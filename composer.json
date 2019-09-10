@@ -3,6 +3,8 @@
     "description": "The Laravel Api Module.",
     "license": "MIT",
     "version": "0.1.0",
+    "homepage": "https://github.com/dskripchenko/laravel-api",
+    "keywords": ["laravel", "api", "swagger"],
     "authors": [
         {
             "name": "Denis Skripchenko",
@@ -10,12 +12,12 @@
         }
     ],
     "require": {
-        "laravel/framework": "^5.8",
+        "laravel/framework": "^5.3",
         "phpdocumentor/reflection-docblock": "^4.3"
     },
     "autoload": {
         "psr-4": {
-            "Dskripchenko/LaravelApi\\": "src/"
+            "Dskripchenko\\LaravelApi\\": ["src/"]
         }
     }
 }

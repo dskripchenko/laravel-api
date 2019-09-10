@@ -33,7 +33,7 @@ class ApiDocumentationController extends Controller
             $filesData[] = ['url' => Storage::url("{$folder}/{$fileName}") . '?r=' . uniqid(), 'name' => $version];
         }
 
-        return view('api/documentation', [
+        return view('api_module::api/documentation', [
             'filesJsonData' => json_encode($filesData)
         ]);
     }

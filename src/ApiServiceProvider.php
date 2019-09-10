@@ -13,7 +13,14 @@ use Illuminate\Support\Facades\Route;
 
 class ApiServiceProvider extends RouteServiceProvider
 {
-    
+
+    public function boot()
+    {
+        parent::boot();
+
+        $this->loadViewsFrom(dirname(__DIR__) . '/resources/views', 'api_module');
+    }
+
     public function register()
     {
         $this->app->bind('api_module', function (){
