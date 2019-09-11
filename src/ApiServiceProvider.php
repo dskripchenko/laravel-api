@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Dskripchenko\LaravelApi\Providers;
+namespace Dskripchenko\LaravelApi;
 
 
 use Dskripchenko\LaravelApi\Components\BaseApiRequest;

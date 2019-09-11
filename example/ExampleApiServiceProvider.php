@@ -1,7 +1,7 @@
 <?php
 namespace Dskripchenko\LaravelApiExample;
 
-use Dskripchenko\LaravelApi\Providers\ApiServiceProvider;
+use Dskripchenko\LaravelApi\ApiServiceProvider;
 
 class ExampleApiServiceProvider extends ApiServiceProvider
 {
