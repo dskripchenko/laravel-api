@@ -4,7 +4,7 @@
 namespace Dskripchenko\LaravelApiExample\Versions\v2\Controllers;
 
 
-use Dskripchenko\LaravelApi\Facades\ApiRequest;
+use Illuminate\Http\Request;
 
 class DController
 {
@@ -19,10 +19,10 @@ class DController
      * @output array $request Request data
      *
      *
-     * @param ApiRequest $request
+     * @param Request $request
      * @return array
      */
-    public function d(ApiRequest $request){
+    public function d(Request $request){
         return ['method' => 'D-d', 'request' => [$request->id, $request->name]];
     }
 }

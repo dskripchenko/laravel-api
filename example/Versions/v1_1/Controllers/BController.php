@@ -4,9 +4,10 @@
 namespace Dskripchenko\LaravelApiExample\Versions\v1_1\Controllers;
 
 
-use Dskripchenko\LaravelApi\Facades\ApiRequest;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
-class BController
+class BController extends Controller
 {
     /**
      * Method B
@@ -19,10 +20,10 @@ class BController
      * @output array $request Request data
      *
      *
-     * @param ApiRequest $request
+     * @param Request $request
      * @return array
      */
-    public function b(ApiRequest $request){
+    public function b(Request $request){
         return ['method' => 'B-b', 'request' => [$request->id, $request->name]];
     }
 }

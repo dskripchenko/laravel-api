@@ -4,7 +4,7 @@
 namespace Dskripchenko\LaravelApiExample\Versions\v1\Controllers;
 
 
-use Dskripchenko\LaravelApi\Facades\ApiRequest;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class AController extends Controller
@@ -20,11 +20,11 @@ class AController extends Controller
      * @output array $request Request data
      *
      *
-     * @param ApiRequest $request
+     * @param Request $request
      * @return array
      */
-    public function a(ApiRequest $request){
-        return ['method' => 'A-a', 'request' => [$request->id, $request->name]];
+    public function a(Request $request){
+        return ['method' => 'A-a', 'request' => [$request->input('id'), $request->input('name')]];
     }
 
     /**
@@ -38,11 +38,11 @@ class AController extends Controller
      * @output array $request Request data
      *
      *
-     * @param ApiRequest $request
+     * @param Request $request
      * @return array
      */
-    public function b(ApiRequest $request){
-        return ['method' => 'A-b', 'request' => [$request->id, $request->name]];
+    public function b(Request $request){
+        return ['method' => 'A-b', 'request' => [$request->input('id'), $request->input('name')]];
     }
 
     /**
@@ -56,10 +56,10 @@ class AController extends Controller
      * @output array $request Request data
      *
      *
-     * @param ApiRequest $request
+     * @param Request $request
      * @return array
      */
-    public function c(ApiRequest $request){
-        return ['method' => 'A-c', 'request' => [$request->id, $request->name]];
+    public function c(Request $request){
+        return ['method' => 'A-c', 'request' => [$request->input('id'), $request->input('name')]];
     }
 }
