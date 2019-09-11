@@ -12,7 +12,7 @@ class DController
      * Method D
      * Method description
      *
-     * @input indeger $id Id
+     * @input integer $id Id
      * @input string $name Name
      *
      * @output string $method Method

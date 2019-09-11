@@ -13,7 +13,7 @@ class AController extends Controller
      * Method A
      * Method description
      *
-     * @input indeger $id Id
+     * @input integer $id Id
      * @input string $name Name
      *
      * @output string $method Method
@@ -31,7 +31,7 @@ class AController extends Controller
      * Method B
      * Method description
      *
-     * @input indeger $id Id
+     * @input integer $id Id
      * @input string $name Name
      *
      * @output string $method Method
@@ -49,7 +49,7 @@ class AController extends Controller
      * Method C
      * Method description
      *
-     * @input indeger $id Id
+     * @input integer $id Id
      * @input string $name Name
      *
      * @output string $method Method

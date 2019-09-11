@@ -12,7 +12,7 @@ class BController extends \Dskripchenko\LaravelApiExample\Versions\v1_1\Controll
      * Method C
      * Method description
      *
-     * @input indeger $id Id
+     * @input integer $id Id
      * @input string $name Name
      *
      * @output string $method Method
