@@ -92,7 +92,7 @@ class BaseModule
     /**
      * @return array
      */
-    public static function getApiVersionList(){
+    public function getApiVersionList(){
         return [
             //api version list
         ];

@@ -17,7 +17,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Dskripchenko\\LaravelApi\\": ["src/"]
+            "Dskripchenko\\LaravelApi\\": ["src/"],
+            "Dskripchenko\\LaravelApiExample\\": ["example/"]
         }
     }
 }

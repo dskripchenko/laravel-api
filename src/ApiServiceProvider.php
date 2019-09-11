@@ -24,14 +24,29 @@ class ApiServiceProvider extends RouteServiceProvider
     public function register()
     {
         $this->app->bind('api_module', function (){
-            return new BaseModule();
+            return $this->getApiModule();
         });
 
         $this->app->bind('api_request', function (){
-            return BaseApiRequest::getInstance();
+            return $this->getApiRequest();
         });
 
         parent::register();
+    }
+
+    /**
+     * @return BaseModule
+     */
+    protected function getApiModule(){
+        return new BaseModule();
+    }
+
+    /**
+     * @return BaseApiRequest
+     * @throws \Exception
+     */
+    protected function getApiRequest(){
+        return BaseApiRequest::getInstance();
     }
 
     public function map()
