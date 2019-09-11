@@ -17,7 +17,7 @@ class ApiDocumentationController extends Controller
     public function index(){
         $versionList = ApiModule::getApiVersionList();
 
-        $folder = 'swagger';
+        $folder = 'public/swagger';
 
         if(!Storage::exists($folder)){
             Storage::makeDirectory($folder);
