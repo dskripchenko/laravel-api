@@ -35,7 +35,7 @@ abstract class BaseApi
      *          'login' => [],
      *          'logout' => false,
      *          'limited-access' => [
-     *              'limitedAccess'
+     *              'action' => 'limitedAccess',
      *              'middleware' => [
      *                  VerifyApiToken::class
      *              ]
@@ -121,11 +121,13 @@ abstract class BaseApi
             return false;
         }
 
-        if(is_string($actions[$actionKey])){
-            $actionKey = $actions[$actionKey];
-        }
-        elseif (is_array($actions[$actionKey]) && isset($actions[$actionKey]['action'])){
-            $actionKey = $actions[$actionKey]['action'];
+        if(isset($actions[$actionKey])){
+            if(is_string($actions[$actionKey])){
+                $actionKey = $actions[$actionKey];
+            }
+            elseif (is_array($actions[$actionKey]) && isset($actions[$actionKey]['action'])){
+                $actionKey = $actions[$actionKey]['action'];
+            }
         }
 
         if(!method_exists($controller, $actionKey)){
