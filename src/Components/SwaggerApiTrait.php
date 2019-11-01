@@ -51,14 +51,20 @@ trait SwaggerApiTrait
             $class = Arr::get($options, 'controller');
             $reflectionClass = new \ReflectionClass($class);
 
-            foreach (Arr::get($options, 'actions', []) as $key => $value){
+            $actions = Arr::get($options, 'actions', []);
+            foreach ($actions as $key => $value){
                 if($value === false){
                     continue;
                 }
                 $action = $key;
-                if(is_numeric($action)){
+
+                if(is_numeric($action) || is_string($value)){
                     $action = $value;
                 }
+                elseif (is_array($value) && isset($value['action'])){
+                    $action = $value['action'];
+                }
+
                 if(!is_string($action)){
                     continue;
                 }
