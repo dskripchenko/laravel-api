@@ -34,12 +34,13 @@ abstract class BaseApi
      *          ],
      *          'login' => [],
      *          'logout' => false,
-     *          'limitedAccess' => [
+     *          'limited-access' => [
+     *              'limitedAccess'
      *              'middleware' => [
      *                  VerifyApiToken::class
      *              ]
      *          ],
-     *          'getSign' => [],
+     *          'get-sign' => 'getSign',
      *          'checkSign' => [
      *              'middleware' => [ //TODO middleware на уровне экшена
      *                  VerifyApiSign::class
@@ -64,7 +65,29 @@ abstract class BaseApi
         if(!$action){
             throw new NotFoundHttpException('The requested method was not found!');
         }
-        return app()->call($action);
+        return static::callAction($action);
+    }
+
+    /**
+     * @param $action
+     * @return array|mixed
+     */
+    final public static function callAction($action){
+        try {
+            return app()->call($action);
+        }
+        catch (ApiException $e){
+            return ApiResponseHelper::sayError([
+                'errorKey' => $e->getErrorKey(),
+                'message' => $e->getMessage(),
+            ]);
+        }
+        catch (\Exception $e){
+            return ApiResponseHelper::sayError([
+                'errorKey' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
 
@@ -96,6 +119,13 @@ abstract class BaseApi
         }
         if(isset($actions[$actionKey]) && $actions[$actionKey] === false){
             return false;
+        }
+
+        if(is_string($actions[$actionKey])){
+            $actionKey = $actions[$actionKey];
+        }
+        elseif (is_array($actions[$actionKey]) && isset($actions[$actionKey]['action'])){
+            $actionKey = $actions[$actionKey]['action'];
         }
 
         if(!method_exists($controller, $actionKey)){

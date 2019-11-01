@@ -37,12 +37,13 @@ protected static function getMethods(){
                ],
                'login' => [],
                'logout' => false,
-               'limitedAccess' => [
+               'limited-access' => [
+                   'action' => 'limitedAccess',
                    'middleware' => [
                        VerifyApiToken::class
                    ]
                ],
-               'getSign' => [],
+               'get-sign' => 'getSign',
                'checkSign' => [
                    'middleware' => [
                        VerifyApiSign::class
