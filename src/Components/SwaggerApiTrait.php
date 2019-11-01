@@ -56,21 +56,26 @@ trait SwaggerApiTrait
                 if($value === false){
                     continue;
                 }
-                $action = $key;
 
-                if(is_numeric($action) || is_string($value)){
+                $action = $key;
+                if(is_numeric($action)){
                     $action = $value;
                 }
-                elseif (is_array($value) && isset($value['action'])){
-                    $action = $value['action'];
-                }
-
                 if(!is_string($action)){
                     continue;
                 }
 
+                $methodKey = $action;
+                if(is_string($value)){
+                    $methodKey = $value;
+                }
+                if(is_array($value) && isset($value['action'])){
+                    $methodKey = $value['action'];
+                }
+
+
                 $middlewareList = static::getMiddlewareByControllerAndActionKey($controller,$action);
-                $reflectionMethod = $reflectionClass->getMethod($action);
+                $reflectionMethod = $reflectionClass->getMethod($methodKey);
                 $docBlock = static::getDocBlockByComment($reflectionMethod->getDocComment());
 
 
