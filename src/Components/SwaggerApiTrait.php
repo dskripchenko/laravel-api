@@ -132,10 +132,10 @@ trait SwaggerApiTrait
             if(preg_match($pattern, $desctiption, $matches)){
                 $parameters[] = [
                     'in' => 'formData',
-                    'name' => $matches['variable'],
-                    'description' => $matches['description'],
-                    'required' => $matches['optional'] !== '?',
-                    'type' => $matches['type'],
+                    'name' => Arr::get($matches, 'variable', ''),
+                    'description' => Arr::get($matches, 'description', ''),
+                    'required' =>  Arr::get($matches, 'optional', '') !== '?',
+                    'type' => Arr::get($matches, 'type', 'string'),
                 ];
             }
         }
