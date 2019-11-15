@@ -9,7 +9,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 abstract class BaseApi
 {
-    use SwaggerApiTrait;
+    use SwaggerApiTrait{
+        getSwaggerTemplates as public getSwaggerTemplatesTrait;
+    }
 
     /**
      * @var array
@@ -56,6 +58,33 @@ abstract class BaseApi
      * 'middleware' => [] //TODO сквозные middleware на уровне всего апи
      */
     abstract protected static function getMethods();
+
+    /**
+     * [
+     *      'User' => [
+     *              'id' => [
+     *                  'type' => 'integer',
+     *                  'required' => true,
+     *              ],
+     *              'name' => [
+     *                  'type' => 'string',
+     *                  'required' => true,
+     *              ],
+     *      ],
+     *      'Users' => [
+     *          'list' => [
+     *              'type' => 'array',
+     *              'items' => '@User'
+     *          ]
+     *      ]
+     * ];
+     *
+     * @return array
+     */
+    public static function getSwaggerTemplates()
+    {
+        return static::getSwaggerTemplatesTrait();
+    }
 
     /**
      * @return mixed

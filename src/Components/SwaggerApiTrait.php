@@ -12,6 +12,8 @@ use phpDocumentor\Reflection\DocBlockFactory;
 
 trait SwaggerApiTrait
 {
+    public static $useResponseTemplates = false;
+
     /**
      * @param string $version
      * @return array
@@ -20,7 +22,8 @@ trait SwaggerApiTrait
     public static function getSwaggerApiConfig(string $version){
         $reflectionClass = new \ReflectionClass(static::class);
         $docBlock = static::getDocBlockByComment($reflectionClass->getDocComment());
-        return [
+
+        $config = [
             'swagger' => '2.0',
             'info' => [
                 'title' => $docBlock->getSummary(),
@@ -32,8 +35,14 @@ trait SwaggerApiTrait
             'schemes' => [
                 request()->getScheme()
             ],
-            'paths' => static::getSwaggerApiPaths($version)
+            'paths' => static::getSwaggerApiPaths($version),
         ];
+
+        if(static::$useResponseTemplates){
+            $config['definitions'] = static::getSchemas();
+        }
+
+        return $config;
     }
 
 
@@ -134,7 +143,7 @@ trait SwaggerApiTrait
                     'in' => 'formData',
                     'name' => Arr::get($matches, 'variable', ''),
                     'description' => Arr::get($matches, 'description', ''),
-                    'required' =>  Arr::get($matches, 'optional', '') !== '?',
+                    'required' => Arr::get($matches, 'optional', '') !== '?',
                     'type' => Arr::get($matches, 'type', 'string'),
                 ];
             }
@@ -149,31 +158,40 @@ trait SwaggerApiTrait
      */
     private static function getResponseByTags(array $tags){
         $properties = [];
-
         $pattern = static::getDocInputOutputPattern();
+        $templatePattern = static::getDocInputOutputTemplatePattern();
         /**
          * @var Tag $tag
          */
         foreach ($tags as $tag){
             $desctiption = $tag->getDescription()->render();
 
+            if(static::$useResponseTemplates && preg_match($templatePattern, $desctiption, $matches)){
+                if(static::isHasTemplate($matches['template'])){
+                    return [
+                        'description' => 'Response payload',
+                        'schema' => [
+                            '$ref' => "#/definitions/{$matches['template']}"
+                        ],
+                    ];
+                }
+            }
+
             if(preg_match($pattern, $desctiption, $matches)){
                 $properties[$matches['variable']] = [
-                    'type' => $matches['type'],
-                    'name' => $matches['variable'],
-                    'description' => $matches['description'],
-                    'required' => $matches['optional'] !== '?',
+                    'type' => Arr::get($matches, 'type', ''),
+                    'name' => Arr::get($matches, 'variable', ''),
+                    'description' => Arr::get($matches, 'description', ''),
+                    'required' => Arr::get($matches, 'optional', '') !== '?',
                 ];
+                continue;
             }
         }
 
-
         return [
-            'description' => 'OK',
-            'schema' => [
-                'type' => 'object',
-                'properties' => $properties,
-            ]
+            'description' => 'Response payload',
+            'type' => 'object',
+            'properties' => $properties,
         ];
     }
 
@@ -182,6 +200,13 @@ trait SwaggerApiTrait
      */
     private static function getDocInputOutputPattern(){
         return '/^(?<type>[\S]*?)[\s]*+(?<optional>\?)?\$(?<variable>[\S]*+)([\s]*?(?<description>\S[\S\s]*?))?$/';
+    }
+
+    /**
+     * @return string
+     */
+    private static function getDocInputOutputTemplatePattern(){
+        return '/{(?<template>[\S]*?)}(?<description>[\s\S]*?)$/';
     }
 
     /**
@@ -238,6 +263,27 @@ trait SwaggerApiTrait
      * @return array
      */
     private static function getMethodData($summary, $description, $tags = [], $parameters = [], $responses = []){
+        $responses = [
+            'payload' => $responses,
+        ];
+
+        if(static::$useResponseTemplates){
+            $responses = ArrayMergeHelper::merge($responses, [
+                'success' => [
+                    'description' => 'Success response',
+                    'schema' => [
+                        '$ref' => "#/definitions/Default"
+                    ]
+                ],
+                'error' => [
+                    'description' => 'Error response',
+                    'schema' => [
+                        '$ref' => "#/definitions/Error"
+                    ]
+                ],
+            ]);
+        }
+
         return [
             'summary' => $summary,
             'description' => $description,
@@ -246,11 +292,87 @@ trait SwaggerApiTrait
                 'application/x-www-form-urlencoded'
             ],
             'parameters' => $parameters,
-            'responses' => [
-                '200' => $responses
-            ]
+            'responses' => $responses,
 
         ];
+    }
+
+    /**
+     * @return array
+     */
+    private static function getSchemas(){
+        $result = [];
+        foreach (static::getRawTemplates() as $schemaName => &$properties){
+            $requiredProperties = [];
+            foreach ($properties as $property => &$attributes){
+                if(isset($attributes['required'])){
+                    if($attributes['required']){
+                        $requiredProperties[] = $property;
+                    }
+                    unset($attributes['required']);
+                }
+            }
+
+            $result[$schemaName] = [
+                'type' => 'object',
+                'properties' => $properties,
+                'required' => $requiredProperties
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    private static function getRawTemplates(){
+        $defaultTemplates = [
+            'Error' => [
+                'success' => [
+                    'type' => 'boolean',
+                ],
+                'errorKey' => [
+                    'type' => 'string',
+                ],
+                'message' => [
+                    'type' => 'string',
+                ],
+            ],
+            'Default' => [
+                'success' => [
+                    'type' => 'boolean',
+                ],
+                'payload' => [
+                    'type' => 'object',
+                    'description' => 'Response payload',
+                ],
+            ]
+        ];
+
+        $templates = static::getSwaggerTemplates();
+
+        array_walk_recursive($templates, function (&$item, $key){
+            if(strpos($item, '@') !== false) {
+                $item = ['$ref' => str_replace('@', '#/definitions/', $item)];
+            }
+        });
+
+        return ArrayMergeHelper::merge($defaultTemplates, $templates);
+    }
+
+    /**
+     * @param string $name
+     * @return array
+     */
+    private static function isHasTemplate($name){
+        return Arr::has(static::getRawTemplates(), $name);
+    }
+
+    /**
+     * @return array
+     */
+    protected static function getSwaggerTemplates(){
+        return []; //override in final class
     }
 
 
