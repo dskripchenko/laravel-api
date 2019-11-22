@@ -237,7 +237,7 @@ trait SwaggerApiTrait
 
         foreach ($middlewareList as $middleware){
             $middlewareReflection = new \ReflectionClass($middleware);
-            $middlewareReflectionMethod = $middlewareReflection->getMethod('handle');
+            $middlewareReflectionMethod = $middlewareReflection->getMethod('run');
             $middlewareDocBloick = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
             $middlewareTagList = $middlewareDocBloick->getTagsByName('input');
             $inputTagList = ArrayMergeHelper::merge($inputTagList,$middlewareTagList);
