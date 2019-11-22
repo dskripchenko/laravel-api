@@ -99,7 +99,7 @@ abstract class BaseApi
 
     /**
      * @param $action
-     * @return array|mixed
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
     final public static function callAction($action){
         try {
