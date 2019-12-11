@@ -37,12 +37,15 @@ class ApiErrorHandler
      */
     public function handle(\Exception $e){
         $className = get_class($e);
-        $handle = Arr::get($this->handlers, $className, function (\Exception $e) {
-            return ApiResponseHelper::sayError([
-                'errorKey' => $e->getCode(),
-                'message' => $e->getMessage(),
-            ]);
-        });
+        $handle = Arr::get($this->handlers, $className, false);
+        if(!$handle){
+            $handle = function (\Exception $e) {
+                return ApiResponseHelper::sayError([
+                    'errorKey' => $e->getCode(),
+                    'message' => $e->getMessage(),
+                ]);
+            };
+        }
 
         return $handle($e);
     }
