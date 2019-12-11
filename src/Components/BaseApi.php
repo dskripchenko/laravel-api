@@ -4,6 +4,7 @@
 namespace Dskripchenko\LaravelApi\Components;
 
 use Dskripchenko\LaravelApi\Facades\ApiRequest;
+use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -105,17 +106,8 @@ abstract class BaseApi
         try {
             return app()->call($action);
         }
-        catch (ApiException $e){
-            return ApiResponseHelper::sayError([
-                'errorKey' => $e->getErrorKey(),
-                'message' => $e->getMessage(),
-            ]);
-        }
         catch (\Exception $e){
-            return ApiResponseHelper::sayError([
-                'errorKey' => $e->getCode(),
-                'message' => $e->getMessage(),
-            ]);
+            return ApiErrorHandler::handle($e);
         }
     }
 

@@ -4,6 +4,7 @@
 namespace Dskripchenko\LaravelApi;
 
 
+use Dskripchenko\LaravelApi\Components\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Components\BaseApiRequest;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Components\ApiDocumentationController;
@@ -31,6 +32,10 @@ class ApiServiceProvider extends RouteServiceProvider
             return $this->getApiRequest();
         });
 
+        $this->app->bind('api_error_handler', function (){
+            return $this->getApiErrorHandler();
+        });
+
         parent::register();
     }
 
@@ -39,6 +44,13 @@ class ApiServiceProvider extends RouteServiceProvider
      */
     protected function getApiModule(){
         return new BaseModule();
+    }
+
+    /**
+     * @return ApiErrorHandler
+     */
+    protected function getApiErrorHandler(){
+        return new ApiErrorHandler();
     }
 
     /**
