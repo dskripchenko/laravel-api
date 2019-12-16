@@ -5,7 +5,9 @@ namespace Dskripchenko\LaravelApi\Components;
 
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Route;
 use phpDocumentor\Reflection\DocBlock;
 use phpDocumentor\Reflection\DocBlock\Tag;
 use phpDocumentor\Reflection\DocBlockFactory;
@@ -235,14 +237,31 @@ trait SwaggerApiTrait
         $inputTagList = [];
         $methodTagList = $methodDocBlock->getTagsByName('input');
 
-        foreach ($middlewareList as $middleware){
+        $addInputToTagList = function ($middleware, &$inputTagList) {
             $middlewareReflection = new \ReflectionClass($middleware);
-            $middlewareReflectionMethod = $middlewareReflection->getMethod('run');
+            $method = 'run';
+            if(!$middlewareReflection->hasMethod($method)){
+                $method = 'handle';
+                if(!$middlewareReflection->hasMethod($method)){
+                    return;
+                }
+            }
+
+            $middlewareReflectionMethod = $middlewareReflection->getMethod($method);
             $middlewareDocBloick = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
             $middlewareTagList = $middlewareDocBloick->getTagsByName('input');
             $inputTagList = ArrayMergeHelper::merge($inputTagList,$middlewareTagList);
+        };
+        foreach ($middlewareList as $middleware){
+            if(class_exists($middleware)){
+                $addInputToTagList($middleware, $inputTagList);
+            }
+            else{
+                foreach (Arr::get(Route::getMiddlewareGroups(), $middleware, []) as $groupedMiddleware){
+                    $addInputToTagList($groupedMiddleware, $inputTagList);
+                }
+            }
         }
-
         return ArrayMergeHelper::merge($inputTagList,$methodTagList);
     }
 
@@ -272,7 +291,7 @@ trait SwaggerApiTrait
                 'success' => [
                     'description' => 'Success response',
                     'schema' => [
-                        '$ref' => "#/definitions/Default"
+                        '$ref' => "#/definitions/Success"
                     ]
                 ],
                 'error' => [
@@ -338,7 +357,7 @@ trait SwaggerApiTrait
                     'type' => 'string',
                 ],
             ],
-            'Default' => [
+            'Success' => [
                 'success' => [
                     'type' => 'boolean',
                 ],
@@ -361,8 +380,8 @@ trait SwaggerApiTrait
     }
 
     /**
-     * @param string $name
-     * @return array
+     * @param $name
+     * @return bool
      */
     private static function isHasTemplate($name){
         return Arr::has(static::getRawTemplates(), $name);
