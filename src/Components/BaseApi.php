@@ -104,7 +104,7 @@ abstract class BaseApi
      */
     final public static function callAction($action){
         try {
-            return app()->call($action);
+            return app()->call($action, ApiRequest::all(), 'index');
         }
         catch (\Exception $e){
             return ApiErrorHandler::handle($e);
