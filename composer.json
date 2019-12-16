@@ -2,7 +2,7 @@
     "name": "dskripchenko/laravel-api",
     "description": "The Laravel Api Module.",
     "license": "MIT",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "homepage": "https://github.com/dskripchenko/laravel-api",
     "keywords": ["laravel", "api", "versioning", "swagger"],
     "authors": [
