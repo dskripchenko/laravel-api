@@ -17,8 +17,6 @@ class ApiServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        parent::boot();
-
         $this->loadViewsFrom(dirname(__DIR__) . '/resources/views', 'api_module');
 
         $this->makeApiRoutes();
