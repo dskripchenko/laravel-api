@@ -9,10 +9,10 @@ use Dskripchenko\LaravelApi\Components\BaseApiRequest;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Components\ApiDocumentationController;
 use Dskripchenko\LaravelApi\Components\BaseModule;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 
-class ApiServiceProvider extends RouteServiceProvider
+class ApiServiceProvider extends ServiceProvider
 {
 
     public function boot()
@@ -20,6 +20,8 @@ class ApiServiceProvider extends RouteServiceProvider
         parent::boot();
 
         $this->loadViewsFrom(dirname(__DIR__) . '/resources/views', 'api_module');
+
+        $this->makeApiRoutes();
     }
 
     public function register()
@@ -61,7 +63,7 @@ class ApiServiceProvider extends RouteServiceProvider
         return BaseApiRequest::getInstance();
     }
 
-    public function map()
+    public function makeApiRoutes()
     {
         Route::group([
             'namespace' => ApiModule::getControllerNamespace(),
