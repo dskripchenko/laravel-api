@@ -30,7 +30,7 @@ class ApiDocumentationController extends Controller
             $config = $api::getSwaggerApiConfig($version);
             $fileName = "{$version}.json";
             Storage::put("{$folder}/{$fileName}", json_encode($config));
-            $filesData[] = ['url' => Storage::url("{$folder}/{$fileName}") . '?r=' . uniqid(), 'name' => $version];
+            $filesData[] = ['url' => asset(Storage::url("{$folder}/{$fileName}") . '?r=' . uniqid()), 'name' => $version];
         }
 
         return view('api_module::api/documentation', [
