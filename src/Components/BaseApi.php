@@ -210,13 +210,29 @@ abstract class BaseApi
             $nonStaticParents = array_reverse($nonStaticParents);
 
             foreach ($nonStaticParents as $className){
-                if (method_exists($className, 'getMethods')){
-                    static::$preparedMethods = ArrayMergeHelper::merge(static::$preparedMethods, $className::getMethods());
+                if (method_exists($className, 'getNormalizedMethods')){
+                    static::$preparedMethods = ArrayMergeHelper::merge(static::$preparedMethods, $className::getNormalizedMethods());
                 }
             }
 
-            static::$preparedMethods[static::class] = ArrayMergeHelper::merge(static::$preparedMethods, static::getMethods());
+            static::$preparedMethods[static::class] = ArrayMergeHelper::merge(static::$preparedMethods, static::getNormalizedMethods());
         }
         return static::$preparedMethods[static::class];
+    }
+
+    /**
+     * @return array
+     */
+    private static function getNormalizedMethods(){
+        $methods = static::getMethods();
+        foreach (Arr::get($methods, 'controllers', []) as $controllerKey => $controller){
+            foreach (Arr::get($controller, 'actions', []) as $key => $value){
+                if(is_numeric($key) && is_string($value)){
+                    Arr::set($methods, "controllers.{$controllerKey}.actions.{$value}", $value);
+                    Arr::pull($methods, "controllers.{$controllerKey}.actions.{$key}");
+                }
+            }
+        }
+        return $methods;
     }
 }

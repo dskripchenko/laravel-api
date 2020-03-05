@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Laravel</title>
         <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@3.12.1/swagger-ui.css">
+        <link rel="stylesheet" type="text/css" href="/swagger-themes/theme-flattop.css">
     </head>
     <body>
         <div id="swagger-ui"></div>

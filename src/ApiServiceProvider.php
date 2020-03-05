@@ -17,6 +17,10 @@ class ApiServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        $this->publishes([
+            dirname(__DIR__) . '/resources/swagger-themes' => public_path('swagger-themes'),
+        ]);
+
         $this->loadViewsFrom(dirname(__DIR__) . '/resources/views', 'api_module');
 
         $this->makeApiRoutes();
