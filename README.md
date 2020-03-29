@@ -93,8 +93,6 @@ Available types ```string|number|integer|boolean|file```
 * ApiResponseHelper
     * say
     * sayError
-* ArrayMergeHelper
-    * merge //deep array merge
 
 ## Example
 

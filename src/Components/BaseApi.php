@@ -211,11 +211,11 @@ abstract class BaseApi
 
             foreach ($nonStaticParents as $className){
                 if (method_exists($className, 'getNormalizedMethods')){
-                    static::$preparedMethods = ArrayMergeHelper::merge(static::$preparedMethods, $className::getNormalizedMethods());
+                    static::$preparedMethods = array_merge_deep(static::$preparedMethods, $className::getNormalizedMethods());
                 }
             }
 
-            static::$preparedMethods[static::class] = ArrayMergeHelper::merge(static::$preparedMethods, static::getNormalizedMethods());
+            static::$preparedMethods[static::class] = array_merge_deep(static::$preparedMethods, static::getNormalizedMethods());
         }
         return static::$preparedMethods[static::class];
     }

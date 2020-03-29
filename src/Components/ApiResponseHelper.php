@@ -14,7 +14,7 @@ class ApiResponseHelper
      * @return JsonResponse
      */
     public static function say($data = []){
-        $data = ArrayMergeHelper::merge(
+        $data = array_merge_deep(
             [
                 'success' => Arr::pull($data, 'success', true)
             ],
@@ -30,6 +30,6 @@ class ApiResponseHelper
      * @return JsonResponse
      */
     public static function sayError($data = []){
-        return static::say(ArrayMergeHelper::merge($data, ['success' => false]));
+        return static::say(array_merge_deep($data, ['success' => false]));
     }
 }

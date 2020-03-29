@@ -250,7 +250,7 @@ trait SwaggerApiTrait
             $middlewareReflectionMethod = $middlewareReflection->getMethod($method);
             $middlewareDocBloick = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
             $middlewareTagList = $middlewareDocBloick->getTagsByName('input');
-            $inputTagList = ArrayMergeHelper::merge($inputTagList,$middlewareTagList);
+            $inputTagList = array_merge_deep($inputTagList,$middlewareTagList);
         };
         foreach ($middlewareList as $middleware){
             if(class_exists($middleware)){
@@ -262,7 +262,7 @@ trait SwaggerApiTrait
                 }
             }
         }
-        return ArrayMergeHelper::merge($inputTagList,$methodTagList);
+        return array_merge_deep($inputTagList,$methodTagList);
     }
 
     /**
@@ -287,7 +287,7 @@ trait SwaggerApiTrait
         ];
 
         if(static::$useResponseTemplates){
-            $responses = ArrayMergeHelper::merge($responses, [
+            $responses = array_merge_deep($responses, [
                 'success' => [
                     'description' => 'Success response',
                     'schema' => [
@@ -376,7 +376,7 @@ trait SwaggerApiTrait
             }
         });
 
-        return ArrayMergeHelper::merge($defaultTemplates, $templates);
+        return array_merge_deep($defaultTemplates, $templates);
     }
 
     /**
