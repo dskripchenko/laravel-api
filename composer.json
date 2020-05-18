@@ -2,7 +2,7 @@
     "name": "dskripchenko/laravel-api",
     "description": "The Laravel Api Module.",
     "license": "MIT",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "homepage": "https://github.com/dskripchenko/laravel-api",
     "keywords": ["laravel", "api", "versioning", "swagger"],
     "authors": [
@@ -13,7 +13,7 @@
     ],
     "require": {
         "laravel/framework": "*",
-        "phpdocumentor/reflection-docblock": "^4.3",
+        "phpdocumentor/reflection-docblock": "*",
         "dskripchenko/php-array-helper": "@dev"
     },
     "autoload": {
