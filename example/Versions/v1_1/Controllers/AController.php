@@ -23,7 +23,8 @@ class AController extends \Dskripchenko\LaravelApiExample\Versions\v1\Controller
      * @param Request $request
      * @return array
      */
-    public function b(Request $request){
+    public function b(Request $request)
+    {
         return ['method' => 'A-b', 'request' => [$request->id, $request->name2]];
     }
 }

@@ -20,11 +20,12 @@ class BaseModule
     /**
      * @return BaseApi|null
      */
-    protected function getApi(){
-        if(!$this->api){
+    protected function getApi()
+    {
+        if (!$this->api) {
             $this->api = Arr::get(ApiModule::getApiVersionList(), ApiRequest::getApiVersion(), false);
         }
-        if(!is_subclass_of($this->api, BaseApi::class)){
+        if (!is_subclass_of($this->api, BaseApi::class)) {
             return null;
         }
 
@@ -35,12 +36,13 @@ class BaseModule
      * @return mixed
      * @throws \Exception
      */
-    public function makeApi(){
+    public function makeApi()
+    {
         /**
          * @var BaseApi $api
          */
         $api = $this->getApi();
-        if (!$api){
+        if (!$api) {
             throw new NotFoundHttpException('The requested version is not active!');
         }
         return $api::make();
@@ -50,12 +52,13 @@ class BaseModule
      * @return array
      * @throws \Exception
      */
-    public function getApiMiddleware(){
+    public function getApiMiddleware()
+    {
         /**
          * @var BaseApi $api
          */
         $api = $this->getApi();
-        if(!$api){
+        if (!$api) {
             return [];
         }
         return $api::getMiddleware();
@@ -64,35 +67,40 @@ class BaseModule
     /**
      * @return string
      */
-    public function getApiPrefix(){
+    public function getApiPrefix()
+    {
         return 'api';
     }
 
     /**
      * @return array
      */
-    public function getAvailableApiMethods(){
+    public function getAvailableApiMethods()
+    {
         return ['post'];
     }
 
     /**
      * @return string
      */
-    public function getApiUriPattern(){
+    public function getApiUriPattern()
+    {
         return '{version}/{controller}/{action}';
     }
 
     /**
      * @return string
      */
-    public function getControllerNamespace(){
+    public function getControllerNamespace()
+    {
         return 'App\Api\Versions';
     }
 
     /**
      * @return array
      */
-    public function getApiVersionList(){
+    public function getApiVersionList()
+    {
         return [
             //api version list
         ];

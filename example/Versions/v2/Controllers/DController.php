@@ -22,7 +22,8 @@ class DController
      * @param Request $request
      * @return array
      */
-    public function d(Request $request){
+    public function d(Request $request)
+    {
         return ['method' => 'D-d', 'request' => [$request->id, $request->name]];
     }
 }

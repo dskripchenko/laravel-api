@@ -1,4 +1,5 @@
 <?php
+
 namespace Dskripchenko\LaravelApiExample\Versions\v2;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;

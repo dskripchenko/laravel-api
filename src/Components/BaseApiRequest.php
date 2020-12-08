@@ -4,7 +4,6 @@
 namespace Dskripchenko\LaravelApi\Components;
 
 
-
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -78,8 +77,9 @@ class BaseApiRequest extends Request
      * @return BaseApiRequest
      * @throws \Exception
      */
-    public static function getInstance(){
-        if(is_null(static::$_instance)){
+    public static function getInstance()
+    {
+        if (is_null(static::$_instance)) {
             static::$_instance = static::capture();
             static::$_instance->apiPrefix = ApiModule::getApiPrefix();
             static::$_instance->apiUriPattern = ApiModule::getApiUriPattern();
@@ -94,15 +94,16 @@ class BaseApiRequest extends Request
     /**
      * @throws \Exception
      */
-    protected function validateApiUriPattern(){
+    protected function validateApiUriPattern()
+    {
         $patternParts = explode('/', $this->apiUriPattern);
-        if(!in_array('{version}', $patternParts)){
+        if (!in_array('{version}', $patternParts)) {
             throw new \Exception('Некорректный паттерн api, отсутствует версия {version}');
         }
-        if(!in_array('{controller}', $patternParts)){
+        if (!in_array('{controller}', $patternParts)) {
             throw new \Exception('Некорректный паттерн api, отсутствует контроллер {controller}');
         }
-        if(!in_array('{action}', $patternParts)){
+        if (!in_array('{action}', $patternParts)) {
             throw new \Exception('Некорректный паттерн api, отсутствует экшен {action}');
         }
     }
@@ -111,16 +112,16 @@ class BaseApiRequest extends Request
     protected function prepareApi()
     {
         $path = $this->getPathInfo();
-        if(strpos($path, $this->apiPrefix) === false){
+        if (strpos($path, $this->apiPrefix) === false) {
             return;
         }
 
-        $method = str_replace("/{$this->apiPrefix}/",'',$path);
-        $methodParts = explode('/',$method);
+        $method = str_replace("/{$this->apiPrefix}/", '', $path);
+        $methodParts = explode('/', $method);
 
         $patternParts = explode('/', $this->apiUriPattern);
 
-        if(count($patternParts) != count($methodParts)){
+        if (count($patternParts) != count($methodParts)) {
             return;
         }
 
@@ -128,9 +129,9 @@ class BaseApiRequest extends Request
         $values = array_slice(array_values($methodParts), 0, count($keys));
         $data = array_combine($keys, $values);
 
-        $this->apiVersion = Arr::get($data,'{version}');
-        $this->apiController = Arr::get($data,'{controller}');
-        $this->apiAction = Arr::get($data,'{action}');
+        $this->apiVersion = Arr::get($data, '{version}');
+        $this->apiController = Arr::get($data, '{controller}');
+        $this->apiAction = Arr::get($data, '{action}');
     }
 
 }

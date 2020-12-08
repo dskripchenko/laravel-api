@@ -23,7 +23,8 @@ class BController extends Controller
      * @param Request $request
      * @return array
      */
-    public function b(Request $request){
+    public function b(Request $request)
+    {
         return ['method' => 'B-b', 'request' => [$request->id, $request->name]];
     }
 }

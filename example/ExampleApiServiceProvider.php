@@ -1,4 +1,5 @@
 <?php
+
 namespace Dskripchenko\LaravelApiExample;
 
 use Dskripchenko\LaravelApi\ApiServiceProvider;

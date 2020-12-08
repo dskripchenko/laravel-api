@@ -21,7 +21,8 @@ class BController extends \Dskripchenko\LaravelApiExample\Versions\v1_1\Controll
      * @param Request $request
      * @return array
      */
-    public function c(Request $request){
+    public function c(Request $request)
+    {
         return ['method' => 'B-c', 'request' => [$request->id, $request->name]];
     }
 }

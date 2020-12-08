@@ -1,4 +1,5 @@
 <?php
+
 namespace Dskripchenko\LaravelApiExample\Versions\v1_1;
 
 use Dskripchenko\LaravelApiExample\Versions\v1_1\Controllers\AController;

@@ -13,7 +13,8 @@ class ApiResponseHelper
      * @param array $data
      * @return JsonResponse
      */
-    public static function say($data = []){
+    public static function say($data = [])
+    {
         $data = array_merge_deep(
             [
                 'success' => Arr::pull($data, 'success', true)
@@ -29,7 +30,8 @@ class ApiResponseHelper
      * @param array $data
      * @return JsonResponse
      */
-    public static function sayError($data = []){
+    public static function sayError($data = [])
+    {
         return static::say(array_merge_deep($data, ['success' => false]));
     }
 }

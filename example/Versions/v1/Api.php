@@ -1,4 +1,5 @@
 <?php
+
 namespace Dskripchenko\LaravelApiExample\Versions\v1;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;
@@ -13,7 +14,9 @@ class Api extends BaseApi
                 'a' => [
                     'controller' => AController::class,
                     'actions' => [
-                        'a', 'b', 'c'
+                        'a',
+                        'b',
+                        'c'
                     ]
                 ]
             ]

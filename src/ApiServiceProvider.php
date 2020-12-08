@@ -17,9 +17,11 @@ class ApiServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->publishes([
-            dirname(__DIR__) . '/resources/swagger-themes' => public_path('swagger-themes'),
-        ]);
+        $this->publishes(
+            [
+                dirname(__DIR__) . '/resources/swagger-themes' => public_path('swagger-themes'),
+            ]
+        );
 
         $this->loadViewsFrom(dirname(__DIR__) . '/resources/views', 'api_module');
 
@@ -28,17 +30,26 @@ class ApiServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->app->bind('api_module', function (){
-            return $this->getApiModule();
-        });
+        $this->app->bind(
+            'api_module',
+            function () {
+                return $this->getApiModule();
+            }
+        );
 
-        $this->app->bind('api_request', function (){
-            return $this->getApiRequest();
-        });
+        $this->app->bind(
+            'api_request',
+            function () {
+                return $this->getApiRequest();
+            }
+        );
 
-        $this->app->bind('api_error_handler', function (){
-            return $this->getApiErrorHandler();
-        });
+        $this->app->bind(
+            'api_error_handler',
+            function () {
+                return $this->getApiErrorHandler();
+            }
+        );
 
         parent::register();
     }
@@ -46,14 +57,16 @@ class ApiServiceProvider extends ServiceProvider
     /**
      * @return BaseModule
      */
-    protected function getApiModule(){
+    protected function getApiModule()
+    {
         return new BaseModule();
     }
 
     /**
      * @return ApiErrorHandler
      */
-    protected function getApiErrorHandler(){
+    protected function getApiErrorHandler()
+    {
         return new ApiErrorHandler();
     }
 
@@ -61,23 +74,34 @@ class ApiServiceProvider extends ServiceProvider
      * @return BaseApiRequest
      * @throws \Exception
      */
-    protected function getApiRequest(){
+    protected function getApiRequest()
+    {
         return BaseApiRequest::getInstance();
     }
 
     public function makeApiRoutes()
     {
-        Route::group([
-            'namespace' => ApiModule::getControllerNamespace(),
-            'prefix' => ApiModule::getApiPrefix(),
-        ], function (){
-            Route::get('doc',function (){
-                return app()->call(ApiDocumentationController::class . '@index');
-            });
+        Route::group(
+            [
+                'namespace' => ApiModule::getControllerNamespace(),
+                'prefix' => ApiModule::getApiPrefix(),
+            ],
+            function () {
+                Route::get(
+                    'doc',
+                    function () {
+                        return app()->call(ApiDocumentationController::class . '@index');
+                    }
+                );
 
-            Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function (){
-                return ApiModule::makeApi();
-            })->middleware(ApiModule::getApiMiddleware());
-        });
+                Route::match(
+                    ApiModule::getAvailableApiMethods(),
+                    ApiModule::getApiUriPattern(),
+                    function () {
+                        return ApiModule::makeApi();
+                    }
+                )->middleware(ApiModule::getApiMiddleware());
+            }
+        );
     }
 }

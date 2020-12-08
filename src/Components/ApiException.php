@@ -20,7 +20,8 @@ class ApiException extends \Exception
     /**
      * @return string
      */
-    public function getErrorKey(){
+    public function getErrorKey()
+    {
         return $this->errorKey;
     }
 

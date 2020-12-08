@@ -14,7 +14,8 @@ class ApiErrorHandler
      * @param $exceptionClassName
      * @param \Closure $handler
      */
-    public function addErrorHandler($exceptionClassName, \Closure $handler){
+    public function addErrorHandler($exceptionClassName, \Closure $handler)
+    {
         $this->handlers[$exceptionClassName] = $handler;
     }
 
@@ -23,27 +24,35 @@ class ApiErrorHandler
      */
     public function __construct()
     {
-        $this->addErrorHandler(ApiException::class, function (ApiException $e) {
-            return ApiResponseHelper::sayError([
-                'errorKey' => $e->getErrorKey(),
-                'message' => $e->getMessage(),
-            ]);
-        });
+        $this->addErrorHandler(
+            ApiException::class,
+            function (ApiException $e) {
+                return ApiResponseHelper::sayError(
+                    [
+                        'errorKey' => $e->getErrorKey(),
+                        'message' => $e->getMessage(),
+                    ]
+                );
+            }
+        );
     }
 
     /**
      * @param \Exception $e
      * @return mixed
      */
-    public function handle(\Exception $e){
+    public function handle(\Exception $e)
+    {
         $className = get_class($e);
         $handle = Arr::get($this->handlers, $className, false);
-        if(!$handle){
+        if (!$handle) {
             $handle = function (\Exception $e) {
-                return ApiResponseHelper::sayError([
-                    'errorKey' => $e->getCode(),
-                    'message' => $e->getMessage(),
-                ]);
+                return ApiResponseHelper::sayError(
+                    [
+                        'errorKey' => $e->getCode(),
+                        'message' => $e->getMessage(),
+                    ]
+                );
             };
         }
 

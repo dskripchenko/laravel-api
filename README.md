@@ -12,8 +12,8 @@ or add
 
 to the ```require``` section of your `composer.json` file.
 
-
 ## Usage
+
 See ```Dskripchenko\LaravelApiExample\```
 
 * make `ApiModule` extended from `Dskripchenko\LaravelApi\Components\BaseModule`
@@ -24,8 +24,8 @@ See ```Dskripchenko\LaravelApiExample\```
 * override `getApiModule` in new `ApiServiceProvider`
 * register `ApiServiceProvider`
 
-
 ## Api methods template
+
 ```php
 protected static function getMethods(){
     return [
@@ -56,6 +56,7 @@ protected static function getMethods(){
 ```
 
 ## AutoDoc comments to swagger
+
 ```php
 /**
  * Method title
@@ -69,9 +70,11 @@ protected static function getMethods(){
  */
 
 ```
+
 Available types ```string|number|integer|boolean|file```
 
 ## Facades
+
 * ApiRequest
     * getApiVersion
     * getApiMethod
@@ -89,7 +92,8 @@ Available types ```string|number|integer|boolean|file```
     * addErrorHandler
     * handle
 
-## Helpers 
+## Helpers
+
 * ApiResponseHelper
     * say
     * sayError

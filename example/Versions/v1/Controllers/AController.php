@@ -23,7 +23,8 @@ class AController extends Controller
      * @param Request $request
      * @return array
      */
-    public function a(Request $request){
+    public function a(Request $request)
+    {
         return ['method' => 'A-a', 'request' => [$request->input('id'), $request->input('name')]];
     }
 
@@ -41,7 +42,8 @@ class AController extends Controller
      * @param Request $request
      * @return array
      */
-    public function b(Request $request){
+    public function b(Request $request)
+    {
         return ['method' => 'A-b', 'request' => [$request->input('id'), $request->input('name')]];
     }
 
@@ -59,7 +61,8 @@ class AController extends Controller
      * @param Request $request
      * @return array
      */
-    public function c(Request $request){
+    public function c(Request $request)
+    {
         return ['method' => 'A-c', 'request' => [$request->input('id'), $request->input('name')]];
     }
 }

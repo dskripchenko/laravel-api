@@ -13,21 +13,24 @@ abstract class ApiMiddleware
      * @param \Closure $next
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    final public function handle(Request $request, \Closure $next){
+    final public function handle(Request $request, \Closure $next)
+    {
         try {
             return $this->run($request, $next);
-        }
-        catch (ApiException $e){
-            return ApiResponseHelper::sayError([
-                'errorKey' => $e->getErrorKey(),
-                'message' => $e->getMessage(),
-            ]);
-        }
-        catch (\Exception $e){
-            return ApiResponseHelper::sayError([
-                'errorKey' => $e->getCode(),
-                'message' => $e->getMessage(),
-            ]);
+        } catch (ApiException $e) {
+            return ApiResponseHelper::sayError(
+                [
+                    'errorKey' => $e->getErrorKey(),
+                    'message' => $e->getMessage(),
+                ]
+            );
+        } catch (\Exception $e) {
+            return ApiResponseHelper::sayError(
+                [
+                    'errorKey' => $e->getCode(),
+                    'message' => $e->getMessage(),
+                ]
+            );
         }
     }
 
