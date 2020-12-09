@@ -150,7 +150,7 @@ abstract class BaseApi
     /**
      * @return string|null
      */
-    private static function getAction()
+    protected static function getAction()
     {
         if (static::$action === null) {
             static::$action = static::getPreparedAction(
@@ -167,7 +167,7 @@ abstract class BaseApi
      * @param $actionKey
      * @return bool|string
      */
-    private static function getPreparedAction($controllerKey, $actionKey)
+    protected static function getPreparedAction($controllerKey, $actionKey)
     {
         $methods = static::getPreparedMethods();
         $controller = Arr::get($methods, "controllers.{$controllerKey}.controller", false);
@@ -213,7 +213,7 @@ abstract class BaseApi
      * @param $actionKey
      * @return array
      */
-    private static function getMiddlewareByControllerAndActionKey($controllerKey, $actionKey)
+    protected static function getMiddlewareByControllerAndActionKey($controllerKey, $actionKey)
     {
         if (!static::getPreparedAction($controllerKey, $actionKey)) {
             return [];
@@ -249,7 +249,7 @@ abstract class BaseApi
     /**
      * @return mixed
      */
-    private static function getPreparedMethods()
+    protected static function getPreparedMethods()
     {
         if (!isset(static::$preparedMethods[static::class])) {
             static::$preparedMethods[static::class] = [];
@@ -278,7 +278,7 @@ abstract class BaseApi
     /**
      * @return array
      */
-    private static function getNormalizedMethods()
+    protected static function getNormalizedMethods()
     {
         $methods = static::getMethods();
         foreach (Arr::get($methods, 'controllers', []) as $controllerKey => $controller) {
