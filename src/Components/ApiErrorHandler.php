@@ -4,7 +4,11 @@
 namespace Dskripchenko\LaravelApi\Components;
 
 
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 
 class ApiErrorHandler
 {
@@ -35,6 +39,55 @@ class ApiErrorHandler
                 );
             }
         );
+
+        $this->addErrorHandler(
+            ValidationException::class,
+            function (ValidationException $e) {
+                return ApiResponseHelper::sayError(
+                    [
+                        'errorKey' => 'validation',
+                        'messages' => $e->errors()
+                    ]
+                );
+            }
+        );
+
+        $this->addErrorHandler(
+            AuthorizationException::class,
+            function (AuthorizationException $e) {
+                return ApiResponseHelper::sayError(
+                    [
+                        'errorKey' => 'forbidden',
+                        'message'  => $e->getMessage()
+                    ]
+                );
+            }
+        );
+
+        $this->addErrorHandler(
+            AuthenticationException::class,
+            function (AuthenticationException $e) {
+                return ApiResponseHelper::sayError(
+                    [
+                        'errorKey' => 'forbidden',
+                        'message'  => $e->getMessage()
+                    ]
+                );
+            }
+        );
+
+        $this->addErrorHandler(
+            ModelNotFoundException::class,
+            function (ModelNotFoundException $e) {
+                return ApiResponseHelper::sayError(
+                    [
+                        'errorKey' => 'not_found',
+                        'message'  => "Not found"
+                    ]
+                );
+            }
+        );
+
     }
 
     /**
