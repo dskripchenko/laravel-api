@@ -1,12 +1,15 @@
 <?php
+namespace Components\LaravelApiExample;
 
-namespace Dskripchenko\LaravelApiExample;
+use Dskripchenko\LaravelApi\Providers\ApiServiceProvider;
 
-use Dskripchenko\LaravelApi\ApiServiceProvider;
-
+/**
+ * Class ExampleApiServiceProvider
+ * @package Components\LaravelApiExample
+ */
 class ExampleApiServiceProvider extends ApiServiceProvider
 {
-    protected function getApiModule()
+    protected function getApiModule(): ExampleModule
     {
         return new ExampleModule();
     }

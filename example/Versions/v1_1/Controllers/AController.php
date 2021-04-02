@@ -1,12 +1,16 @@
 <?php
 
+namespace Components\LaravelApiExample\Versions\v1_1\Controllers;
 
-namespace Dskripchenko\LaravelApiExample\Versions\v1_1\Controllers;
-
-
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use \Components\LaravelApiExample\Versions\v1\Controllers\AController as BaseAController;
 
-class AController extends \Dskripchenko\LaravelApiExample\Versions\v1\Controllers\AController
+/**
+ * Class AController
+ * @package Components\LaravelApiExample\Versions\v1_1\Controllers
+ */
+class AController extends BaseAController
 {
 
     /**
@@ -21,10 +25,18 @@ class AController extends \Dskripchenko\LaravelApiExample\Versions\v1\Controller
      *
      *
      * @param Request $request
-     * @return array
+     * @return JsonResponse
      */
-    public function b(Request $request)
+    public function b(Request $request): JsonResponse
     {
-        return ['method' => 'A-b', 'request' => [$request->id, $request->name2]];
+        return $this->success(
+            [
+                'method' => 'A-b',
+                'request' => [
+                    $request->id,
+                    $request->name2
+                ]
+            ]
+        );
     }
 }

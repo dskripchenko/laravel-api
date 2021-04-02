@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Dskripchenko\LaravelApi\Facades;
-
 
 use Illuminate\Support\Facades\Facade;
 

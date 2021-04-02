@@ -1,16 +1,15 @@
 <?php
 
-
-namespace Dskripchenko\LaravelApi\Components;
-
+namespace Dskripchenko\LaravelApi\Exceptions;
 
 use Throwable;
+use Exception;
 
 /**
  * Class ApiException
  * @package Dskripchenko\LaravelApi\Components
  */
-class ApiException extends \Exception
+class ApiException extends Exception
 {
     /**
      * @var string $errorKey
@@ -20,7 +19,7 @@ class ApiException extends \Exception
     /**
      * @return string
      */
-    public function getErrorKey()
+    public function getErrorKey(): string
     {
         return $this->errorKey;
     }
@@ -32,7 +31,7 @@ class ApiException extends \Exception
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct($errorKey, $message = "", $code = 0, Throwable $previous = null)
+    public function __construct(string $errorKey, $message = "", $code = 0, Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
         $this->errorKey = $errorKey;

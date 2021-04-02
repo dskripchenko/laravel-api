@@ -1,12 +1,16 @@
 <?php
 
+namespace Components\LaravelApiExample\Versions\v2\Controllers;
 
-namespace Dskripchenko\LaravelApiExample\Versions\v2\Controllers;
-
-
+use Components\LaravelApi\Controllers\ApiController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class DController
+/**
+ * Class DController
+ * @package Components\LaravelApiExample\Versions\v2\Controllers
+ */
+class DController extends ApiController
 {
     /**
      * Method D
@@ -20,10 +24,15 @@ class DController
      *
      *
      * @param Request $request
-     * @return array
+     * @return JsonResponse
      */
-    public function d(Request $request)
+    public function d(Request $request): JsonResponse
     {
-        return ['method' => 'D-d', 'request' => [$request->id, $request->name]];
+        return $this->success(
+            [
+                'method' => 'D-d',
+                'request' => [$request->id, $request->name]
+            ]
+        );
     }
 }

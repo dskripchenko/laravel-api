@@ -1,13 +1,16 @@
 <?php
 
+namespace Components\LaravelApiExample\Versions\v1\Controllers;
 
-namespace Dskripchenko\LaravelApiExample\Versions\v1\Controllers;
-
-
+use Components\LaravelApi\Controllers\ApiController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 
-class AController extends Controller
+/**
+ * Class AController
+ * @package Components\LaravelApiExample\Versions\v1\Controllers
+ */
+class AController extends ApiController
 {
     /**
      * Method A
@@ -21,11 +24,19 @@ class AController extends Controller
      *
      *
      * @param Request $request
-     * @return array
+     * @return JsonResponse
      */
-    public function a(Request $request)
+    public function a(Request $request): JsonResponse
     {
-        return ['method' => 'A-a', 'request' => [$request->input('id'), $request->input('name')]];
+        return $this->success(
+            [
+                'method' => 'A-a',
+                'request' => [
+                    $request->input('id'),
+                    $request->input('name')
+                ]
+            ]
+        );
     }
 
     /**
@@ -40,11 +51,19 @@ class AController extends Controller
      *
      *
      * @param Request $request
-     * @return array
+     * @return JsonResponse
      */
-    public function b(Request $request)
+    public function b(Request $request): JsonResponse
     {
-        return ['method' => 'A-b', 'request' => [$request->input('id'), $request->input('name')]];
+        return $this->success(
+            [
+                'method' => 'A-b',
+                'request' => [
+                    $request->input('id'),
+                    $request->input('name')
+                ]
+            ]
+        );
     }
 
     /**
@@ -59,10 +78,18 @@ class AController extends Controller
      *
      *
      * @param Request $request
-     * @return array
+     * @return JsonResponse
      */
-    public function c(Request $request)
+    public function c(Request $request): JsonResponse
     {
-        return ['method' => 'A-c', 'request' => [$request->input('id'), $request->input('name')]];
+        return $this->success(
+            [
+                'method' => 'A-c',
+                'request' => [
+                    $request->input('id'),
+                    $request->input('name')
+                ]
+            ]
+        );
     }
 }

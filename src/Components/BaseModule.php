@@ -1,14 +1,16 @@
 <?php
 
-
 namespace Dskripchenko\LaravelApi\Components;
-
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Facades\ApiRequest;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * Class BaseModule
+ * @package Dskripchenko\LaravelApi\Components
+ */
 class BaseModule
 {
     /**
@@ -20,12 +22,12 @@ class BaseModule
     /**
      * @return BaseApi|null
      */
-    protected function getApi()
+    protected function getApi(): ?BaseApi
     {
-        if (!$this->api) {
+        if(!$this->api){
             $this->api = Arr::get(ApiModule::getApiVersionList(), ApiRequest::getApiVersion(), false);
         }
-        if (!is_subclass_of($this->api, BaseApi::class)) {
+        if(!is_subclass_of($this->api, BaseApi::class)){
             return null;
         }
 
@@ -42,7 +44,7 @@ class BaseModule
          * @var BaseApi $api
          */
         $api = $this->getApi();
-        if (!$api) {
+        if (!$api){
             throw new NotFoundHttpException('The requested version is not active!');
         }
         return $api::make();
@@ -52,13 +54,13 @@ class BaseModule
      * @return array
      * @throws \Exception
      */
-    public function getApiMiddleware()
+    public function getApiMiddleware(): array
     {
         /**
          * @var BaseApi $api
          */
         $api = $this->getApi();
-        if (!$api) {
+        if(!$api){
             return [];
         }
         return $api::getMiddleware();
@@ -67,7 +69,7 @@ class BaseModule
     /**
      * @return string
      */
-    public function getApiPrefix()
+    public function getApiPrefix(): string
     {
         return 'api';
     }
@@ -75,7 +77,7 @@ class BaseModule
     /**
      * @return array
      */
-    public function getAvailableApiMethods()
+    public function getAvailableApiMethods(): array
     {
         return ['post'];
     }
@@ -83,23 +85,15 @@ class BaseModule
     /**
      * @return string
      */
-    public function getApiUriPattern()
+    public function getApiUriPattern(): string
     {
         return '{version}/{controller}/{action}';
     }
 
     /**
-     * @return string
-     */
-    public function getControllerNamespace()
-    {
-        return 'App\Api\Versions';
-    }
-
-    /**
      * @return array
      */
-    public function getApiVersionList()
+    public function getApiVersionList(): array
     {
         return [
             //api version list

@@ -1,22 +1,24 @@
 <?php
 
-namespace Dskripchenko\LaravelApiExample\Versions\v1;
+namespace Components\LaravelApiExample\Versions\v1;
 
-use Dskripchenko\LaravelApi\Components\BaseApi;
-use Dskripchenko\LaravelApiExample\Versions\v1\Controllers\AController;
+use Components\LaravelApi\Components\BaseApi;
+use Components\LaravelApiExample\Versions\v1\Controllers\AController;
 
+/**
+ * Class Api
+ * @package Components\LaravelApiExample\Versions\v1
+ */
 class Api extends BaseApi
 {
-    protected static function getMethods()
+    public static function getMethods(): array
     {
         return [
             'controllers' => [
                 'a' => [
                     'controller' => AController::class,
                     'actions' => [
-                        'a',
-                        'b',
-                        'c'
+                        'a', 'b', 'c'
                     ]
                 ]
             ]

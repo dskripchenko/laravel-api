@@ -1,14 +1,16 @@
 <?php
 
+namespace Components\LaravelApiExample\Versions\v1_2;
 
-namespace Dskripchenko\LaravelApiExample\Versions\v1_2;
+use Components\LaravelApiExample\Versions\v1_2\Controllers\BController;
 
-
-use Dskripchenko\LaravelApiExample\Versions\v1_2\Controllers\BController;
-
-class Api extends \Dskripchenko\LaravelApiExample\Versions\v1_1\Api
+/**
+ * Class Api
+ * @package Components\LaravelApiExample\Versions\v1_2
+ */
+class Api extends \Components\LaravelApiExample\Versions\v1_1\Api
 {
-    protected static function getMethods()
+    public static function getMethods(): array
     {
         return [
             'controllers' => [

@@ -1,14 +1,17 @@
 <?php
 
+namespace Dskripchenko\LaravelApi\Requests;
 
-namespace Dskripchenko\LaravelApi\Components;
-
-
+use Dskripchenko\LaravelApi\Exceptions\ApiException;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
-use Illuminate\Http\Request;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 
-class BaseApiRequest extends Request
+/**
+ * Class BaseApiRequest
+ * @package Dskripchenko\LaravelApi\Requests
+ */
+class BaseApiRequest extends FormRequest
 {
     /**
      * @var static|null
@@ -43,7 +46,7 @@ class BaseApiRequest extends Request
     /**
      * @return string
      */
-    public function getApiVersion()
+    public function getApiVersion(): ?string
     {
         return $this->apiVersion;
     }
@@ -51,7 +54,7 @@ class BaseApiRequest extends Request
     /**
      * @return string
      */
-    public function getApiMethod()
+    public function getApiMethod(): string
     {
         return $this->apiMethod;
     }
@@ -60,7 +63,7 @@ class BaseApiRequest extends Request
     /**
      * @return string
      */
-    public function getApiControllerKey()
+    public function getApiControllerKey(): ?string
     {
         return $this->apiController;
     }
@@ -68,7 +71,7 @@ class BaseApiRequest extends Request
     /**
      * @return string
      */
-    public function getApiActionKey()
+    public function getApiActionKey(): ?string
     {
         return $this->apiAction;
     }
@@ -77,9 +80,9 @@ class BaseApiRequest extends Request
      * @return BaseApiRequest
      * @throws \Exception
      */
-    public static function getInstance()
+    public static function getInstance(): ?BaseApiRequest
     {
-        if (is_null(static::$_instance)) {
+        if(is_null(static::$_instance)){
             static::$_instance = static::capture();
             static::$_instance->apiPrefix = ApiModule::getApiPrefix();
             static::$_instance->apiUriPattern = ApiModule::getApiUriPattern();
@@ -94,34 +97,34 @@ class BaseApiRequest extends Request
     /**
      * @throws \Exception
      */
-    protected function validateApiUriPattern()
+    protected function validateApiUriPattern(): void
     {
         $patternParts = explode('/', $this->apiUriPattern);
-        if (!in_array('{version}', $patternParts)) {
-            throw new \Exception('Некорректный паттерн api, отсутствует версия {version}');
+        if(!in_array('{version}', $patternParts, true)){
+            throw new ApiException('api_make_error', 'Некорректный паттерн api, отсутствует версия {version}');
         }
-        if (!in_array('{controller}', $patternParts)) {
-            throw new \Exception('Некорректный паттерн api, отсутствует контроллер {controller}');
+        if(!in_array('{controller}', $patternParts, true)){
+            throw new ApiException('api_make_error', 'Некорректный паттерн api, отсутствует контроллер {controller}');
         }
-        if (!in_array('{action}', $patternParts)) {
-            throw new \Exception('Некорректный паттерн api, отсутствует экшен {action}');
+        if(!in_array('{action}', $patternParts, true)){
+            throw new ApiException('api_make_error', 'Некорректный паттерн api, отсутствует экшен {action}');
         }
     }
 
 
-    protected function prepareApi()
+    protected function prepareApi(): void
     {
         $path = $this->getPathInfo();
-        if (strpos($path, $this->apiPrefix) === false) {
+        if(strpos($path, $this->apiPrefix) === false){
             return;
         }
 
-        $method = str_replace("/{$this->apiPrefix}/", '', $path);
-        $methodParts = explode('/', $method);
+        $method = str_replace("/{$this->apiPrefix}/",'',$path);
+        $methodParts = explode('/',$method);
 
         $patternParts = explode('/', $this->apiUriPattern);
 
-        if (count($patternParts) != count($methodParts)) {
+        if(count($patternParts) != count($methodParts)){
             return;
         }
 
@@ -129,9 +132,9 @@ class BaseApiRequest extends Request
         $values = array_slice(array_values($methodParts), 0, count($keys));
         $data = array_combine($keys, $values);
 
-        $this->apiVersion = Arr::get($data, '{version}');
-        $this->apiController = Arr::get($data, '{controller}');
-        $this->apiAction = Arr::get($data, '{action}');
+        $this->apiVersion = Arr::get($data,'{version}');
+        $this->apiController = Arr::get($data,'{controller}');
+        $this->apiAction = Arr::get($data,'{action}');
     }
 
 }
