@@ -2,7 +2,6 @@
     "name": "dskripchenko/laravel-api",
     "description": "The Laravel Api Module.",
     "license": "MIT",
-    "version": "1.5.1",
     "homepage": "https://github.com/dskripchenko/laravel-api",
     "keywords": [
         "laravel",
@@ -18,7 +17,7 @@
     ],
     "require": {
         "ext-json": "*",
-        "dskripchenko/php-array-helper": "@dev",
+        "dskripchenko/php-array-helper": "^1.0.0",
         "laravel/framework": "6.*",
         "phpdocumentor/reflection-docblock": "*"
     },
