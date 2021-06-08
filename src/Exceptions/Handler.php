@@ -18,16 +18,16 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param Request $request
-     * @param  Exception  $exception
+     * @param \Throwable $e
      * @return Response
      *
      * @throws Exception
      */
-    public function render($request, Exception $exception): Response
+    public function render($request, \Throwable  $e)
     {
         if ($request->routeIs('api-endpoint')) {
-            return ApiErrorHandler::handle($exception);
+            return ApiErrorHandler::handle($e);
         }
-        return parent::render($request, $exception);
+        return parent::render($request, $e);
     }
 }

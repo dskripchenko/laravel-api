@@ -137,4 +137,13 @@ class BaseApiRequest extends FormRequest
         $this->apiAction = Arr::get($data,'{action}');
     }
 
+    /**
+     * @return array
+     */
+    public function rules()
+    {
+        return [];
+    }
+
+
 }

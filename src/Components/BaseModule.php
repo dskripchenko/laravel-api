@@ -22,7 +22,7 @@ class BaseModule
     /**
      * @return BaseApi|null
      */
-    protected function getApi(): ?BaseApi
+    protected function getApi()
     {
         if(!$this->api){
             $this->api = Arr::get(ApiModule::getApiVersionList(), ApiRequest::getApiVersion(), false);
