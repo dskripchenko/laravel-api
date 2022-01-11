@@ -32,7 +32,7 @@ class ApiInstall extends BaseCommand
         $this->onEndSetup();
     }
 
-    protected function getEnvConfig() : array
+    protected function getEnvConfig(): array
     {
         return [
             'Параметры подключения к базе данных' => [
@@ -79,17 +79,17 @@ class ApiInstall extends BaseCommand
 
     protected function fillEnvironment(): void
     {
-        $config = $this->getEnvConfig();
+        $config      = $this->getEnvConfig();
         $envFilePath = base_path('.env');
         $env = file_get_contents($envFilePath);
         foreach ($config as $section => $environments) {
             $this->alert($section);
             foreach ($environments as $key => $options) {
                 $question = Arr::get($options, 'name', $key);
-                $rules = Arr::get($options, 'rules', []);
-                $default = Arr::get($options, 'default');
-                $value = $this->askValid($question, $rules, $default);
-                $env = str_replace($key, $value, $env);
+                $rules    = Arr::get($options, 'rules', []);
+                $default  = Arr::get($options, 'default');
+                $value    = $this->askValid($question, $rules, $default);
+                $env      = str_replace($key, $value, $env);
             }
         }
         file_put_contents($envFilePath, $env);

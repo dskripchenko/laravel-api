@@ -4,8 +4,8 @@ namespace Dskripchenko\LaravelApi\Exceptions;
 
 use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use \Symfony\Component\HttpFoundation\Response;
-use \Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Request;
 use Exception;
 
 /**
@@ -23,7 +23,7 @@ class Handler extends ExceptionHandler
      *
      * @throws Exception
      */
-    public function render($request, \Throwable  $e)
+    public function render($request, \Throwable $e)
     {
         if ($request->routeIs('api-endpoint')) {
             return ApiErrorHandler::handle($e);

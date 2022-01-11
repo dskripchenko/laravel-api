@@ -203,7 +203,7 @@ class Meta
     public function select(string $key, string $name, array $items = [], $required = true, array $options = []): Meta
     {
         $options['required'] = $required;
-        $options['items'] = $items;
+        $options['items']    = $items;
         return $this->column('select', $key, $name, $options);
     }
 
@@ -218,7 +218,7 @@ class Meta
     public function file(string $key, string $name, string $src, $required = true, array $options = []): Meta
     {
         $options['required'] = $required;
-        $options['src'] = $src;
+        $options['src']      = $src;
         return $this->column('file', $key, $name, $options);
     }
 }

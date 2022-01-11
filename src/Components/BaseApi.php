@@ -7,8 +7,7 @@ use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Traits\SwaggerApiTrait;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use \Illuminate\Http\JsonResponse;
-
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class BaseApi
@@ -16,7 +15,7 @@ use \Illuminate\Http\JsonResponse;
  */
 abstract class BaseApi
 {
-    use SwaggerApiTrait{
+    use SwaggerApiTrait {
         SwaggerApiTrait::getSwaggerTemplates as public getSwaggerTemplatesTrait;
     }
 
@@ -39,7 +38,8 @@ abstract class BaseApi
      *       'controller' => \App\Api\Versions\v1_0\Controllers\UserController::class,
      *       'actions' => [
      *          'register' => [
-     *              'exclude-all-middleware' => true, //TODO исключить все middleware на уровне экшена
+     *               //TODO исключить все middleware на уровне экшена
+     *              'exclude-all-middleware' => true,
      *          ],
      *          'login' => [],
      *          'logout' => false,
@@ -51,18 +51,24 @@ abstract class BaseApi
      *          ],
      *          'get-sign' => 'getSign',
      *          'checkSign' => [
-     *              'middleware' => [ //TODO middleware на уровне экшена
+     *               //TODO middleware на уровне экшена
+     *              'middleware' => [
      *                  VerifyApiSign::class
      *              ],
-     *              'exclude-middleware' => [], //TODO исключить middleware для контроллера
+     *               //TODO исключить middleware для контроллера
+     *              'exclude-middleware' => [],
      *          ],
      *       ],
-     *       'exclude-all-middleware' => true, //TODO исключить все middleware для контроллера
-     *       'middleware' => [], //TODO сквозные middleware на уровне контроллера
-     *       'exclude-middleware' => [], //TODO исключить middleware для контроллера
+     *        //TODO исключить все middleware для контроллера
+     *       'exclude-all-middleware' => true,
+     *        //TODO сквозные middleware на уровне контроллера
+     *       'middleware' => [],
+     *        //TODO исключить middleware для контроллера
+     *       'exclude-middleware' => [],
      *   ]
      * ],
-     * 'middleware' => [] //TODO сквозные middleware на уровне всего апи
+     *  //TODO сквозные middleware на уровне всего апи
+     * 'middleware' => []
      */
     abstract public static function getMethods(): array;
 
@@ -99,9 +105,19 @@ abstract class BaseApi
     final public static function make(): JsonResponse
     {
         $action = static::getAction();
-        if(!$action){
+        if (!$action) {
             throw new NotFoundHttpException('The requested method was not found!');
         }
+
+        $requestMethod   = ApiRequest::method();
+        $availableMethod = static::getAvailableMethod();
+        if ($requestMethod !== $availableMethod) {
+            $errorMessage = <<<RAW_STR
+The '{$requestMethod}' method is not supported for this route. Supported method: '{$availableMethod}'.
+RAW_STR;
+            throw new NotFoundHttpException($errorMessage);
+        }
+
         return static::callAction($action);
     }
 
@@ -113,12 +129,11 @@ abstract class BaseApi
     {
         try {
             $response = static::getDefaultEmptyResponse();
-            if(static::beforeCallAction($action)){
+            if (static::beforeCallAction($action)) {
                 $response = app()->call($action, ApiRequest::all(), 'index');
             }
             return static::afterCallAction($action, $response);
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             return ApiErrorHandler::handle($e);
         }
     }
@@ -159,10 +174,28 @@ abstract class BaseApi
      */
     private static function getAction(): ?string
     {
-        if (static::$action === null){
-            static::$action = static::getPreparedAction(ApiRequest::getApiControllerKey(), ApiRequest::getApiActionKey());
+        if (static::$action === null) {
+            static::$action = static::getPreparedAction(
+                ApiRequest::getApiControllerKey(),
+                ApiRequest::getApiActionKey()
+            );
         }
         return static::$action;
+    }
+
+    /**
+     * @return string
+     */
+    private static function getAvailableMethod(): string
+    {
+        $methods       = static::getPreparedMethods();
+        $controllerKey = ApiRequest::getApiControllerKey();
+        $actionKey     = ApiRequest::getApiActionKey();
+        return Arr::get(
+            $methods,
+            "controllers.{$controllerKey}.actions.{$actionKey}.method",
+            'post'
+        );
     }
 
 
@@ -173,33 +206,39 @@ abstract class BaseApi
      */
     private static function getPreparedAction($controllerKey, $actionKey)
     {
-        $methods = static::getPreparedMethods();
-        $controller = Arr::get($methods, "controllers.{$controllerKey}.controller", false);
+        $methods    = static::getPreparedMethods();
+        $controller = Arr::get(
+            $methods,
+            "controllers.{$controllerKey}.controller",
+            false
+        );
 
-        if(!$controller){
+        if (!$controller) {
             return false;
         }
 
         $actions =  Arr::get($methods, "controllers.{$controllerKey}.actions", []);
 
-        if(!isset($actions[$actionKey]) && !in_array($actionKey, $actions, true)){
+        if (!isset($actions[$actionKey]) && !in_array($actionKey, $actions, true)) {
             return false;
         }
 
-        if(isset($actions[$actionKey]) && $actions[$actionKey] === false){
+        if (isset($actions[$actionKey]) && $actions[$actionKey] === false) {
             return false;
         }
 
-        if(isset($actions[$actionKey])){
-            if(is_string($actions[$actionKey])){
+        if (isset($actions[$actionKey])) {
+            if (is_string($actions[$actionKey])) {
                 $actionKey = $actions[$actionKey];
-            }
-            elseif (is_array($actions[$actionKey]) && isset($actions[$actionKey]['action'])){
+            } elseif (
+                is_array($actions[$actionKey])
+                && isset($actions[$actionKey]['action'])
+            ) {
                 $actionKey = $actions[$actionKey]['action'];
             }
         }
 
-        if(!method_exists($controller, $actionKey)){
+        if (!method_exists($controller, $actionKey)) {
             return false;
         }
 
@@ -211,7 +250,10 @@ abstract class BaseApi
      */
     public static function getMiddleware(): array
     {
-        return static::getMiddlewareByControllerAndActionKey(ApiRequest::getApiControllerKey(), ApiRequest::getApiActionKey());
+        return static::getMiddlewareByControllerAndActionKey(
+            ApiRequest::getApiControllerKey(),
+            ApiRequest::getApiActionKey()
+        );
     }
 
     /**
@@ -219,31 +261,33 @@ abstract class BaseApi
      * @param $actionKey
      * @return array
      */
-    private static function getMiddlewareByControllerAndActionKey($controllerKey, $actionKey): array
-    {
-        if (!static::getPreparedAction($controllerKey, $actionKey)){
+    private static function getMiddlewareByControllerAndActionKey(
+        $controllerKey,
+        $actionKey
+    ): array {
+        if (!static::getPreparedAction($controllerKey, $actionKey)) {
             return [];
         }
 
         $methods = static::getPreparedMethods();
 
-        if(Arr::get($methods, "controllers.{$controllerKey}.exclude-all-middleware", false)){
+        if (Arr::get($methods, "controllers.{$controllerKey}.exclude-all-middleware", false)) {
             return [];
         }
 
-        if(Arr::get($methods, "controllers.{$controllerKey}.actions.{$actionKey}.exclude-all-middleware", false)){
+        if (Arr::get($methods, "controllers.{$controllerKey}.actions.{$actionKey}.exclude-all-middleware", false)) {
             return [];
         }
 
-        $globalMiddleware = Arr::get($methods, "middleware", []);
+        $globalMiddleware     = Arr::get($methods, "middleware", []);
         $controllerMiddleware = Arr::get($methods, "controllers.{$controllerKey}.middleware", []);
-        $actionMiddleware = Arr::get($methods, "controllers.{$controllerKey}.actions.{$actionKey}.middleware", []);
+        $actionMiddleware     = Arr::get($methods, "controllers.{$controllerKey}.actions.{$actionKey}.middleware", []);
         $middleware = array_merge($globalMiddleware, $controllerMiddleware, $actionMiddleware);
 
         $excludeControllerMiddleware = Arr::get($methods, "controllers.{$controllerKey}.exclude-middleware", []);
-        $excludeActionMiddleware = Arr::get($methods, "controllers.{$controllerKey}.actions.{$actionKey}.exclude-middleware", []);
+        $excludeActionMiddleware     = Arr::get($methods, "controllers.{$controllerKey}.actions.{$actionKey}.exclude-middleware", []);
         $excludeMiddleware = array_merge($excludeControllerMiddleware, $excludeActionMiddleware);
-        $middleware = array_diff($middleware, $excludeMiddleware);
+        $middleware        = array_diff($middleware, $excludeMiddleware);
 
         return array_unique($middleware);
     }
@@ -253,15 +297,15 @@ abstract class BaseApi
      */
     private static function getPreparedMethods(): array
     {
-        if (!isset(static::$preparedMethods[static::class])){
+        if (!isset(static::$preparedMethods[static::class])) {
             static::$preparedMethods[static::class] = [];
 
             $parents = array_values(class_parents(static::class));
             $nonStaticParents = array_diff($parents, [self::class]);
             $nonStaticParents = array_reverse($nonStaticParents);
 
-            foreach ($nonStaticParents as $className){
-                if (method_exists($className, 'getNormalizedMethods')){
+            foreach ($nonStaticParents as $className) {
+                if (method_exists($className, 'getNormalizedMethods')) {
                     static::$preparedMethods = array_merge_deep(static::$preparedMethods, $className::getNormalizedMethods());
                 }
             }

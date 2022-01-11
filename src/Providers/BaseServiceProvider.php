@@ -23,8 +23,7 @@ class BaseServiceProvider extends ServiceProvider
         if (!$this->app->configurationIsCached()) {
             if ($prefer) {
                 $result = array_merge_deep($this->app['config']->get($key, []), require $path);
-            }
-            else {
+            } else {
                 $result = array_merge_deep(require $path, $this->app['config']->get($key, []));
             }
 

@@ -44,8 +44,8 @@ class ApiErrorHandler
     public function handle(Exception $e)
     {
         $className = get_class($e);
-        $handle = Arr::get($this->handlers, $className, false);
-        if(!$handle){
+        $handle    = Arr::get($this->handlers, $className, false);
+        if (!$handle) {
             $handle = static function (Exception $e) {
                 return ApiResponseHelper::sayError([
                     'errorKey' => $e->getCode(),

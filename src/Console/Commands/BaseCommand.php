@@ -20,7 +20,7 @@ class BaseCommand extends Command
     protected function askValid(string $question, array $rules = [], $default = null)
     {
         do {
-            $value = $this->ask($question, $default);
+            $value        = $this->ask($question, $default);
             $errorMessage = $this->validateInput($rules, $value);
             if ($errorMessage) {
                 $this->error($errorMessage);

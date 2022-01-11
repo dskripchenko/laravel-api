@@ -23,14 +23,12 @@ abstract class ApiMiddleware
     {
         try {
             return $this->run($request, $next);
-        }
-        catch (ApiException $e){
+        } catch (ApiException $e) {
             return ApiResponseHelper::sayError([
                 'errorKey' => $e->getErrorKey(),
                 'message' => $e->getMessage(),
             ]);
-        }
-        catch (Exception $e){
+        } catch (Exception $e) {
             return ApiResponseHelper::sayError([
                 'errorKey' => $e->getCode(),
                 'message' => $e->getMessage(),

@@ -23,9 +23,10 @@ trait SwaggerApiTrait
      * @return array
      * @throws \ReflectionException
      */
-    public static function getSwaggerApiConfig(string $version){
+    public static function getSwaggerApiConfig(string $version)
+    {
         $reflectionClass = new \ReflectionClass(static::class);
-        $docBlock = static::getDocBlockByComment($reflectionClass->getDocComment());
+        $docBlock        = static::getDocBlockByComment($reflectionClass->getDocComment());
 
         $config = [
             'swagger' => '2.0',
@@ -42,7 +43,7 @@ trait SwaggerApiTrait
             'paths' => static::getSwaggerApiPaths($version),
         ];
 
-        if(static::$useResponseTemplates){
+        if (static::$useResponseTemplates) {
             $config['definitions'] = static::getSchemas();
         }
 
@@ -55,64 +56,62 @@ trait SwaggerApiTrait
      * @return array
      * @throws \ReflectionException
      */
-    private static function getSwaggerApiPaths(string $version){
-        $result = [];
-        $methods = static::getPreparedMethods();
+    private static function getSwaggerApiPaths(string $version)
+    {
+        $result       = [];
+        $methods      = static::getPreparedMethods();
         $patternParts = explode('/', ApiModule::getApiUriPattern());
-        $availableMethods = ApiModule::getAvailableApiMethods();
-        foreach (Arr::get($methods, 'controllers', []) as $controller => $options){
+        foreach (Arr::get($methods, 'controllers', []) as $controller => $options) {
             $class = Arr::get($options, 'controller');
             $reflectionClass = new \ReflectionClass($class);
 
             $actions = Arr::get($options, 'actions', []);
-            foreach ($actions as $key => $value){
-                if($value === false){
+            foreach ($actions as $key => $value) {
+                if ($value === false) {
                     continue;
                 }
 
                 $action = $key;
-                if(is_numeric($action)){
+                if (is_numeric($action)) {
                     $action = $value;
                 }
-                if(!is_string($action)){
+                if (!is_string($action)) {
                     continue;
                 }
 
                 $methodKey = $action;
-                if(is_string($value)){
+                if (is_string($value)) {
                     $methodKey = $value;
                 }
-                if(is_array($value) && isset($value['action'])){
+                if (is_array($value) && isset($value['action'])) {
                     $methodKey = $value['action'];
                 }
 
 
-                $middlewareList = static::getMiddlewareByControllerAndActionKey($controller,$action);
+                $middlewareList   = static::getMiddlewareByControllerAndActionKey($controller, $action);
                 $reflectionMethod = $reflectionClass->getMethod($methodKey);
                 $docBlock = static::getDocBlockByComment($reflectionMethod->getDocComment());
 
 
-                $inputTagList = static::getInputTags($docBlock, $middlewareList);
+                $inputTagList  = static::getInputTags($docBlock, $middlewareList);
                 $outputTagList = static::getOutputTagList($docBlock);
 
                 $declaringClass = $reflectionMethod->getDeclaringClass()->name;
 
-                $summary = $docBlock->getSummary();
+                $summary     = $docBlock->getSummary();
                 $description = $declaringClass . PHP_EOL . $docBlock->getDescription()->render();
-                $tags = [$controller];
-                $parameters = static::getParametersByTags($inputTagList, $class);
-                $response = static::getResponseByTags($outputTagList);
+                $tags        = [$controller];
+                $httpMethod  = Arr::get($actions, "{$key}.method", 'post');
+                $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod);
+                $response    = static::getResponseByTags($outputTagList);
 
                 $methodData = static::getMethodData($summary, $description, $tags, $parameters, $response);
 
-                $path = static::getApiPath($patternParts, $version, $controller, $action);
-                $result[$path] = [];
-                foreach ($availableMethods as $method){
-                    $result[$path][$method] = $methodData;
-                }
+                $path   = static::getApiPath($patternParts, $version, $controller, $action);
+                $method = Arr::get($methods, "controllers.{$controller}.actions.{$action}.method", 'post');
+                $result[$path][$method] = $methodData;
             }
         }
-
         return $result;
     }
 
@@ -120,8 +119,9 @@ trait SwaggerApiTrait
      * @param $comment
      * @return \phpDocumentor\Reflection\DocBlock
      */
-    private static function getDocBlockByComment($comment){
-        if(!$comment){
+    private static function getDocBlockByComment($comment)
+    {
+        if (!$comment) {
             $comment = ' ';
         }
         $factory = DocBlockFactory::createInstance();
@@ -130,29 +130,36 @@ trait SwaggerApiTrait
     }
 
     /**
-     * @param array $tags
+     * @param  array  $tags
+     * @param $class
+     * @param  string  $httpMethod
      * @return array
      */
-    private static function getParametersByTags(array $tags, $class){
+    private static function getParametersByTags(array $tags, $class, $httpMethod = 'post')
+    {
         $parameters = [];
-        $pattern = static::getDocInputOutputPattern();
+        $pattern    = static::getDocInputOutputPattern();
         $callableInputsPattern = static::getDocInputsCallablePattern();
+        $httpMethod = strtolower($httpMethod);
+
+        $parameterType = $httpMethod === 'get' ? 'query' : 'formData';
+
         /**
          * @var Tag $tag
          */
-        foreach ($tags as $tag){
-            $description = $tag->getDescription()->render();
+        foreach ($tags as $tag) {
+            $description  = $tag->getDescription()->render();
             $descriptions = [$description];
 
             if (preg_match($callableInputsPattern, $description, $matches)) {
-                $callable = "{$class}@{$matches['callable']}";
+                $callable     = "{$class}@{$matches['callable']}";
                 $descriptions = app()->call($callable);
             }
 
             foreach ($descriptions as $description) {
-                if(preg_match($pattern, $description, $matches)){
+                if (preg_match($pattern, $description, $matches)) {
                     $parameters[] = [
-                        'in' => 'formData',
+                        'in' => $parameterType,
                         'name' => Arr::get($matches, 'variable', ''),
                         'description' => Arr::get($matches, 'description', ''),
                         'required' => Arr::get($matches, 'optional', '') !== '?',
@@ -169,18 +176,19 @@ trait SwaggerApiTrait
      * @param array $tags
      * @return array
      */
-    private static function getResponseByTags(array $tags){
+    private static function getResponseByTags(array $tags)
+    {
         $properties = [];
-        $pattern = static::getDocInputOutputPattern();
+        $pattern    = static::getDocInputOutputPattern();
         $templatePattern = static::getDocInputOutputTemplatePattern();
         /**
          * @var Tag $tag
          */
-        foreach ($tags as $tag){
+        foreach ($tags as $tag) {
             $desctiption = $tag->getDescription()->render();
 
-            if(static::$useResponseTemplates && preg_match($templatePattern, $desctiption, $matches)){
-                if(static::isHasTemplate($matches['template'])){
+            if (static::$useResponseTemplates && preg_match($templatePattern, $desctiption, $matches)) {
+                if (static::isHasTemplate($matches['template'])) {
                     return [
                         'description' => 'Response payload',
                         'schema' => [
@@ -190,7 +198,7 @@ trait SwaggerApiTrait
                 }
             }
 
-            if(preg_match($pattern, $desctiption, $matches)){
+            if (preg_match($pattern, $desctiption, $matches)) {
                 $properties[$matches['variable']] = [
                     'type' => static::getSafeDataType(Arr::get($matches, 'type', 'string')),
                     'name' => Arr::get($matches, 'variable', ''),
@@ -211,28 +219,32 @@ trait SwaggerApiTrait
     /**
      * @return string
      */
-    private static function getDocInputOutputPattern(){
+    private static function getDocInputOutputPattern()
+    {
         return '/^(?<type>[\S]*?)[\s]*+(?<optional>\?)?\$(?<variable>[\S]*+)([\s]*?(?<description>\S[\S\s]*?))?$/';
     }
 
     /**
      * @return string
      */
-    private static function getDocInputOutputTemplatePattern(){
+    private static function getDocInputOutputTemplatePattern()
+    {
         return '/{(?<template>[\S]*?)}(?<description>[\s\S]*?)$/';
     }
 
     /**
      * @return string
      */
-    private static function getDocInputsCallablePattern(){
+    private static function getDocInputsCallablePattern()
+    {
         return '/^\[(?<callable>[\S]*?)\]$/';
     }
 
     /**
      * @return string[]
      */
-    private static function getAvailableDataTypes(){
+    private static function getAvailableDataTypes()
+    {
         return ['string', 'file', 'number', 'integer', 'boolean', 'array', 'object'];
     }
 
@@ -240,7 +252,8 @@ trait SwaggerApiTrait
      * @param $type
      * @return mixed|string
      */
-    private static function getSafeDataType(string $type){
+    private static function getSafeDataType(string $type)
+    {
         if (!in_array($type, static::getAvailableDataTypes())) {
             $type = 'string';
         }
@@ -254,13 +267,14 @@ trait SwaggerApiTrait
      * @param $action
      * @return string
      */
-    private static function getApiPath($patternParts, $version, $controller, $action){
+    private static function getApiPath($patternParts, $version, $controller, $action)
+    {
         $replaceParts = [
             '{version}' => $version,
             '{controller}' => $controller,
             '{action}' => $action,
         ];
-        return '/' . implode('/', str_replace(array_keys($replaceParts),array_values($replaceParts),$patternParts));
+        return '/' . implode('/', str_replace(array_keys($replaceParts), array_values($replaceParts), $patternParts));
     }
 
     /**
@@ -269,43 +283,44 @@ trait SwaggerApiTrait
      * @return Tag[]
      * @throws \ReflectionException
      */
-    private static function getInputTags(DocBlock $methodDocBlock, array $middlewareList = []){
-        $inputTagList = [];
+    private static function getInputTags(DocBlock $methodDocBlock, array $middlewareList = [])
+    {
+        $inputTagList  = [];
         $methodTagList = $methodDocBlock->getTagsByName('input');
 
         $addInputToTagList = function ($middleware, &$inputTagList) {
             $middlewareReflection = new \ReflectionClass($middleware);
             $method = 'run';
-            if(!$middlewareReflection->hasMethod($method)){
+            if (!$middlewareReflection->hasMethod($method)) {
                 $method = 'handle';
-                if(!$middlewareReflection->hasMethod($method)){
+                if (!$middlewareReflection->hasMethod($method)) {
                     return;
                 }
             }
 
             $middlewareReflectionMethod = $middlewareReflection->getMethod($method);
-            $middlewareDocBloick = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
+            $middlewareDocBloick        = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
             $middlewareTagList = $middlewareDocBloick->getTagsByName('input');
-            $inputTagList = array_merge_deep($inputTagList,$middlewareTagList);
+            $inputTagList      = array_merge_deep($inputTagList, $middlewareTagList);
         };
-        foreach ($middlewareList as $middleware){
-            if(class_exists($middleware)){
+        foreach ($middlewareList as $middleware) {
+            if (class_exists($middleware)) {
                 $addInputToTagList($middleware, $inputTagList);
-            }
-            else{
-                foreach (Arr::get(Route::getMiddlewareGroups(), $middleware, []) as $groupedMiddleware){
+            } else {
+                foreach (Arr::get(Route::getMiddlewareGroups(), $middleware, []) as $groupedMiddleware) {
                     $addInputToTagList($groupedMiddleware, $inputTagList);
                 }
             }
         }
-        return array_merge_deep($inputTagList,$methodTagList);
+        return array_merge_deep($inputTagList, $methodTagList);
     }
 
     /**
      * @param DocBlock $methodDocBlock
      * @return Tag[]
      */
-    private static function getOutputTagList(DocBlock $methodDocBlock){
+    private static function getOutputTagList(DocBlock $methodDocBlock)
+    {
         return $methodDocBlock->getTagsByName('output');
     }
 
@@ -317,12 +332,13 @@ trait SwaggerApiTrait
      * @param array $responses
      * @return array
      */
-    private static function getMethodData($summary, $description, $tags = [], $parameters = [], $responses = []){
+    private static function getMethodData($summary, $description, $tags = [], $parameters = [], $responses = [])
+    {
         $responses = [
             'payload' => $responses,
         ];
 
-        if(static::$useResponseTemplates){
+        if (static::$useResponseTemplates) {
             $responses = array_merge_deep($responses, [
                 'success' => [
                     'description' => 'Success response',
@@ -355,13 +371,14 @@ trait SwaggerApiTrait
     /**
      * @return array
      */
-    private static function getSchemas(){
+    private static function getSchemas()
+    {
         $result = [];
-        foreach (static::getRawTemplates() as $schemaName => &$properties){
+        foreach (static::getRawTemplates() as $schemaName => &$properties) {
             $requiredProperties = [];
-            foreach ($properties as $property => &$attributes){
-                if(isset($attributes['required'])){
-                    if($attributes['required']){
+            foreach ($properties as $property => &$attributes) {
+                if (isset($attributes['required'])) {
+                    if ($attributes['required']) {
                         $requiredProperties[] = $property;
                     }
                     unset($attributes['required']);
@@ -380,7 +397,8 @@ trait SwaggerApiTrait
     /**
      * @return array
      */
-    private static function getRawTemplates(){
+    private static function getRawTemplates()
+    {
         $defaultTemplates = [
             'Error' => [
                 'success' => [
@@ -406,8 +424,8 @@ trait SwaggerApiTrait
 
         $templates = static::getSwaggerTemplates();
 
-        array_walk_recursive($templates, function (&$item, $key){
-            if(strpos($item, '@') !== false) {
+        array_walk_recursive($templates, function (&$item, $key) {
+            if (strpos($item, '@') !== false) {
                 $item = ['$ref' => str_replace('@', '#/definitions/', $item)];
             }
         });
@@ -419,16 +437,16 @@ trait SwaggerApiTrait
      * @param $name
      * @return bool
      */
-    private static function isHasTemplate($name){
+    private static function isHasTemplate($name)
+    {
         return Arr::has(static::getRawTemplates(), $name);
     }
 
     /**
      * @return array
      */
-    protected static function getSwaggerTemplates(){
+    protected static function getSwaggerTemplates()
+    {
         return []; //override in final class
     }
-
-
 }

@@ -47,9 +47,9 @@ abstract class CrudService implements CrudServiceInterface
     {
         $query = $this->query();
         foreach (Arr::get($data, 'filter', []) as $filter) {
-            $column = Arr::get($filter, 'column');
+            $column   = Arr::get($filter, 'column');
             $operator = Arr::get($filter, 'operator', '=');
-            $value = Arr::get($filter, 'value');
+            $value    = Arr::get($filter, 'value');
 
             if ($operator === 'in') {
                 if (!is_array($value)) {
@@ -72,13 +72,13 @@ abstract class CrudService implements CrudServiceInterface
 
         foreach (Arr::get($data, 'order', []) as $order) {
             $column = Arr::get($order, 'column');
-            $value = Arr::get($order, 'value');
+            $value  = Arr::get($order, 'value');
 
             $query->orderBy($column, $value ? 'asc' : 'desc');
         }
 
-        $page = Arr::get($data, 'page', 1);
-        $perPage = Arr::get($data, 'perPage', 10);
+        $page      = Arr::get($data, 'page', 1);
+        $perPage   = Arr::get($data, 'perPage', 10);
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         return $this

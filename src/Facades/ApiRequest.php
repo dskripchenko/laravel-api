@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string getApiControllerKey()
  * @method static string getApiActionKey()
  * @method static array all()
+ * @method static string method()
  *
  * @see \Dskripchenko\LaravelApi\Components\BaseApiRequest
  */

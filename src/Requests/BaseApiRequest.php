@@ -82,9 +82,9 @@ class BaseApiRequest extends FormRequest
      */
     public static function getInstance(): ?BaseApiRequest
     {
-        if(is_null(static::$_instance)){
+        if (is_null(static::$_instance)) {
             static::$_instance = static::capture();
-            static::$_instance->apiPrefix = ApiModule::getApiPrefix();
+            static::$_instance->apiPrefix     = ApiModule::getApiPrefix();
             static::$_instance->apiUriPattern = ApiModule::getApiUriPattern();
             static::$_instance->validateApiUriPattern();
             static::$_instance->prepareApi();
@@ -100,13 +100,13 @@ class BaseApiRequest extends FormRequest
     protected function validateApiUriPattern(): void
     {
         $patternParts = explode('/', $this->apiUriPattern);
-        if(!in_array('{version}', $patternParts, true)){
+        if (!in_array('{version}', $patternParts, true)) {
             throw new ApiException('api_make_error', 'Некорректный паттерн api, отсутствует версия {version}');
         }
-        if(!in_array('{controller}', $patternParts, true)){
+        if (!in_array('{controller}', $patternParts, true)) {
             throw new ApiException('api_make_error', 'Некорректный паттерн api, отсутствует контроллер {controller}');
         }
-        if(!in_array('{action}', $patternParts, true)){
+        if (!in_array('{action}', $patternParts, true)) {
             throw new ApiException('api_make_error', 'Некорректный паттерн api, отсутствует экшен {action}');
         }
     }
@@ -115,26 +115,26 @@ class BaseApiRequest extends FormRequest
     protected function prepareApi(): void
     {
         $path = $this->getPathInfo();
-        if(strpos($path, $this->apiPrefix) === false){
+        if (strpos($path, $this->apiPrefix) === false) {
             return;
         }
 
-        $method = str_replace("/{$this->apiPrefix}/",'',$path);
-        $methodParts = explode('/',$method);
+        $method      = str_replace("/{$this->apiPrefix}/", '', $path);
+        $methodParts = explode('/', $method);
 
         $patternParts = explode('/', $this->apiUriPattern);
 
-        if(count($patternParts) != count($methodParts)){
+        if (count($patternParts) != count($methodParts)) {
             return;
         }
 
-        $keys = array_values($patternParts);
+        $keys   = array_values($patternParts);
         $values = array_slice(array_values($methodParts), 0, count($keys));
-        $data = array_combine($keys, $values);
+        $data   = array_combine($keys, $values);
 
-        $this->apiVersion = Arr::get($data,'{version}');
-        $this->apiController = Arr::get($data,'{controller}');
-        $this->apiAction = Arr::get($data,'{action}');
+        $this->apiVersion    = Arr::get($data, '{version}');
+        $this->apiController = Arr::get($data, '{controller}');
+        $this->apiAction     = Arr::get($data, '{action}');
     }
 
     /**
@@ -145,5 +145,11 @@ class BaseApiRequest extends FormRequest
         return [];
     }
 
-
+    /**
+     * @return string
+     */
+    public function method(): string
+    {
+        return strtolower(parent::method());
+    }
 }

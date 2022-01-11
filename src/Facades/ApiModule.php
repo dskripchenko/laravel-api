@@ -4,7 +4,6 @@ namespace Dskripchenko\LaravelApi\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-
 /**
  * @method static string getApiPrefix()
  * @method static array getAvailableApiMethods()

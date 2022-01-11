@@ -9,6 +9,7 @@ use Dskripchenko\LaravelApi\Exceptions\Handler;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Components\BaseModule;
 use Dskripchenko\LaravelApi\Requests\BaseApiRequest;
+use Exception;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -62,22 +63,25 @@ class ApiServiceProvider extends ServiceProvider
     /**
      * @return BaseModule
      */
-    protected function getApiModule(){
+    protected function getApiModule()
+    {
         return new BaseModule();
     }
 
     /**
      * @return ApiErrorHandler
      */
-    protected function getApiErrorHandler(){
+    protected function getApiErrorHandler()
+    {
         return new ApiErrorHandler();
     }
 
     /**
      * @return BaseApiRequest
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function getApiRequest(){
+    protected function getApiRequest()
+    {
         return BaseApiRequest::getInstance();
     }
 
@@ -85,12 +89,12 @@ class ApiServiceProvider extends ServiceProvider
     {
         Route::group([
             'prefix' => ApiModule::getApiPrefix(),
-        ], function (){
-            Route::get('doc',function (){
+        ], function () {
+            Route::get('doc', function () {
                 return app()->call(ApiDocumentationController::class . '@index');
-            });
+            })->name('api-doc');
 
-            Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function (){
+            Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function () {
                 return ApiModule::makeApi();
             })->middleware(ApiModule::getApiMiddleware())->name('api-endpoint');
         });
