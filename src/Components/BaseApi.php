@@ -4,6 +4,7 @@ namespace Dskripchenko\LaravelApi\Components;
 
 use Dskripchenko\LaravelApi\Facades\ApiRequest;
 use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
+use Dskripchenko\LaravelApi\Interfaces\ApiInterface;
 use Dskripchenko\LaravelApi\Traits\SwaggerApiTrait;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -13,7 +14,7 @@ use Illuminate\Http\JsonResponse;
  * Class BaseApi
  * @package Dskripchenko\LaravelApi\Components
  */
-abstract class BaseApi
+abstract class BaseApi implements ApiInterface
 {
     use SwaggerApiTrait {
         SwaggerApiTrait::getSwaggerTemplates as public getSwaggerTemplatesTrait;
@@ -31,44 +32,6 @@ abstract class BaseApi
 
     /**
      * @return array
-     *
-     *
-     * 'controllers' => [
-     *   'user' => [
-     *       'controller' => \App\Api\Versions\v1_0\Controllers\UserController::class,
-     *       'actions' => [
-     *          'register' => [
-     *               //TODO исключить все middleware на уровне экшена
-     *              'exclude-all-middleware' => true,
-     *          ],
-     *          'login' => [],
-     *          'logout' => false,
-     *          'limited-access' => [
-     *              'action' => 'limitedAccess',
-     *              'middleware' => [
-     *                  VerifyApiToken::class
-     *              ]
-     *          ],
-     *          'get-sign' => 'getSign',
-     *          'checkSign' => [
-     *               //TODO middleware на уровне экшена
-     *              'middleware' => [
-     *                  VerifyApiSign::class
-     *              ],
-     *               //TODO исключить middleware для контроллера
-     *              'exclude-middleware' => [],
-     *          ],
-     *       ],
-     *        //TODO исключить все middleware для контроллера
-     *       'exclude-all-middleware' => true,
-     *        //TODO сквозные middleware на уровне контроллера
-     *       'middleware' => [],
-     *        //TODO исключить middleware для контроллера
-     *       'exclude-middleware' => [],
-     *   ]
-     * ],
-     *  //TODO сквозные middleware на уровне всего апи
-     * 'middleware' => []
      */
     abstract public static function getMethods(): array;
 

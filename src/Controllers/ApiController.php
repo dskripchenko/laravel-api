@@ -44,7 +44,7 @@ class ApiController extends Controller
 
     /**
      * @param $messages
-     * @return JsonResource
+     * @return JsonResponse
      */
     public function validationError($messages): JsonResponse
     {

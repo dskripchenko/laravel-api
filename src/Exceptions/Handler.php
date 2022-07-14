@@ -7,6 +7,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\Request;
 use Exception;
+use Throwable;
 
 /**
  * Class Handler
@@ -18,12 +19,12 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param Request $request
-     * @param \Throwable $e
+     * @param Throwable $e
      * @return Response
      *
      * @throws Exception
      */
-    public function render($request, \Throwable $e)
+    public function render($request, Throwable $e)
     {
         if ($request->routeIs('api-endpoint')) {
             return ApiErrorHandler::handle($e);

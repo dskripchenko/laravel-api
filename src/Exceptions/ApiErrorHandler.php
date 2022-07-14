@@ -48,7 +48,6 @@ class ApiErrorHandler
         if (!$handle) {
             $handle = static function (Exception $e) {
                 return ApiResponseHelper::sayError([
-                    'errorKey' => $e->getCode(),
                     'message' => $e->getMessage(),
                 ]);
             };
