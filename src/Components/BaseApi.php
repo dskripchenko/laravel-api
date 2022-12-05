@@ -33,7 +33,10 @@ abstract class BaseApi implements ApiInterface
     /**
      * @return array
      */
-    abstract public static function getMethods(): array;
+    public static function getMethods(): array
+    {
+        return [];
+    }
 
     /**
      * [
