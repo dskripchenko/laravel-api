@@ -14,27 +14,28 @@ use Illuminate\Routing\Controller;
 class ApiController extends Controller
 {
     /**
-     * @param  mixed  $payload
+     * @param $payload
+     * @param $status
      * @return JsonResponse
      */
-    public function success($payload = []): JsonResponse
+    public function success($payload = [], $status = 200): JsonResponse
     {
         if ($this->isPayloadJsonResource($payload)) {
             $payload = $payload->toArray(request());
         }
-        return ApiResponseHelper::say($payload);
+        return ApiResponseHelper::say($payload, $status);
     }
 
     /**
      * @param  mixed  $payload
      * @return JsonResponse
      */
-    public function error($payload = []): JsonResponse
+    public function error($payload = [], $status = 200): JsonResponse
     {
         if ($this->isPayloadJsonResource($payload)) {
             $payload = $payload->toArray(request());
         }
-        return ApiResponseHelper::sayError($payload);
+        return ApiResponseHelper::sayError($payload, $status);
     }
 
     protected function isPayloadJsonResource($payload): bool

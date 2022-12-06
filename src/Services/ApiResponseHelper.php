@@ -12,10 +12,11 @@ use Illuminate\Support\Arr;
 class ApiResponseHelper
 {
     /**
-     * @param array $data
+     * @param $data
+     * @param $status
      * @return JsonResponse
      */
-    public static function say($data = []): JsonResponse
+    public static function say($data = [], $status = 200): JsonResponse
     {
         $data = array_merge_deep(
             [
@@ -25,15 +26,16 @@ class ApiResponseHelper
                 'payload' => $data
             ]
         );
-        return new JsonResponse($data);
+        return new JsonResponse($data, $status);
     }
 
     /**
-     * @param array $data
+     * @param $data
+     * @param $status
      * @return JsonResponse
      */
-    public static function sayError($data = []): JsonResponse
+    public static function sayError($data = [], $status = 200): JsonResponse
     {
-        return static::say(array_merge_deep($data, ['success' => false]));
+        return static::say(array_merge_deep($data, ['success' => false]), $status);
     }
 }
