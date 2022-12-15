@@ -8,7 +8,7 @@ use Dskripchenko\LaravelApi\Interfaces\ApiInterface;
 use Dskripchenko\LaravelApi\Traits\SwaggerApiTrait;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class BaseApi
@@ -68,7 +68,7 @@ abstract class BaseApi implements ApiInterface
     /**
      * @return mixed
      */
-    final public static function make(): JsonResponse
+    final public static function make(): Response
     {
         $action = static::getAction();
         if (!$action) {
@@ -89,9 +89,9 @@ RAW_STR;
 
     /**
      * @param $action
-     * @return JsonResponse|mixed
+     * @return Response
      */
-    final public static function callAction($action): JsonResponse
+    final public static function callAction($action): Response
     {
         try {
             $response = static::getDefaultEmptyResponse();
@@ -116,10 +116,10 @@ RAW_STR;
 
     /**
      * @param $action
-     * @param $response JsonResponse|mixed
-     * @return JsonResponse|mixed
+     * @param $response Response
+     * @return Response
      */
-    public static function afterCallAction($action, JsonResponse $response): JsonResponse
+    public static function afterCallAction($action, Response $response): Response
     {
         //for override
         return $response;

@@ -2,9 +2,10 @@
 
 namespace Dskripchenko\LaravelApi\Middlewares;
 
+use Closure;
 use Dskripchenko\LaravelApi\Exceptions\ApiException;
 use Dskripchenko\LaravelApi\Services\ApiResponseHelper;
-use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\Request;
 use Exception;
 
@@ -16,10 +17,10 @@ abstract class ApiMiddleware
 {
     /**
      * @param Request $request
-     * @param \Closure $next
-     * @return JsonResponse|mixed
+     * @param Closure $next
+     * @return Response
      */
-    public function handle(Request $request, \Closure $next): JsonResponse
+    public function handle(Request $request, Closure $next): Response
     {
         try {
             return $this->run($request, $next);
@@ -38,8 +39,8 @@ abstract class ApiMiddleware
 
     /**
      * @param Request $request
-     * @param \Closure $next
+     * @param Closure $next
      * @return mixed
      */
-    abstract public function run(Request $request, \Closure $next);
+    abstract public function run(Request $request, Closure $next);
 }
