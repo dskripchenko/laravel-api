@@ -87,16 +87,20 @@ class ApiServiceProvider extends ServiceProvider
 
     public function makeApiRoutes()
     {
+        $middlewareGroupName = "api-middleware-group";
+
         Route::group([
             'prefix' => ApiModule::getApiPrefix(),
-        ], function () {
-            Route::get('doc', function () {
+        ], static function () use ($middlewareGroupName) {
+            Route::get('doc', static function () {
                 return app()->call(ApiDocumentationController::class . '@index');
             })->name('api-doc');
 
             Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function () {
                 return ApiModule::makeApi();
-            })->middleware(ApiModule::getApiMiddleware())->name('api-endpoint');
-        });
+            })->name('api-endpoint')
+                ->middleware($middlewareGroupName);
+
+        })->middlewareGroup($middlewareGroupName, ApiModule::getApiMiddleware());
     }
 }
