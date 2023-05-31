@@ -11,6 +11,7 @@ use Dskripchenko\LaravelApi\Components\BaseModule;
 use Dskripchenko\LaravelApi\Requests\BaseApiRequest;
 use Exception;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -88,6 +89,9 @@ class ApiServiceProvider extends ServiceProvider
     public function makeApiRoutes()
     {
         $middlewareGroupName = "api-middleware-group";
+        /** @var Router $router */
+        $router = app(Router::class);
+        $router->middlewareGroup($middlewareGroupName, ApiModule::getApiMiddleware());
 
         Route::group([
             'prefix' => ApiModule::getApiPrefix(),
@@ -101,6 +105,6 @@ class ApiServiceProvider extends ServiceProvider
             })->name('api-endpoint')
                 ->middleware($middlewareGroupName);
 
-        })->middlewareGroup($middlewareGroupName, ApiModule::getApiMiddleware());
+        });
     }
 }
