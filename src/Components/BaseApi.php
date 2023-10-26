@@ -76,10 +76,11 @@ abstract class BaseApi implements ApiInterface
         }
 
         $requestMethod   = ApiRequest::method();
-        $availableMethod = static::getAvailableMethod();
-        if ($requestMethod !== $availableMethod) {
+        $availableMethods = static::getAvailableMethod();
+        if (!in_array($requestMethod, $availableMethods, true)) {
+            $supportedMethods = implode(',', $availableMethods);
             $errorMessage = <<<RAW_STR
-The '{$requestMethod}' method is not supported for this route. Supported method: '{$availableMethod}'.
+The '{$requestMethod}' method is not supported for this route. Supported method: '{$supportedMethods}'.
 RAW_STR;
             throw new NotFoundHttpException($errorMessage);
         }
@@ -150,18 +151,28 @@ RAW_STR;
     }
 
     /**
-     * @return string
+     * @return array
      */
-    private static function getAvailableMethod(): string
+    private static function getAvailableMethod(): array
     {
         $methods       = static::getPreparedMethods();
         $controllerKey = ApiRequest::getApiControllerKey();
         $actionKey     = ApiRequest::getApiActionKey();
-        return Arr::get(
+        $availableMethods = Arr::get(
             $methods,
             "controllers.{$controllerKey}.actions.{$actionKey}.method",
-            'post'
+            ['post']
         );
+
+        if (!$availableMethods) {
+            return ['post'];
+        }
+
+        if (!is_array($availableMethods)) {
+            return [$availableMethods];
+        }
+
+        return $availableMethods;
     }
 
 

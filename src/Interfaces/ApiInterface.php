@@ -13,12 +13,14 @@ interface ApiInterface
      *       'controller' => \App\Api\Versions\v1_0\Controllers\UserController::class,
      *       'actions' => [
      *          'register' => [
+     *              'method' => 'put',
      *               //TODO исключить все middleware на уровне экшена
      *              'exclude-all-middleware' => true,
      *          ],
      *          'login' => [],
      *          'logout' => false,
      *          'limited-access' => [
+     *              'method' => ['get', 'post'],
      *              'action' => 'limitedAccess',
      *              'middleware' => [
      *                  VerifyApiToken::class

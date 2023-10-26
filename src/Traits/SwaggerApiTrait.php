@@ -101,15 +101,22 @@ trait SwaggerApiTrait
                 $summary     = $docBlock->getSummary();
                 $description = $declaringClass . PHP_EOL . $docBlock->getDescription()->render();
                 $tags        = [$controller];
-                $httpMethod  = Arr::get($actions, "{$key}.method", 'post');
-                $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod);
-                $response    = static::getResponseByTags($outputTagList);
+                $httpMethods  = Arr::get($actions, "{$key}.method", ['post']);
+                if (!$httpMethods) {
+                    $httpMethods = ['post'];
+                }
 
-                $methodData = static::getMethodData($summary, $description, $tags, $parameters, $response);
+                if (!is_array($httpMethods)) {
+                    $httpMethods = [$httpMethods];
+                }
 
-                $path   = static::getApiPath($patternParts, $version, $controller, $action);
-                $method = Arr::get($methods, "controllers.{$controller}.actions.{$action}.method", 'post');
-                $result[$path][$method] = $methodData;
+                foreach ($httpMethods as $httpMethod) {
+                    $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod);
+                    $response    = static::getResponseByTags($outputTagList);
+                    $methodData = static::getMethodData($summary, $description, $tags, $parameters, $response);
+                    $path   = static::getApiPath($patternParts, $version, $controller, $action);
+                    $result[$path][$httpMethod] = $methodData;
+                }
             }
         }
         return $result;
