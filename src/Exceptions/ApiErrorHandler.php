@@ -6,6 +6,7 @@ use Dskripchenko\LaravelApi\Services\ApiResponseHelper;
 use Illuminate\Support\Arr;
 use Closure;
 use Exception;
+use Throwable;
 
 /**
  * Class ApiErrorHandler
@@ -38,15 +39,15 @@ class ApiErrorHandler
     }
 
     /**
-     * @param Exception $e
+     * @param Throwable $e
      * @return mixed
      */
-    public function handle(Exception $e)
+    public function handle(Throwable $e)
     {
         $className = get_class($e);
         $handle    = Arr::get($this->handlers, $className, false);
         if (!$handle) {
-            $handle = static function (Exception $e) {
+            $handle = static function (Throwable $e) {
                 return ApiResponseHelper::sayError([
                     'message' => $e->getMessage(),
                 ]);
