@@ -151,13 +151,16 @@ RAW_STR;
     }
 
     /**
-     * @return array
+     * @param $controllerKey
+     * @param $actionKey
+     *
+     * @return array|string[]
      */
-    private static function getAvailableMethod(): array
+    private static function getAvailableMethod($controllerKey = null, $actionKey = null): array
     {
         $methods       = static::getPreparedMethods();
-        $controllerKey = ApiRequest::getApiControllerKey();
-        $actionKey     = ApiRequest::getApiActionKey();
+        $controllerKey = $controllerKey ?: ApiRequest::getApiControllerKey();
+        $actionKey     = $actionKey ?: ApiRequest::getApiActionKey();
         $availableMethods = Arr::get(
             $methods,
             "controllers.{$controllerKey}.actions.{$actionKey}.method",
@@ -173,6 +176,19 @@ RAW_STR;
         }
 
         return $availableMethods;
+    }
+
+    /**
+     * @param string $controller
+     * @param string $action
+     *
+     * @return string|null
+     */
+    public static function getActionMethod(string $controller, string $action): string
+    {
+        $methods = static::getAvailableMethod($controller, $action);
+
+        return Arr::first($methods, null, 'post');
     }
 
 

@@ -20,12 +20,15 @@ class BaseModule
 
 
     /**
+     * @param string|null $version
+     *
      * @return BaseApi|null
      */
-    protected function getApi()
+    public function getApi(string $version = null): ?BaseApi
     {
+        $version = $version ?: ApiRequest::getApiVersion();
         if (!$this->api) {
-            $this->api = Arr::get(ApiModule::getApiVersionList(), ApiRequest::getApiVersion(), false);
+            $this->api = Arr::get(ApiModule::getApiVersionList(), $version, false);
         }
         if (!is_subclass_of($this->api, BaseApi::class)) {
             return null;

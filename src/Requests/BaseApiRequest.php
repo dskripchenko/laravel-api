@@ -132,9 +132,9 @@ class BaseApiRequest extends FormRequest
         $values = array_slice(array_values($methodParts), 0, count($keys));
         $data   = array_combine($keys, $values);
 
-        $this->apiVersion    = Arr::get($data, '{version}');
-        $this->apiController = Arr::get($data, '{controller}');
-        $this->apiAction     = Arr::get($data, '{action}');
+        $this->apiVersion    = Arr::get($data, '{version}', data_get($_SERVER, 'TESTING_API_VERSION'));
+        $this->apiController = Arr::get($data, '{controller}', data_get($_SERVER, 'TESTING_API_CONTROLLER'));
+        $this->apiAction     = Arr::get($data, '{action}', data_get($_SERVER, 'TESTING_API_ACTION'));
     }
 
     /**
