@@ -27,6 +27,9 @@ class BaseModule
     public function getApi(string $version = null): ?BaseApi
     {
         $version = $version ?: ApiRequest::getApiVersion();
+        if (!$version) {
+            return null;
+        }
         if (!$this->api) {
             $this->api = Arr::get(ApiModule::getApiVersionList(), $version, false);
         }
