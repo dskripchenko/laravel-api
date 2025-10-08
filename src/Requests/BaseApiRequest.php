@@ -6,6 +6,7 @@ use Dskripchenko\LaravelApi\Exceptions\ApiException;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 /**
  * Class BaseApiRequest
@@ -48,15 +49,15 @@ class BaseApiRequest extends FormRequest
      */
     public function getApiVersion(): ?string
     {
-        return $this->apiVersion;
+        return static::$_instance->apiVersion ?? null;
     }
 
     /**
      * @return string
      */
-    public function getApiMethod(): string
+    public function getApiMethod(): ?string
     {
-        return $this->apiMethod;
+        return static::$_instance->apiMethod ?? null;
     }
 
 
@@ -65,7 +66,7 @@ class BaseApiRequest extends FormRequest
      */
     public function getApiControllerKey(): ?string
     {
-        return $this->apiController;
+        return static::$_instance->apiController ?? null;
     }
 
     /**
@@ -73,7 +74,7 @@ class BaseApiRequest extends FormRequest
      */
     public function getApiActionKey(): ?string
     {
-        return $this->apiAction;
+        return static::$_instance->apiAction ?? null;
     }
 
     /**
@@ -90,6 +91,22 @@ class BaseApiRequest extends FormRequest
             static::$_instance->prepareApi();
         }
 
+        return static::$_instance;
+    }
+
+    /**
+     * @param SymfonyRequest $request
+     *
+     * @return BaseApiRequest|static|null
+     * @throws \Exception
+     */
+    public static function createFromBase(SymfonyRequest $request): ?BaseApiRequest
+    {
+        static::$_instance = parent::createFromBase($request);
+        static::$_instance->apiPrefix     = ApiModule::getApiPrefix();
+        static::$_instance->apiUriPattern = ApiModule::getApiUriPattern();
+        static::$_instance->validateApiUriPattern();
+        static::$_instance->prepareApi();
         return static::$_instance;
     }
 

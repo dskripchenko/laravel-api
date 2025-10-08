@@ -4,6 +4,8 @@ namespace Dskripchenko\LaravelApi\Traits\Testing;
 
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Facades\ApiRequest;
+use Dskripchenko\LaravelApi\Requests\BaseApiRequest;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Application;
@@ -93,5 +95,15 @@ trait MakesHttpApiRequests
         }
 
         return $this->createTestResponse($response, $request);
+    }
+
+    /**
+     * @param $symfonyRequest
+     *
+     * @return BaseApiRequest|null
+     */
+    protected function createTestRequest($symfonyRequest)
+    {
+        return ApiRequest::createFromBase($symfonyRequest);
     }
 }
