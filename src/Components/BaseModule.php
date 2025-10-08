@@ -24,12 +24,21 @@ class BaseModule
      *
      * @return BaseApi|null
      */
-    public function getApi(string $version = null): ?BaseApi
+    public function getApi(string $version = null): ?string
     {
-        $version = $version ?: ApiRequest::getApiVersion();
+        if (!$version) {
+            $version = ApiRequest::getApiVersion();
+        }
+
+        if (!$version) {
+            $request = ApiRequest::getInstance();
+            $version = $request ? (string) $request->server('TESTING_API_VERSION') : null;
+        }
+
         if (!$version) {
             return null;
         }
+
         if (!$this->api) {
             $this->api = Arr::get(ApiModule::getApiVersionList(), $version, false);
         }

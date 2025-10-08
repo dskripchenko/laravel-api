@@ -2,6 +2,7 @@
 
 namespace Dskripchenko\LaravelApi\Facades;
 
+use Dskripchenko\LaravelApi\Requests\BaseApiRequest;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string getApiActionKey()
  * @method static array all()
  * @method static string method()
+ * @method static BaseApiRequest|null getInstance()
  *
  * @see \Dskripchenko\LaravelApi\Components\BaseApiRequest
  */
