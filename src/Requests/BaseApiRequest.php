@@ -78,6 +78,14 @@ class BaseApiRequest extends FormRequest
     }
 
     /**
+     * @return string
+     */
+    public function method(): string
+    {
+        return strtolower(static::$_instance->method() ?? parent::method());
+    }
+
+    /**
      * @return BaseApiRequest
      * @throws \Exception
      */
@@ -160,13 +168,5 @@ class BaseApiRequest extends FormRequest
     public function rules()
     {
         return [];
-    }
-
-    /**
-     * @return string
-     */
-    public function method(): string
-    {
-        return strtolower(parent::method());
     }
 }
