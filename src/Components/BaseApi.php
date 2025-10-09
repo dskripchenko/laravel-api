@@ -26,11 +26,6 @@ abstract class BaseApi implements ApiInterface
     protected static $preparedMethods = [];
 
     /**
-     * @var string|null
-     */
-    protected static $action = null;
-
-    /**
      * @return array
      */
     public static function getMethods(): array
@@ -141,13 +136,16 @@ RAW_STR;
      */
     private static function getAction(): ?string
     {
-        if (static::$action === null) {
-            static::$action = static::getPreparedAction(
-                ApiRequest::getApiControllerKey(),
-                ApiRequest::getApiActionKey()
-            );
+        $action = static::getPreparedAction(
+            ApiRequest::getApiControllerKey(),
+            ApiRequest::getApiActionKey()
+        );
+
+        if (!$action) {
+            return null;
         }
-        return static::$action;
+
+        return $action; 
     }
 
     /**
