@@ -82,7 +82,7 @@ class BaseApiRequest extends FormRequest
      */
     public function method(): string
     {
-        return strtolower(static::$_instance->method() ?? parent::method());
+        return strtolower(static::$_instance->getMethod() ?? parent::method());
     }
 
     /**
