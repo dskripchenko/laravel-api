@@ -47,7 +47,7 @@ it('generated JSON is valid swagger', function () {
 
     $content = Storage::get('public/swagger/v1.json');
     $data = json_decode($content, true);
-    expect($data['swagger'])->toBe('2.0');
+    expect($data['openapi'])->toBe('3.0.0');
     expect($data['info'])->toHaveKey('title');
     expect($data['paths'])->not->toBeEmpty();
 });

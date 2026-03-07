@@ -6,11 +6,12 @@ use Tests\Fixtures\Versions\v1\TestApi;
 use Tests\Fixtures\Swagger\TemplateApi;
 use Tests\Fixtures\Swagger\ExtendedApi;
 
-it('generates valid swagger 2.0 structure', function () {
+it('generates valid openapi 3.0 structure', function () {
     $config = TestApi::getSwaggerApiConfig('v1');
-    expect($config['swagger'])->toBe('2.0');
+    expect($config['openapi'])->toBe('3.0.0');
     expect($config['info'])->toHaveKeys(['title', 'description', 'version']);
-    expect($config['basePath'])->toBe('/api');
+    expect($config['servers'])->toBeArray();
+    expect($config['servers'][0]['url'])->toContain('/api');
 });
 
 it('includes all action paths', function () {
@@ -26,41 +27,40 @@ it('includes all action paths', function () {
 
 it('parses @input tags correctly', function () {
     $config = TestApi::getSwaggerApiConfig('v1');
-    $createParams = $config['paths']['/v1/item/create']['post']['parameters'];
-    $names = array_column($createParams, 'name');
+    $operation = $config['paths']['/v1/item/create']['post'];
+    $contentType = array_key_first($operation['requestBody']['content']);
+    $props = $operation['requestBody']['content'][$contentType]['schema']['properties'];
 
-    // Should include auth middleware input + action inputs
-    expect($names)->toContain('name');
+    expect($props)->toHaveKey('name');
 });
 
 it('parses @output tags correctly', function () {
     $config = TestApi::getSwaggerApiConfig('v1');
-    $showResponse = $config['paths']['/v1/item/show']['get']['responses']['payload'];
-    expect($showResponse['properties'])->toHaveKey('id');
-    expect($showResponse['properties'])->toHaveKey('name');
+    $responseSchema = $config['paths']['/v1/item/show']['get']['responses']['200']['content']['application/json']['schema'];
+    expect($responseSchema['properties'])->toHaveKey('id');
+    expect($responseSchema['properties'])->toHaveKey('name');
 });
 
-it('includes definitions with templates', function () {
+it('includes components schemas with templates', function () {
     $config = TemplateApi::getSwaggerApiConfig('v1');
-    expect($config['definitions'])->toHaveKey('Error');
-    expect($config['definitions'])->toHaveKey('Success');
-    expect($config['definitions'])->toHaveKey('UserResponse');
+    expect($config['components']['schemas'])->toHaveKey('Error');
+    expect($config['components']['schemas'])->toHaveKey('Success');
+    expect($config['components']['schemas'])->toHaveKey('UserResponse');
 
-    $userDef = $config['definitions']['UserResponse'];
+    $userDef = $config['components']['schemas']['UserResponse'];
     expect($userDef['type'])->toBe('object');
     expect($userDef['properties'])->toHaveKey('id');
     expect($userDef['required'])->toContain('id');
     expect($userDef['required'])->toContain('name');
 });
 
-it('generates extended swagger with all new features', function () {
+it('generates extended openapi with all new features', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
 
-    expect($config['swagger'])->toBe('2.0');
-    expect($config)->toHaveKey('securityDefinitions');
-    expect($config)->toHaveKey('definitions');
+    expect($config['openapi'])->toBe('3.0.0');
+    expect($config['components'])->toHaveKey('securitySchemes');
+    expect($config['components'])->toHaveKey('schemas');
 
-    // Check that extended paths exist
     $paths = array_keys($config['paths']);
     expect($paths)->toContain('/v1/extended/headerAction');
     expect($paths)->toContain('/v1/extended/securityAction');
@@ -82,29 +82,36 @@ it('generates extended swagger with all new features', function () {
     // Verify security
     expect($config['paths']['/v1/extended/securityAction']['post']['security'])->toBe([['BearerAuth' => []]]);
 
-    // Verify multi-response
+    // Verify multi-response with content wrapper
     $responses = $config['paths']['/v1/extended/multiResponseAction']['get']['responses'];
     expect($responses)->toHaveKey('200');
     expect($responses)->toHaveKey('422');
+    expect($responses['200']['content']['application/json']['schema']['$ref'])->toBe('#/components/schemas/UserResponse');
 });
 
 it('backward compat with simple api', function () {
     $config = TestApi::getSwaggerApiConfig('v1');
 
-    // Same structure as before
-    expect($config['swagger'])->toBe('2.0');
+    expect($config['openapi'])->toBe('3.0.0');
     expect($config['paths'])->toHaveKey('/v1/item/list');
-    expect($config)->not->toHaveKey('securityDefinitions');
 
-    // Parameters still work
+    // No components when no templates and no security
+    if (isset($config['components'])) {
+        expect($config['components'])->not->toHaveKey('securitySchemes');
+    }
+
+    // GET parameters still work with schema wrapper
     $params = $config['paths']['/v1/item/list']['get']['parameters'];
     $names = array_column($params, 'name');
     expect($names)->toContain('page');
+    foreach ($params as $param) {
+        expect($param)->toHaveKey('schema');
+    }
 
-    // Responses still work
-    $response = $config['paths']['/v1/item/show']['get']['responses']['payload'];
-    expect($response['properties'])->toHaveKey('id');
+    // Responses use 200 key with content wrapper
+    $responseSchema = $config['paths']['/v1/item/show']['get']['responses']['200']['content']['application/json']['schema'];
+    expect($responseSchema['properties'])->toHaveKey('id');
 
-    // Consumes defaults to urlencoded
-    expect($config['paths']['/v1/item/list']['get']['consumes'])->toBe(['application/x-www-form-urlencoded']);
+    // No consumes at operation level
+    expect($config['paths']['/v1/item/list']['get'])->not->toHaveKey('consumes');
 });

@@ -7,9 +7,9 @@ use Tests\Fixtures\Swagger\TemplateApi;
 use Tests\Fixtures\Swagger\ExtendedApi;
 use Dskripchenko\LaravelApi\Components\BaseApi;
 
-it('generates swagger 2.0 config', function () {
+it('generates openapi 3.0 config', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
-    expect($config['swagger'])->toBe('2.0');
+    expect($config['openapi'])->toBe('3.0.0');
 });
 
 it('includes info from class docblock', function () {
@@ -18,17 +18,19 @@ it('includes info from class docblock', function () {
     expect($config['info']['version'])->toBe('v1');
 });
 
-it('includes host and basePath', function () {
+it('includes servers instead of host and basePath', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
-    expect($config['basePath'])->toBe('/api');
-    expect($config)->toHaveKey('host');
-    expect($config)->toHaveKey('schemes');
+    expect($config['servers'])->toBeArray();
+    expect($config['servers'][0])->toHaveKey('url');
+    expect($config['servers'][0]['url'])->toContain('/api');
+    expect($config)->not->toHaveKey('host');
+    expect($config)->not->toHaveKey('basePath');
+    expect($config)->not->toHaveKey('schemes');
 });
 
 it('generates paths for actions', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
     expect($config['paths'])->not->toBeEmpty();
-    // Should have paths like /v1/item/list, /v1/item/show, etc.
     expect($config['paths'])->toHaveKey('/v1/item/list');
     expect($config['paths'])->toHaveKey('/v1/item/show');
 });
@@ -38,24 +40,26 @@ it('does not include disabled actions in paths', function () {
     expect($config['paths'])->not->toHaveKey('/v1/item/disabled');
 });
 
-it('does not include definitions when useResponseTemplates is false', function () {
+it('does not include components schemas when useResponseTemplates is false', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
-    expect($config)->not->toHaveKey('definitions');
+    if (isset($config['components'])) {
+        expect($config['components'])->not->toHaveKey('schemas');
+    } else {
+        expect($config)->not->toHaveKey('components');
+    }
 });
 
-it('includes definitions when useResponseTemplates is true', function () {
+it('includes components schemas when useResponseTemplates is true', function () {
     $config = TemplateApi::getSwaggerApiConfig('v1');
-    expect($config)->toHaveKey('definitions');
-    expect($config['definitions'])->toHaveKey('Error');
-    expect($config['definitions'])->toHaveKey('Success');
-    expect($config['definitions'])->toHaveKey('UserResponse');
+    expect($config['components']['schemas'])->toHaveKey('Error');
+    expect($config['components']['schemas'])->toHaveKey('Success');
+    expect($config['components']['schemas'])->toHaveKey('UserResponse');
 });
 
 it('parses @input tags into parameters', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
     $listPath = $config['paths']['/v1/item/list'];
     $getParams = $listPath['get']['parameters'];
-    // Should have page and perPage inputs
     $names = array_column($getParams, 'name');
     expect($names)->toContain('page');
     expect($names)->toContain('perPage');
@@ -66,38 +70,39 @@ it('sets parameter in to query for GET methods', function () {
     $params = $config['paths']['/v1/item/list']['get']['parameters'];
     foreach ($params as $param) {
         expect($param['in'])->toBe('query');
+        expect($param)->toHaveKey('schema');
+        expect($param['schema'])->toHaveKey('type');
     }
 });
 
-it('sets parameter in to formData for POST methods', function () {
+it('moves POST formData params to requestBody', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/item/create']['post']['parameters'];
-    foreach ($params as $param) {
-        expect($param['in'])->toBe('formData');
-    }
+    $operation = $config['paths']['/v1/item/create']['post'];
+    expect($operation)->toHaveKey('requestBody');
+    $contentType = array_key_first($operation['requestBody']['content']);
+    $schema = $operation['requestBody']['content'][$contentType]['schema'];
+    expect($schema['properties'])->toHaveKey('name');
 });
 
 it('parses @output tags into response', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
     $showPath = $config['paths']['/v1/item/show'];
-    $response = $showPath['get']['responses']['payload'];
-    expect($response['properties'])->toHaveKey('id');
-    expect($response['properties'])->toHaveKey('name');
+    $responseSchema = $showPath['get']['responses']['200']['content']['application/json']['schema'];
+    expect($responseSchema['properties'])->toHaveKey('id');
+    expect($responseSchema['properties'])->toHaveKey('name');
 });
 
 it('uses template reference in output when useResponseTemplates is true', function () {
     $config = TemplateApi::getSwaggerApiConfig('v1');
     $getUserPath = $config['paths']['/v1/template/getUser'];
-    $response = $getUserPath['get']['responses']['payload'];
-    expect($response['schema']['$ref'])->toBe('#/definitions/UserResponse');
+    $responseSchema = $getUserPath['get']['responses']['200']['content']['application/json']['schema'];
+    expect($responseSchema['$ref'])->toBe('#/components/schemas/UserResponse');
 });
 
 it('falls back unknown type to string', function () {
-    // Testing getSafeDataType via reflection
     $ref = new \ReflectionMethod(BaseApi::class, 'getSafeDataType');
     $ref->setAccessible(true);
 
-    // Use a concrete subclass since it's a trait method
     expect($ref->invoke(null, 'unknown_type'))->toBe('string');
     expect($ref->invoke(null, 'integer'))->toBe('integer');
     expect($ref->invoke(null, 'boolean'))->toBe('boolean');
@@ -107,20 +112,21 @@ it('falls back unknown type to string', function () {
 
 it('parses format from type parentheses for input', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/extended/formatAction']['post']['parameters'];
-    $emailParam = collect($params)->firstWhere('name', 'email');
-    $bigIdParam = collect($params)->firstWhere('name', 'bigId');
+    $operation = $config['paths']['/v1/extended/formatAction']['post'];
+    $requestBody = $operation['requestBody']['content'];
+    $contentType = array_key_first($requestBody);
+    $props = $requestBody[$contentType]['schema']['properties'];
 
-    expect($emailParam['type'])->toBe('string');
-    expect($emailParam['format'])->toBe('email');
-    expect($bigIdParam['type'])->toBe('integer');
-    expect($bigIdParam['format'])->toBe('int64');
+    expect($props['email']['type'])->toBe('string');
+    expect($props['email']['format'])->toBe('email');
+    expect($props['bigId']['type'])->toBe('integer');
+    expect($props['bigId']['format'])->toBe('int64');
 });
 
 it('parses format for output', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $response = $config['paths']['/v1/extended/formatAction']['post']['responses']['payload'];
-    $props = $response['properties'];
+    $responseSchema = $config['paths']['/v1/extended/formatAction']['post']['responses']['200']['content']['application/json']['schema'];
+    $props = $responseSchema['properties'];
 
     expect($props['createdAt']['format'])->toBe('date-time');
     expect($props['count']['format'])->toBe('int32');
@@ -131,24 +137,24 @@ it('ignores format when no parentheses', function () {
     $params = $config['paths']['/v1/item/list']['get']['parameters'];
     $pageParam = collect($params)->firstWhere('name', 'page');
 
-    expect($pageParam)->not->toHaveKey('format');
+    expect($pageParam['schema'])->not->toHaveKey('format');
 });
 
 it('extracts enum from description brackets', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/extended/enumAction']['post']['parameters'];
-    $statusParam = collect($params)->firstWhere('name', 'status');
+    $operation = $config['paths']['/v1/extended/enumAction']['post'];
+    $props = $operation['requestBody']['content']['application/x-www-form-urlencoded']['schema']['properties'];
 
-    expect($statusParam['enum'])->toBe(['active', 'blocked', 'pending']);
+    expect($props['status']['enum'])->toBe(['active', 'blocked', 'pending']);
 });
 
 it('strips enum brackets from description', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/extended/enumAction']['post']['parameters'];
-    $statusParam = collect($params)->firstWhere('name', 'status');
+    $operation = $config['paths']['/v1/extended/enumAction']['post'];
+    $props = $operation['requestBody']['content']['application/x-www-form-urlencoded']['schema']['properties'];
 
-    expect($statusParam['description'])->toBe('Status');
-    expect($statusParam['description'])->not->toContain('[');
+    expect($props['status']['description'])->toBe('Status');
+    expect($props['status']['description'])->not->toContain('[');
 });
 
 it('generates operationId', function () {
@@ -182,12 +188,12 @@ it('parses @header into header parameters', function () {
 
     expect($authParam['in'])->toBe('header');
     expect($authParam['required'])->toBeTrue();
+    expect($authParam['schema']['type'])->toBe('string');
     expect($reqIdParam['in'])->toBe('header');
     expect($reqIdParam['required'])->toBeFalse();
 });
 
 it('aggregates @header from middleware', function () {
-    // Create a temporary API class that uses HeaderMiddleware
     $apiClass = new class extends BaseApi {
         public static $useResponseTemplates = false;
 
@@ -214,7 +220,6 @@ it('aggregates @header from middleware', function () {
     $params = $config['paths']['/v1/extended/headerAction']['post']['parameters'];
     $headerParams = collect($params)->where('in', 'header');
 
-    // Should have headers from both middleware and docblock
     $names = $headerParams->pluck('name')->toArray();
     expect($names)->toContain('X-Auth-Token');
     expect($names)->toContain('Authorization');
@@ -228,28 +233,31 @@ it('parses @response with HTTP codes', function () {
     expect($responses)->toHaveKey('422');
 });
 
-it('uses template ref in @response', function () {
+it('uses template ref in @response with content wrapper', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
     $responses = $config['paths']['/v1/extended/multiResponseAction']['get']['responses'];
 
-    expect($responses['200']['schema']['$ref'])->toBe('#/definitions/UserResponse');
-    expect($responses['422']['schema']['$ref'])->toBe('#/definitions/ValidationError');
+    $ref200 = $responses['200']['content']['application/json']['schema']['$ref'];
+    $ref422 = $responses['422']['content']['application/json']['schema']['$ref'];
+    expect($ref200)->toBe('#/components/schemas/UserResponse');
+    expect($ref422)->toBe('#/components/schemas/ValidationError');
 });
 
 it('falls back to @output when no @response', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
     $responses = $config['paths']['/v1/extended/formatAction']['post']['responses'];
 
-    expect($responses)->toHaveKey('payload');
-    expect($responses['payload']['properties'])->toHaveKey('createdAt');
+    expect($responses)->toHaveKey('200');
+    $schema = $responses['200']['content']['application/json']['schema'];
+    expect($schema['properties'])->toHaveKey('createdAt');
 });
 
-it('includes securityDefinitions', function () {
+it('includes components securitySchemes', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
 
-    expect($config)->toHaveKey('securityDefinitions');
-    expect($config['securityDefinitions'])->toHaveKey('BearerAuth');
-    expect($config['securityDefinitions']['BearerAuth']['type'])->toBe('apiKey');
+    expect($config['components'])->toHaveKey('securitySchemes');
+    expect($config['components']['securitySchemes'])->toHaveKey('BearerAuth');
+    expect($config['components']['securitySchemes']['BearerAuth']['type'])->toBe('apiKey');
 });
 
 it('parses @security tag', function () {
@@ -259,101 +267,106 @@ it('parses @security tag', function () {
     expect($method['security'])->toBe([['BearerAuth' => []]]);
 });
 
-it('no securityDefinitions when empty', function () {
+it('no components securitySchemes when empty', function () {
     $config = V1Api::getSwaggerApiConfig('v1');
 
-    expect($config)->not->toHaveKey('securityDefinitions');
+    if (isset($config['components'])) {
+        expect($config['components'])->not->toHaveKey('securitySchemes');
+    } else {
+        expect($config)->not->toHaveKey('components');
+    }
 });
 
 // === Phase 3: Nested, Auto-consumes ===
 
-it('dot-notation inputs to body param with nested schema', function () {
+it('dot-notation inputs to requestBody with nested schema', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/extended/nestedInputAction']['post']['parameters'];
-    $bodyParam = collect($params)->firstWhere('in', 'body');
+    $operation = $config['paths']['/v1/extended/nestedInputAction']['post'];
+    $requestBody = $operation['requestBody'];
+    $schema = $requestBody['content']['application/json']['schema'];
 
-    expect($bodyParam)->not->toBeNull();
-    expect($bodyParam['schema']['type'])->toBe('object');
-    expect($bodyParam['schema']['properties'])->toHaveKey('address');
-    expect($bodyParam['schema']['properties']['address']['type'])->toBe('object');
-    expect($bodyParam['schema']['properties']['address']['properties'])->toHaveKey('city');
+    expect($schema['properties'])->toHaveKey('address');
+    expect($schema['properties']['address']['type'])->toBe('object');
+    expect($schema['properties']['address']['properties'])->toHaveKey('city');
 });
 
 it('array notation in dot-notation', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/extended/nestedInputAction']['post']['parameters'];
-    $bodyParam = collect($params)->firstWhere('in', 'body');
+    $operation = $config['paths']['/v1/extended/nestedInputAction']['post'];
+    $schema = $operation['requestBody']['content']['application/json']['schema'];
 
-    $tags = $bodyParam['schema']['properties']['tags'];
+    $tags = $schema['properties']['tags'];
     expect($tags['type'])->toBe('array');
     expect($tags['items']['type'])->toBe('object');
     expect($tags['items']['properties'])->toHaveKey('id');
     expect($tags['items']['properties'])->toHaveKey('name');
 });
 
-it('flat inputs stay formData', function () {
+it('flat POST inputs go to requestBody', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/extended/enumAction']['post']['parameters'];
+    $operation = $config['paths']['/v1/extended/enumAction']['post'];
 
-    foreach ($params as $param) {
-        expect($param['in'])->toBe('formData');
-    }
+    expect($operation)->toHaveKey('requestBody');
+    $contentType = array_key_first($operation['requestBody']['content']);
+    expect($contentType)->toBe('application/x-www-form-urlencoded');
 });
 
 it('dot-notation outputs nested', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $response = $config['paths']['/v1/extended/nestedInputAction']['post']['responses']['payload'];
+    $responseSchema = $config['paths']['/v1/extended/nestedInputAction']['post']['responses']['200']['content']['application/json']['schema'];
 
-    expect($response['properties'])->toHaveKey('address');
-    expect($response['properties']['address']['type'])->toBe('object');
-    expect($response['properties']['address']['properties'])->toHaveKey('city');
+    expect($responseSchema['properties'])->toHaveKey('address');
+    expect($responseSchema['properties']['address']['type'])->toBe('object');
+    expect($responseSchema['properties']['address']['properties'])->toHaveKey('city');
 });
 
-it('consumes multipart for file', function () {
+it('requestBody uses multipart for file', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $method = $config['paths']['/v1/extended/fileUploadAction']['post'];
+    $operation = $config['paths']['/v1/extended/fileUploadAction']['post'];
 
-    expect($method['consumes'])->toBe(['multipart/form-data']);
+    expect($operation['requestBody']['content'])->toHaveKey('multipart/form-data');
+    $props = $operation['requestBody']['content']['multipart/form-data']['schema']['properties'];
+    expect($props['avatar']['type'])->toBe('string');
+    expect($props['avatar']['format'])->toBe('binary');
 });
 
-it('consumes json for body param', function () {
+it('requestBody uses json for nested body', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $method = $config['paths']['/v1/extended/nestedInputAction']['post'];
+    $operation = $config['paths']['/v1/extended/nestedInputAction']['post'];
 
-    expect($method['consumes'])->toBe(['application/json']);
+    expect($operation['requestBody']['content'])->toHaveKey('application/json');
 });
 
-it('consumes urlencoded default', function () {
+it('requestBody uses urlencoded for flat formData', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $method = $config['paths']['/v1/extended/enumAction']['post'];
+    $operation = $config['paths']['/v1/extended/enumAction']['post'];
 
-    expect($method['consumes'])->toBe(['application/x-www-form-urlencoded']);
+    expect($operation['requestBody']['content'])->toHaveKey('application/x-www-form-urlencoded');
 });
 
 // === Phase 4: Model/Ref ===
 
-it('body param $ref for @input @Model', function () {
+it('requestBody $ref for @input @Model', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $params = $config['paths']['/v1/extended/modelRefAction']['post']['parameters'];
-    $bodyParam = collect($params)->firstWhere('in', 'body');
+    $operation = $config['paths']['/v1/extended/modelRefAction']['post'];
+    $schema = $operation['requestBody']['content']['application/json']['schema'];
 
-    expect($bodyParam)->not->toBeNull();
-    expect($bodyParam['schema']['$ref'])->toBe('#/definitions/OrderCreateRequest');
+    expect($schema['$ref'])->toBe('#/components/schemas/OrderCreateRequest');
 });
 
 it('output field $ref', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $response = $config['paths']['/v1/extended/modelRefAction']['post']['responses']['payload'];
+    $responseSchema = $config['paths']['/v1/extended/modelRefAction']['post']['responses']['200']['content']['application/json']['schema'];
 
-    expect($response['properties']['user']['$ref'])->toBe('#/definitions/User');
+    expect($responseSchema['properties']['user']['$ref'])->toBe('#/components/schemas/User');
 });
 
 it('output array $ref', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
-    $response = $config['paths']['/v1/extended/modelRefAction']['post']['responses']['payload'];
+    $responseSchema = $config['paths']['/v1/extended/modelRefAction']['post']['responses']['200']['content']['application/json']['schema'];
 
-    expect($response['properties']['users']['type'])->toBe('array');
-    expect($response['properties']['users']['items']['$ref'])->toBe('#/definitions/User');
+    expect($responseSchema['properties']['users']['type'])->toBe('array');
+    expect($responseSchema['properties']['users']['items']['$ref'])->toBe('#/components/schemas/User');
 });
 
 // === Phase 5: Default/Example ===
@@ -363,13 +376,22 @@ it('default from @default tag', function () {
     $params = $config['paths']['/v1/extended/defaultExampleAction']['get']['parameters'];
     $pageParam = collect($params)->firstWhere('name', 'page');
 
-    expect($pageParam['default'])->toBe(1);
+    expect($pageParam['schema']['default'])->toBe(1);
 });
 
-it('x-example from @example tag', function () {
+it('example from @example tag', function () {
     $config = ExtendedApi::getSwaggerApiConfig('v1');
     $params = $config['paths']['/v1/extended/defaultExampleAction']['get']['parameters'];
     $pageParam = collect($params)->firstWhere('name', 'page');
 
-    expect($pageParam['x-example'])->toBe(3);
+    expect($pageParam['example'])->toBe(3);
+});
+
+// === No consumes at operation level in OAS3 ===
+
+it('does not include consumes at operation level', function () {
+    $config = V1Api::getSwaggerApiConfig('v1');
+    $operation = $config['paths']['/v1/item/list']['get'];
+
+    expect($operation)->not->toHaveKey('consumes');
 });

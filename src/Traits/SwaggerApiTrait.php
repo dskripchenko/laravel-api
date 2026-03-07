@@ -32,28 +32,36 @@ trait SwaggerApiTrait
         $reflectionClass = new \ReflectionClass(static::class);
         $docBlock        = static::getDocBlockByComment($reflectionClass->getDocComment());
 
+        $scheme   = request()->getScheme();
+        $host     = request()->getHttpHost();
+        $basePath = '/' . ApiModule::getApiPrefix();
+
         $config = [
-            'swagger' => '2.0',
+            'openapi' => '3.0.0',
             'info' => [
                 'title' => $docBlock->getSummary(),
                 'description' => $docBlock->getDescription()->render(),
                 'version' => $version,
             ],
-            'host' => request()->getHttpHost(),
-            'basePath' => '/' . ApiModule::getApiPrefix(),
-            'schemes' => [
-                request()->getScheme()
+            'servers' => [
+                ['url' => "{$scheme}://{$host}{$basePath}"],
             ],
             'paths' => static::getSwaggerApiPaths($version),
         ];
 
+        $components = [];
+
         if (static::$useResponseTemplates) {
-            $config['definitions'] = static::getSchemas();
+            $components['schemas'] = static::getSchemas();
         }
 
         $securityDefinitions = static::getSwaggerSecurityDefinitions();
         if (!empty($securityDefinitions)) {
-            $config['securityDefinitions'] = $securityDefinitions;
+            $components['securitySchemes'] = $securityDefinitions;
+        }
+
+        if (!empty($components)) {
+            $config['components'] = $components;
         }
 
         return $config;
@@ -140,8 +148,6 @@ trait SwaggerApiTrait
                         ? static::getResponsesByTags($responseTags, $outputTagList)
                         : static::getResponseByTags($outputTagList);
 
-                    $consumes = static::detectConsumes($parameters);
-
                     $methodData = static::getMethodData($summary, $description, [
                         'tags' => $tags,
                         'parameters' => $parameters,
@@ -149,7 +155,6 @@ trait SwaggerApiTrait
                         'operationId' => $operationId,
                         'deprecated' => $deprecated,
                         'security' => $security,
-                        'consumes' => $consumes,
                         'hasExplicitResponses' => $hasExplicitResponses,
                     ]);
                     $path   = static::getApiPath($patternParts, $version, $controller, $action);
@@ -217,7 +222,7 @@ trait SwaggerApiTrait
                             'description' => $modelName,
                             'required' => true,
                             'schema' => [
-                                '$ref' => "#/definitions/{$modelName}",
+                                '$ref' => "#/components/schemas/{$modelName}",
                             ],
                         ];
                     }
@@ -259,7 +264,7 @@ trait SwaggerApiTrait
                     $param['default'] = $defaultsAndExamples[$varName]['default'];
                 }
                 if (isset($defaultsAndExamples[$varName]['example'])) {
-                    $param['x-example'] = $defaultsAndExamples[$varName]['example'];
+                    $param['example'] = $defaultsAndExamples[$varName]['example'];
                 }
 
                 $parameters[] = $param;
@@ -290,7 +295,7 @@ trait SwaggerApiTrait
                     return [
                         'description' => 'Response payload',
                         'schema' => [
-                            '$ref' => "#/definitions/{$matches['template']}"
+                            '$ref' => "#/components/schemas/{$matches['template']}"
                         ],
                     ];
                 }
@@ -305,12 +310,12 @@ trait SwaggerApiTrait
                     if ($isArray) {
                         $properties[$variable] = [
                             'type' => 'array',
-                            'items' => ['$ref' => "#/definitions/{$modelName}"],
+                            'items' => ['$ref' => "#/components/schemas/{$modelName}"],
                             'description' => Arr::get($matches, 'description', ''),
                         ];
                     } else {
                         $properties[$variable] = [
-                            '$ref' => "#/definitions/{$modelName}",
+                            '$ref' => "#/components/schemas/{$modelName}",
                             'description' => Arr::get($matches, 'description', ''),
                         ];
                     }
@@ -643,8 +648,12 @@ trait SwaggerApiTrait
                     $templateName = trim($template, '{}');
                     $responses[$code] = [
                         'description' => $templateName,
-                        'schema' => [
-                            '$ref' => "#/definitions/{$templateName}",
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    '$ref' => "#/components/schemas/{$templateName}",
+                                ],
+                            ],
                         ],
                     ];
                 } else {
@@ -823,20 +832,145 @@ trait SwaggerApiTrait
     }
 
     /**
-     * @param array $parameters
-     * @return array
+     * @param array $rawParameters
+     * @return array [oasParameters, requestBody|null]
      */
-    private static function detectConsumes(array $parameters): array
+    private static function buildOasParametersAndBody(array $rawParameters): array
     {
-        foreach ($parameters as $param) {
-            if (($param['type'] ?? '') === 'file') {
-                return ['multipart/form-data'];
-            }
-            if (($param['in'] ?? '') === 'body') {
-                return ['application/json'];
+        $oasParams = [];
+        $formDataProps = [];
+        $formDataRequired = [];
+        $bodySchema = null;
+        $hasFile = false;
+
+        foreach ($rawParameters as $param) {
+            $in = $param['in'] ?? 'query';
+
+            if ($in === 'query' || $in === 'header') {
+                $schema = ['type' => $param['type'] ?? 'string'];
+                if (isset($param['format'])) {
+                    $schema['format'] = $param['format'];
+                }
+                if (isset($param['enum'])) {
+                    $schema['enum'] = $param['enum'];
+                }
+                if (isset($param['default'])) {
+                    $schema['default'] = $param['default'];
+                }
+
+                $oasParam = [
+                    'name' => $param['name'],
+                    'in' => $in,
+                    'description' => $param['description'] ?? '',
+                    'required' => $param['required'] ?? false,
+                    'schema' => $schema,
+                ];
+
+                if (isset($param['example'])) {
+                    $oasParam['example'] = $param['example'];
+                }
+
+                $oasParams[] = $oasParam;
+            } elseif ($in === 'body') {
+                $bodySchema = $param['schema'] ?? null;
+            } elseif ($in === 'formData') {
+                $name = $param['name'] ?? '';
+                if (($param['type'] ?? '') === 'file') {
+                    $hasFile = true;
+                    $formDataProps[$name] = [
+                        'type' => 'string',
+                        'format' => 'binary',
+                        'description' => $param['description'] ?? '',
+                    ];
+                } else {
+                    $prop = ['type' => $param['type'] ?? 'string'];
+                    if (isset($param['format'])) {
+                        $prop['format'] = $param['format'];
+                    }
+                    if (isset($param['enum'])) {
+                        $prop['enum'] = $param['enum'];
+                    }
+                    if (isset($param['default'])) {
+                        $prop['default'] = $param['default'];
+                    }
+                    if (isset($param['example'])) {
+                        $prop['example'] = $param['example'];
+                    }
+                    $prop['description'] = $param['description'] ?? '';
+                    $formDataProps[$name] = $prop;
+                }
+                if ($param['required'] ?? false) {
+                    $formDataRequired[] = $name;
+                }
             }
         }
-        return ['application/x-www-form-urlencoded'];
+
+        $requestBody = null;
+        if ($bodySchema !== null) {
+            $requestBody = [
+                'required' => true,
+                'content' => [
+                    'application/json' => ['schema' => $bodySchema],
+                ],
+            ];
+        } elseif (!empty($formDataProps)) {
+            $contentType = $hasFile ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
+            $schema = ['type' => 'object', 'properties' => $formDataProps];
+            if (!empty($formDataRequired)) {
+                $schema['required'] = $formDataRequired;
+            }
+            $requestBody = [
+                'required' => true,
+                'content' => [
+                    $contentType => ['schema' => $schema],
+                ],
+            ];
+        }
+
+        return [$oasParams, $requestBody];
+    }
+
+    /**
+     * @param array $responseData
+     * @return array
+     */
+    private static function buildOasResponses(array $responseData): array
+    {
+        $description = $responseData['description'] ?? 'Response payload';
+
+        if (isset($responseData['schema'])) {
+            $schema = $responseData['schema'];
+        } else {
+            $schema = [];
+            if (isset($responseData['type'])) {
+                $schema['type'] = $responseData['type'];
+            }
+            if (isset($responseData['properties'])) {
+                $schema['properties'] = $responseData['properties'];
+            }
+        }
+
+        $responses = [
+            '200' => [
+                'description' => $description,
+                'content' => [
+                    'application/json' => ['schema' => $schema],
+                ],
+            ],
+        ];
+
+        if (static::$useResponseTemplates) {
+            $responses['default'] = [
+                'description' => 'Error response',
+                'content' => [
+                    'application/json' => [
+                        'schema' => ['$ref' => '#/components/schemas/Error'],
+                    ],
+                ],
+            ];
+        }
+
+        return $responses;
     }
 
     /**
@@ -848,45 +982,32 @@ trait SwaggerApiTrait
     private static function getMethodData($summary, $description, array $options = [])
     {
         $tags = $options['tags'] ?? [];
-        $parameters = $options['parameters'] ?? [];
+        $rawParameters = $options['parameters'] ?? [];
         $responses = $options['responses'] ?? [];
         $operationId = $options['operationId'] ?? null;
         $deprecated = $options['deprecated'] ?? false;
         $security = $options['security'] ?? [];
-        $consumes = $options['consumes'] ?? ['application/x-www-form-urlencoded'];
         $hasExplicitResponses = $options['hasExplicitResponses'] ?? false;
 
-        if (!$hasExplicitResponses) {
-            $responses = [
-                'payload' => $responses,
-            ];
-        }
+        [$oasParameters, $requestBody] = static::buildOasParametersAndBody($rawParameters);
 
-        if (static::$useResponseTemplates && !$hasExplicitResponses) {
-            $responses = array_merge_deep($responses, [
-                'success' => [
-                    'description' => 'Success response',
-                    'schema' => [
-                        '$ref' => "#/definitions/Success"
-                    ]
-                ],
-                'error' => [
-                    'description' => 'Error response',
-                    'schema' => [
-                        '$ref' => "#/definitions/Error"
-                    ]
-                ],
-            ]);
+        if ($hasExplicitResponses) {
+            $formattedResponses = $responses;
+        } else {
+            $formattedResponses = static::buildOasResponses($responses);
         }
 
         $result = [
             'summary' => $summary,
             'description' => $description,
             'tags' => $tags,
-            'consumes' => $consumes,
-            'parameters' => $parameters,
-            'responses' => $responses,
+            'parameters' => $oasParameters,
+            'responses' => $formattedResponses,
         ];
+
+        if ($requestBody !== null) {
+            $result['requestBody'] = $requestBody;
+        }
 
         if ($operationId !== null) {
             $result['operationId'] = $operationId;
@@ -965,7 +1086,7 @@ trait SwaggerApiTrait
 
         array_walk_recursive($templates, function (&$item, $key) {
             if (strpos($item, '@') !== false) {
-                $item = ['$ref' => str_replace('@', '#/definitions/', $item)];
+                $item = ['$ref' => str_replace('@', '#/components/schemas/', $item)];
             }
         });
 
