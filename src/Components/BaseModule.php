@@ -14,9 +14,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class BaseModule
 {
     /**
-     * @var BaseApi
+     * @var array
      */
-    protected $api;
+    protected $resolvedApis = [];
 
 
     /**
@@ -39,14 +39,16 @@ class BaseModule
             return null;
         }
 
-        if (!$this->api) {
-            $this->api = Arr::get(ApiModule::getApiVersionList(), $version, false);
+        if (!isset($this->resolvedApis[$version])) {
+            $this->resolvedApis[$version] = Arr::get(ApiModule::getApiVersionList(), $version, false);
         }
-        if (!is_subclass_of($this->api, BaseApi::class)) {
+
+        $api = $this->resolvedApis[$version];
+        if (!is_subclass_of($api, BaseApi::class)) {
             return null;
         }
 
-        return $this->api;
+        return $api;
     }
 
     /**
@@ -113,5 +115,13 @@ class BaseModule
         return [
             //api version list
         ];
+    }
+
+    /**
+     * @return array
+     */
+    public function getDocMiddleware(): array
+    {
+        return [];
     }
 }

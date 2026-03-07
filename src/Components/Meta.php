@@ -114,6 +114,14 @@ class Meta
     /**
      * @return array
      */
+    public function getColumnKeys(): array
+    {
+        return array_keys($this->columns);
+    }
+
+    /**
+     * @return array
+     */
     public function getSwaggerInputs(): array
     {
         return Collection::make($this->columns)

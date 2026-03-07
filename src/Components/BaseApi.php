@@ -65,13 +65,17 @@ abstract class BaseApi implements ApiInterface
      */
     final public static function make(): Response
     {
-        $action = static::getAction();
+        $controllerKey = ApiRequest::getApiControllerKey();
+        $actionKey     = ApiRequest::getApiActionKey();
+        $methods       = static::getPreparedMethods();
+
+        $action = static::resolveAction($methods, $controllerKey, $actionKey);
         if (!$action) {
             throw new NotFoundHttpException('The requested method was not found!');
         }
 
-        $requestMethod   = ApiRequest::method();
-        $availableMethods = static::getAvailableMethod();
+        $requestMethod    = ApiRequest::method();
+        $availableMethods = static::resolveAvailableMethods($methods, $controllerKey, $actionKey);
         if (!in_array($requestMethod, $availableMethods, true)) {
             $supportedMethods = implode(',', $availableMethods);
             $errorMessage = <<<RAW_STR
@@ -136,16 +140,11 @@ RAW_STR;
      */
     private static function getAction(): ?string
     {
-        $action = static::getPreparedAction(
+        return static::resolveAction(
+            static::getPreparedMethods(),
             ApiRequest::getApiControllerKey(),
             ApiRequest::getApiActionKey()
-        );
-
-        if (!$action) {
-            return null;
-        }
-
-        return $action; 
+        ) ?: null;
     }
 
     /**
@@ -156,9 +155,34 @@ RAW_STR;
      */
     private static function getAvailableMethod($controllerKey = null, $actionKey = null): array
     {
-        $methods       = static::getPreparedMethods();
-        $controllerKey = $controllerKey ?: ApiRequest::getApiControllerKey();
-        $actionKey     = $actionKey ?: ApiRequest::getApiActionKey();
+        return static::resolveAvailableMethods(
+            static::getPreparedMethods(),
+            $controllerKey ?: ApiRequest::getApiControllerKey(),
+            $actionKey ?: ApiRequest::getApiActionKey()
+        );
+    }
+
+    /**
+     * @param string $controller
+     * @param string $action
+     *
+     * @return string
+     */
+    public static function getActionMethod(string $controller, string $action): string
+    {
+        $methods = static::getAvailableMethod($controller, $action);
+
+        return Arr::first($methods, null, 'post');
+    }
+
+    /**
+     * @param array $methods
+     * @param string|null $controllerKey
+     * @param string|null $actionKey
+     * @return array
+     */
+    private static function resolveAvailableMethods(array $methods, ?string $controllerKey, ?string $actionKey): array
+    {
         $availableMethods = Arr::get(
             $methods,
             "controllers.{$controllerKey}.actions.{$actionKey}.method",
@@ -177,27 +201,13 @@ RAW_STR;
     }
 
     /**
-     * @param string $controller
-     * @param string $action
-     *
-     * @return string|null
-     */
-    public static function getActionMethod(string $controller, string $action): string
-    {
-        $methods = static::getAvailableMethod($controller, $action);
-
-        return Arr::first($methods, null, 'post');
-    }
-
-
-    /**
+     * @param array $methods
      * @param $controllerKey
      * @param $actionKey
      * @return bool|string
      */
-    private static function getPreparedAction($controllerKey, $actionKey)
+    private static function resolveAction(array $methods, $controllerKey, $actionKey)
     {
-        $methods    = static::getPreparedMethods();
         $controller = Arr::get(
             $methods,
             "controllers.{$controllerKey}.controller",
@@ -234,6 +244,16 @@ RAW_STR;
         }
 
         return "{$controller}@{$actionKey}";
+    }
+
+    /**
+     * @param $controllerKey
+     * @param $actionKey
+     * @return bool|string
+     */
+    private static function getPreparedAction($controllerKey, $actionKey)
+    {
+        return static::resolveAction(static::getPreparedMethods(), $controllerKey, $actionKey);
     }
 
     /**
@@ -296,7 +316,7 @@ RAW_STR;
             $nonStaticParents = array_reverse($nonStaticParents);
 
             foreach ($nonStaticParents as $className) {
-                if (method_exists($className, 'getNormalizedMethods')) {
+                if (is_subclass_of($className, self::class)) {
                     static::$preparedMethods = array_merge_deep(static::$preparedMethods, $className::getNormalizedMethods());
                 }
             }
@@ -314,7 +334,7 @@ RAW_STR;
         $methods = static::getMethods();
         foreach (Arr::get($methods, 'controllers', []) as $controllerKey => $controller) {
             foreach (Arr::get($controller, 'actions', []) as $key => $value) {
-                if (is_array($value)) {
+                if (is_array($value) || $value === false) {
                     continue;
                 }
 

@@ -48,9 +48,13 @@ class ApiErrorHandler
         $handle    = Arr::get($this->handlers, $className, false);
         if (!$handle) {
             $handle = static function (Throwable $e) {
+                $message = app()->hasDebugModeEnabled()
+                    ? $e->getMessage()
+                    : 'Internal server error';
+
                 return ApiResponseHelper::sayError([
-                    'message' => $e->getMessage(),
-                ]);
+                    'message' => $message,
+                ], 500);
             };
         }
 

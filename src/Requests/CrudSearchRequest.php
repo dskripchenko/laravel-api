@@ -16,7 +16,7 @@ class CrudSearchRequest extends BaseApiRequest
         return [
             'filter' => 'nullable|array',
             'filter.*.column' => 'required_with:filter|string',
-            'filter.*.operator' => 'nullable|string|in:=,!=,>,<,>=,<=,in,not_in,like,ilike,rlike',
+            'filter.*.operator' => 'nullable|string|in:=,!=,>,<,>=,<=,in,not_in,like',
             'filter.*.value' => 'required_with:filter',
 
             'order' => 'nullable|array',

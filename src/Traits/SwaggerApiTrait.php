@@ -18,6 +18,10 @@ trait SwaggerApiTrait
 {
     public static $useResponseTemplates = false;
 
+    protected static ?DocBlockFactory $docBlockFactory = null;
+
+    protected static ?array $cachedRawTemplates = null;
+
     /**
      * @param string $version
      * @return array
@@ -131,9 +135,11 @@ trait SwaggerApiTrait
         if (!$comment) {
             $comment = ' ';
         }
-        $factory = DocBlockFactory::createInstance();
+        if (static::$docBlockFactory === null) {
+            static::$docBlockFactory = DocBlockFactory::createInstance();
+        }
 
-        return $factory->create($comment);
+        return static::$docBlockFactory->create($comment);
     }
 
     /**
@@ -290,17 +296,25 @@ trait SwaggerApiTrait
      * @return Tag[]
      * @throws \ReflectionException
      */
+    protected static array $middlewareInputTagCache = [];
+
     private static function getInputTags(DocBlock $methodDocBlock, array $middlewareList = [])
     {
         $inputTagList  = [];
         $methodTagList = $methodDocBlock->getTagsByName('input');
 
         $addInputToTagList = function ($middleware, &$inputTagList) {
+            if (isset(static::$middlewareInputTagCache[$middleware])) {
+                $inputTagList = array_merge_deep($inputTagList, static::$middlewareInputTagCache[$middleware]);
+                return;
+            }
+
             $middlewareReflection = new \ReflectionClass($middleware);
             $method = 'run';
             if (!$middlewareReflection->hasMethod($method)) {
                 $method = 'handle';
                 if (!$middlewareReflection->hasMethod($method)) {
+                    static::$middlewareInputTagCache[$middleware] = [];
                     return;
                 }
             }
@@ -308,7 +322,8 @@ trait SwaggerApiTrait
             $middlewareReflectionMethod = $middlewareReflection->getMethod($method);
             $middlewareDocBloick        = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
             $middlewareTagList = $middlewareDocBloick->getTagsByName('input');
-            $inputTagList      = array_merge_deep($inputTagList, $middlewareTagList);
+            static::$middlewareInputTagCache[$middleware] = $middlewareTagList;
+            $inputTagList = array_merge_deep($inputTagList, $middlewareTagList);
         };
         foreach ($middlewareList as $middleware) {
             if (class_exists($middleware)) {
@@ -406,6 +421,10 @@ trait SwaggerApiTrait
      */
     private static function getRawTemplates()
     {
+        if (static::$cachedRawTemplates !== null) {
+            return static::$cachedRawTemplates;
+        }
+
         $defaultTemplates = [
             'Error' => [
                 'success' => [
@@ -437,7 +456,8 @@ trait SwaggerApiTrait
             }
         });
 
-        return array_merge_deep($defaultTemplates, $templates);
+        static::$cachedRawTemplates = array_merge_deep($defaultTemplates, $templates);
+        return static::$cachedRawTemplates;
     }
 
     /**

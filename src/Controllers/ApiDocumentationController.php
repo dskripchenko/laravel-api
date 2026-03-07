@@ -36,15 +36,22 @@ class ApiDocumentationController extends Controller
          * @var BaseApi $api
          */
         foreach ($versionList as $version => $api) {
-            $config   = $api::getSwaggerApiConfig($version);
             $fileName = "{$version}.json";
-            Storage::put("{$folder}/{$fileName}", json_encode($config));
-            $urlPath = Storage::url("{$folder}/{$fileName}");
-            $urlHash = uniqid('', true);
+            $filePath = "{$folder}/{$fileName}";
+
+            if (!Storage::exists($filePath) || app()->hasDebugModeEnabled()) {
+                $config = $api::getSwaggerApiConfig($version);
+                Storage::put($filePath, json_encode($config));
+            } else {
+                $config = json_decode(Storage::get($filePath), true);
+            }
+
+            $urlPath = Storage::url($filePath);
+            $urlHash = filemtime(Storage::path($filePath)) ?: time();
             $url     = asset("{$urlPath}?r={$urlHash}");
             $filesData[] = [
                 'url' => $url,
-                'name' => $config['info']['title'] ?: $version
+                'name' => ($config['info']['title'] ?? '') ?: $version
             ];
         }
 

@@ -98,7 +98,8 @@ class ApiServiceProvider extends ServiceProvider
         ], static function () use ($middlewareGroupName) {
             Route::get('doc', static function () {
                 return app()->call(ApiDocumentationController::class . '@index');
-            })->name('api-doc');
+            })->name('api-doc')
+                ->middleware(ApiModule::getDocMiddleware());
 
             Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function () {
                 return ApiModule::makeApi();

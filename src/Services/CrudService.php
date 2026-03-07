@@ -40,6 +40,55 @@ abstract class CrudService implements CrudServiceInterface
     abstract public function collection(Collection $collection): BaseJsonResourceCollection;
 
     /**
+     * @var array|null
+     */
+    private ?array $cachedAllowedColumns = null;
+
+    /**
+     * @return array
+     */
+    protected function getAllowedColumns(): array
+    {
+        if ($this->cachedAllowedColumns === null) {
+            $this->cachedAllowedColumns = $this->meta()->getColumnKeys();
+        }
+
+        return $this->cachedAllowedColumns;
+    }
+
+    /**
+     * @param string|null $column
+     * @return bool
+     */
+    protected function isAllowedColumn(?string $column): bool
+    {
+        if ($column === null) {
+            return false;
+        }
+
+        $allowed = $this->getAllowedColumns();
+        if (empty($allowed)) {
+            return false;
+        }
+
+        return in_array($column, $allowed, true);
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function filterDataByAllowedColumns(array $data): array
+    {
+        $allowed = $this->getAllowedColumns();
+        if (empty($allowed)) {
+            return $data;
+        }
+
+        return Arr::only($data, $allowed);
+    }
+
+    /**
      * @param array $data
      * @return BaseJsonResourceCollection
      */
@@ -50,6 +99,10 @@ abstract class CrudService implements CrudServiceInterface
             $column   = Arr::get($filter, 'column');
             $operator = Arr::get($filter, 'operator', '=');
             $value    = Arr::get($filter, 'value');
+
+            if (!$this->isAllowedColumn($column)) {
+                continue;
+            }
 
             if ($operator === 'in') {
                 if (!is_array($value)) {
@@ -74,6 +127,10 @@ abstract class CrudService implements CrudServiceInterface
             $column = Arr::get($order, 'column');
             $value  = Arr::get($order, 'value');
 
+            if (!$this->isAllowedColumn($column)) {
+                continue;
+            }
+
             $query->orderBy($column, $value ? 'asc' : 'desc');
         }
 
@@ -82,7 +139,7 @@ abstract class CrudService implements CrudServiceInterface
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         return $this
-            ->collection(Collection::make($paginator->items()))
+            ->collection(new Collection($paginator->items()))
             ->additional([
                 'page' => $paginator->currentPage(),
                 'perPage' => $paginator->perPage(),
@@ -97,7 +154,7 @@ abstract class CrudService implements CrudServiceInterface
      */
     public function create(array $data = []): BaseJsonResource
     {
-        $model = $this->query()->create($data);
+        $model = $this->query()->create($this->filterDataByAllowedColumns($data));
         return $this->resource($model);
     }
 
@@ -119,7 +176,7 @@ abstract class CrudService implements CrudServiceInterface
     public function update(int $id, array $data = []): BaseJsonResource
     {
         $model = $this->query()->findOrFail($id);
-        $model->fill($data);
+        $model->fill($this->filterDataByAllowedColumns($data));
         $model->save();
         return $this->resource($model);
     }
