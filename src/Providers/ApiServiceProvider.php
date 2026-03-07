@@ -28,6 +28,10 @@ class ApiServiceProvider extends ServiceProvider
             dirname(__DIR__, 2) . '/resources/swagger-themes' => public_path('swagger-themes'),
         ]);
 
+        $this->publishes([
+            dirname(__DIR__, 2) . '/config/laravel-api.php' => config_path('laravel-api.php'),
+        ], 'laravel-api-config');
+
         $this->loadViewsFrom(dirname(__DIR__, 2) . '/resources/views', 'api_module');
 
         $this->makeApiRoutes();
@@ -35,6 +39,11 @@ class ApiServiceProvider extends ServiceProvider
 
     public function register(): void
     {
+        $this->mergeConfigFrom(
+            dirname(__DIR__, 2) . '/config/laravel-api.php',
+            'laravel-api'
+        );
+
         $this->app->bind('api_module', function () {
             return $this->getApiModule();
         });

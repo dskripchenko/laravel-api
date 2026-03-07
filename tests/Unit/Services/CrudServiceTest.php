@@ -90,12 +90,68 @@ it('filters with like operator', function () {
 
     $result = $this->service->search([
         'filter' => [
-            ['column' => 'name', 'operator' => 'like', 'value' => 'App%'],
+            ['column' => 'name', 'operator' => 'like', 'value' => 'App'],
         ],
     ]);
     $resolved = $result->resolve(request());
     expect($resolved)->toHaveCount(1);
     expect($resolved[0]['name'])->toBe('Apple');
+});
+
+it('escapes percent and underscore in like operator', function () {
+    TestModel::create(['name' => '100% done']);
+    TestModel::create(['name' => '100 items']);
+
+    $result = $this->service->search([
+        'filter' => [
+            ['column' => 'name', 'operator' => 'like', 'value' => '100%'],
+        ],
+    ]);
+    $resolved = $result->resolve(request());
+    expect($resolved)->toHaveCount(1);
+    expect($resolved[0]['name'])->toBe('100% done');
+});
+
+it('filters with between operator', function () {
+    TestModel::create(['name' => 'A']);
+    TestModel::create(['name' => 'M']);
+    TestModel::create(['name' => 'Z']);
+
+    $result = $this->service->search([
+        'filter' => [
+            ['column' => 'name', 'operator' => 'between', 'value' => ['A', 'N']],
+        ],
+    ]);
+    $resolved = $result->resolve(request());
+    expect($resolved)->toHaveCount(2);
+});
+
+it('filters with is_null operator', function () {
+    TestModel::create(['name' => 'A', 'description' => null]);
+    TestModel::create(['name' => 'B', 'description' => 'has desc']);
+
+    $result = $this->service->search([
+        'filter' => [
+            ['column' => 'description', 'operator' => 'is_null', 'value' => null],
+        ],
+    ]);
+    $resolved = $result->resolve(request());
+    expect($resolved)->toHaveCount(1);
+    expect($resolved[0]['name'])->toBe('A');
+});
+
+it('filters with is_not_null operator', function () {
+    TestModel::create(['name' => 'A', 'description' => null]);
+    TestModel::create(['name' => 'B', 'description' => 'has desc']);
+
+    $result = $this->service->search([
+        'filter' => [
+            ['column' => 'description', 'operator' => 'is_not_null', 'value' => null],
+        ],
+    ]);
+    $resolved = $result->resolve(request());
+    expect($resolved)->toHaveCount(1);
+    expect($resolved[0]['name'])->toBe('B');
 });
 
 it('orders ascending', function () {
@@ -104,7 +160,7 @@ it('orders ascending', function () {
 
     $result = $this->service->search([
         'order' => [
-            ['column' => 'name', 'value' => true],
+            ['column' => 'name', 'value' => 'asc'],
         ],
     ]);
     $resolved = $result->resolve(request());
@@ -118,7 +174,7 @@ it('orders descending', function () {
 
     $result = $this->service->search([
         'order' => [
-            ['column' => 'name', 'value' => false],
+            ['column' => 'name', 'value' => 'desc'],
         ],
     ]);
     $resolved = $result->resolve(request());
@@ -213,7 +269,7 @@ it('ignores order on disallowed column', function () {
 
     $result = $this->service->search([
         'order' => [
-            ['column' => 'id', 'value' => true],
+            ['column' => 'id', 'value' => 'asc'],
         ],
     ]);
     $resolved = $result->resolve(request());

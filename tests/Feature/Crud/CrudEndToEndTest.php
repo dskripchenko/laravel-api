@@ -122,7 +122,7 @@ it('searches with ordering', function () {
     $service = new TestCrudService();
     $result = $service->search([
         'order' => [
-            ['column' => 'name', 'value' => true],
+            ['column' => 'name', 'value' => 'asc'],
         ],
     ]);
     $resolved = $result->resolve(request());

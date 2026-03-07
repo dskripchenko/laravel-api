@@ -35,7 +35,7 @@ abstract class ApiMiddleware
                 : 'Internal server error';
 
             return ApiResponseHelper::sayError([
-                'errorKey' => $e->getCode(),
+                'errorKey' => (string) $e->getCode(),
                 'message' => $message,
             ], 500);
         }

@@ -49,7 +49,7 @@ it('catches generic Exception and returns error with debug message in debug mode
     $response = $middleware->handle($request, fn() => new JsonResponse());
     $data = $response->getData(true);
     expect($data['success'])->toBeFalse();
-    expect($data['payload']['errorKey'])->toBe(500);
+    expect($data['payload']['errorKey'])->toBe('500');
     expect($data['payload']['message'])->toBe('Something failed');
     expect($response->getStatusCode())->toBe(500);
 });

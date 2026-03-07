@@ -145,18 +145,6 @@ RAW_STR;
 
 
     /**
-     * @return string|null
-     */
-    private static function getAction(): ?string
-    {
-        return static::resolveAction(
-            static::getPreparedMethods(),
-            ApiRequest::getApiControllerKey(),
-            ApiRequest::getApiActionKey()
-        ) ?: null;
-    }
-
-    /**
      * @param $controllerKey
      * @param $actionKey
      *

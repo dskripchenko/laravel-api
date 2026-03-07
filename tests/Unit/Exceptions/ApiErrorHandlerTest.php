@@ -67,19 +67,15 @@ it('overwrites handler for same exception class', function () {
     expect($data['overwritten'])->toBeTrue();
 });
 
-it('does not match subclass by parent handler using exact class match', function () {
-    app()['config']->set('app.debug', true);
+it('matches subclass by parent handler via class_parents traversal', function () {
     $handler = new ApiErrorHandler();
     $handler->addErrorHandler(\Exception::class, function (\Exception $e) {
         return new JsonResponse(['matched_parent' => true]);
     });
 
-    // RuntimeException is a subclass of Exception, but handler uses get_class exact match
     $response = $handler->handle(new \RuntimeException('sub'));
     $data = $response->getData(true);
-    // Should fall through to generic handler, not the Exception handler
-    expect($data)->not->toHaveKey('matched_parent');
-    expect($data['payload']['message'])->toBe('sub');
+    expect($data['matched_parent'])->toBeTrue();
 });
 
 it('returns JsonResponse from default handler', function () {

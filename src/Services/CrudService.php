@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class CrudService
@@ -120,6 +121,32 @@ abstract class CrudService implements CrudServiceInterface
                 continue;
             }
 
+            if ($operator === 'between') {
+                if (is_array($value) && count($value) === 2) {
+                    $query->whereBetween($column, $value);
+                }
+                continue;
+            }
+
+            if ($operator === 'is_null') {
+                $query->whereNull($column);
+                continue;
+            }
+
+            if ($operator === 'is_not_null') {
+                $query->whereNotNull($column);
+                continue;
+            }
+
+            if ($operator === 'like') {
+                $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], (string) $value);
+                $query->whereRaw(
+                    "\"$column\" LIKE ? ESCAPE '\\'",
+                    ['%' . $escaped . '%']
+                );
+                continue;
+            }
+
             $query->where($column, $operator, $value);
         }
 
@@ -131,7 +158,8 @@ abstract class CrudService implements CrudServiceInterface
                 continue;
             }
 
-            $query->orderBy($column, $value ? 'asc' : 'desc');
+            $direction = ($value === 'desc') ? 'desc' : 'asc';
+            $query->orderBy($column, $direction);
         }
 
         $page      = Arr::get($data, 'page', 1);
@@ -154,8 +182,10 @@ abstract class CrudService implements CrudServiceInterface
      */
     public function create(array $data = []): BaseJsonResource
     {
-        $model = $this->query()->create($this->filterDataByAllowedColumns($data));
-        return $this->resource($model);
+        return DB::transaction(function () use ($data) {
+            $model = $this->query()->create($this->filterDataByAllowedColumns($data));
+            return $this->resource($model);
+        });
     }
 
     /**
@@ -175,10 +205,12 @@ abstract class CrudService implements CrudServiceInterface
      */
     public function update(int $id, array $data = []): BaseJsonResource
     {
-        $model = $this->query()->findOrFail($id);
-        $model->fill($this->filterDataByAllowedColumns($data));
-        $model->save();
-        return $this->resource($model);
+        return DB::transaction(function () use ($id, $data) {
+            $model = $this->query()->findOrFail($id);
+            $model->fill($this->filterDataByAllowedColumns($data));
+            $model->save();
+            return $this->resource($model);
+        });
     }
 
     /**
@@ -188,8 +220,36 @@ abstract class CrudService implements CrudServiceInterface
      */
     public function delete(int $id): BaseJsonResource
     {
-        $model = $this->query()->findOrFail($id);
-        $model->delete();
-        return $this->resource($model);
+        return DB::transaction(function () use ($id) {
+            $model = $this->query()->findOrFail($id);
+            $model->delete();
+            return $this->resource($model);
+        });
+    }
+
+    /**
+     * @param int $id
+     * @return BaseJsonResource
+     */
+    public function restore(int $id): BaseJsonResource
+    {
+        return DB::transaction(function () use ($id) {
+            $model = $this->query()->withTrashed()->findOrFail($id);
+            $model->restore();
+            return $this->resource($model);
+        });
+    }
+
+    /**
+     * @param int $id
+     * @return BaseJsonResource
+     */
+    public function forceDelete(int $id): BaseJsonResource
+    {
+        return DB::transaction(function () use ($id) {
+            $model = $this->query()->withTrashed()->findOrFail($id);
+            $model->forceDelete();
+            return $this->resource($model);
+        });
     }
 }

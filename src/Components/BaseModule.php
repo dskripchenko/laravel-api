@@ -88,7 +88,7 @@ class BaseModule
      */
     public function getApiPrefix(): string
     {
-        return 'api';
+        return config('laravel-api.prefix', 'api');
     }
 
     /**
@@ -96,7 +96,7 @@ class BaseModule
      */
     public function getAvailableApiMethods(): array
     {
-        return ['get', 'post', 'put', 'patch', 'delete'];
+        return config('laravel-api.available_methods', ['get', 'post', 'put', 'patch', 'delete']);
     }
 
     /**
@@ -104,7 +104,7 @@ class BaseModule
      */
     public function getApiUriPattern(): string
     {
-        return '{version}/{controller}/{action}';
+        return config('laravel-api.uri_pattern', '{version}/{controller}/{action}');
     }
 
     /**
