@@ -18,6 +18,7 @@ abstract class BaseApi implements ApiInterface
 {
     use SwaggerApiTrait {
         SwaggerApiTrait::getSwaggerTemplates as public getSwaggerTemplatesTrait;
+        SwaggerApiTrait::getSwaggerSecurityDefinitions as public getSwaggerSecurityDefinitionsTrait;
     }
 
     /**
@@ -58,6 +59,14 @@ abstract class BaseApi implements ApiInterface
     public static function getSwaggerTemplates(): array
     {
         return static::getSwaggerTemplatesTrait();
+    }
+
+    /**
+     * @return array
+     */
+    public static function getSwaggerSecurityDefinitions(): array
+    {
+        return static::getSwaggerSecurityDefinitionsTrait();
     }
 
     /**

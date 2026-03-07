@@ -51,6 +51,11 @@ trait SwaggerApiTrait
             $config['definitions'] = static::getSchemas();
         }
 
+        $securityDefinitions = static::getSwaggerSecurityDefinitions();
+        if (!empty($securityDefinitions)) {
+            $config['securityDefinitions'] = $securityDefinitions;
+        }
+
         return $config;
     }
 
@@ -99,6 +104,11 @@ trait SwaggerApiTrait
 
                 $inputTagList  = static::getInputTags($docBlock, $middlewareList);
                 $outputTagList = static::getOutputTagList($docBlock);
+                $headerTagList = static::getTagsByNameFromDocBlockAndMiddleware('header', $docBlock, $middlewareList);
+                $responseTags  = static::getResponseTags($docBlock);
+                $securityTags  = static::getSecurityTags($docBlock);
+                $defaultTags   = static::getDefaultTags($docBlock);
+                $exampleTags   = static::getExampleTags($docBlock);
 
                 $declaringClass = $reflectionMethod->getDeclaringClass()->name;
 
@@ -114,10 +124,34 @@ trait SwaggerApiTrait
                     $httpMethods = [$httpMethods];
                 }
 
+                $actionSecurity = is_array($value) ? Arr::get($value, 'security', []) : [];
+                $deprecated = static::isDeprecated($docBlock);
+                $operationId = static::getOperationId($controller, $action);
+                $security = !empty($actionSecurity) ? $actionSecurity : static::parseSecurityTags($securityTags);
+                $defaultsAndExamples = static::parseDefaultAndExampleTags($defaultTags, $exampleTags);
+
                 foreach ($httpMethods as $httpMethod) {
-                    $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod);
-                    $response    = static::getResponseByTags($outputTagList);
-                    $methodData = static::getMethodData($summary, $description, $tags, $parameters, $response);
+                    $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod, $defaultsAndExamples);
+                    $headerParameters = static::getHeaderParametersByTags($headerTagList);
+                    $parameters = array_merge($headerParameters, $parameters);
+
+                    $hasExplicitResponses = !empty($responseTags);
+                    $responses = $hasExplicitResponses
+                        ? static::getResponsesByTags($responseTags, $outputTagList)
+                        : static::getResponseByTags($outputTagList);
+
+                    $consumes = static::detectConsumes($parameters);
+
+                    $methodData = static::getMethodData($summary, $description, [
+                        'tags' => $tags,
+                        'parameters' => $parameters,
+                        'responses' => $responses,
+                        'operationId' => $operationId,
+                        'deprecated' => $deprecated,
+                        'security' => $security,
+                        'consumes' => $consumes,
+                        'hasExplicitResponses' => $hasExplicitResponses,
+                    ]);
                     $path   = static::getApiPath($patternParts, $version, $controller, $action);
                     $result[$path][$httpMethod] = $methodData;
                 }
@@ -146,16 +180,20 @@ trait SwaggerApiTrait
      * @param  array  $tags
      * @param $class
      * @param  string  $httpMethod
+     * @param  array  $defaultsAndExamples
      * @return array
      */
-    private static function getParametersByTags(array $tags, $class, $httpMethod = 'post')
+    private static function getParametersByTags(array $tags, $class, $httpMethod = 'post', array $defaultsAndExamples = [])
     {
         $parameters = [];
         $pattern    = static::getDocInputOutputPattern();
         $callableInputsPattern = static::getDocInputsCallablePattern();
+        $modelRefPattern = static::getDocModelRefPattern();
         $httpMethod = strtolower($httpMethod);
 
         $parameterType = $httpMethod === 'get' ? 'query' : 'formData';
+
+        $parsedParams = [];
 
         /**
          * @var Tag $tag
@@ -170,15 +208,61 @@ trait SwaggerApiTrait
             }
 
             foreach ($descriptions as $description) {
-                if (preg_match($pattern, $description, $matches)) {
-                    $parameters[] = [
-                        'in' => $parameterType,
-                        'name' => Arr::get($matches, 'variable', ''),
-                        'description' => Arr::get($matches, 'description', ''),
-                        'required' => Arr::get($matches, 'optional', '') !== '?',
-                        'type' => static::getSafeDataType(Arr::get($matches, 'type', 'string')),
-                    ];
+                if (preg_match($modelRefPattern, $description, $matches)) {
+                    $modelName = $matches['model'];
+                    if (static::$useResponseTemplates && static::isHasTemplate($modelName)) {
+                        $parameters[] = [
+                            'in' => 'body',
+                            'name' => 'body',
+                            'description' => $modelName,
+                            'required' => true,
+                            'schema' => [
+                                '$ref' => "#/definitions/{$modelName}",
+                            ],
+                        ];
+                    }
+                    continue;
                 }
+
+                if (preg_match($pattern, $description, $matches)) {
+                    $parsedParams[] = $matches;
+                }
+            }
+        }
+
+        if (static::hasNestedParameters($parsedParams)) {
+            $nestedSchema = static::buildNestedSchema($parsedParams);
+            $parameters[] = static::getBodyParameterFromNested($nestedSchema);
+        } else {
+            foreach ($parsedParams as $matches) {
+                $descText = Arr::get($matches, 'description', '');
+                $enum = static::extractEnumFromDescription($descText);
+                $type = static::getSafeDataType(Arr::get($matches, 'type', 'string'));
+                $varName = Arr::get($matches, 'variable', '');
+
+                $param = [
+                    'in' => $parameterType,
+                    'name' => $varName,
+                    'description' => $descText,
+                    'required' => Arr::get($matches, 'optional', '') !== '?',
+                    'type' => $type,
+                ];
+
+                $format = Arr::get($matches, 'format');
+                if ($format) {
+                    $param['format'] = $format;
+                }
+                if ($enum !== null) {
+                    $param['enum'] = $enum;
+                }
+                if (isset($defaultsAndExamples[$varName]['default'])) {
+                    $param['default'] = $defaultsAndExamples[$varName]['default'];
+                }
+                if (isset($defaultsAndExamples[$varName]['example'])) {
+                    $param['x-example'] = $defaultsAndExamples[$varName]['example'];
+                }
+
+                $parameters[] = $param;
             }
         }
 
@@ -194,6 +278,7 @@ trait SwaggerApiTrait
         $properties = [];
         $pattern    = static::getDocInputOutputPattern();
         $templatePattern = static::getDocInputOutputTemplatePattern();
+        $modelRefPattern = static::getDocModelRefPattern();
         /**
          * @var Tag $tag
          */
@@ -211,15 +296,71 @@ trait SwaggerApiTrait
                 }
             }
 
+            if (static::$useResponseTemplates && preg_match($modelRefPattern, $desctiption, $matches)) {
+                $modelName = $matches['model'];
+                $isArray = !empty($matches['isArray']);
+                $variable = Arr::get($matches, 'variable', '');
+
+                if (static::isHasTemplate($modelName) && $variable) {
+                    if ($isArray) {
+                        $properties[$variable] = [
+                            'type' => 'array',
+                            'items' => ['$ref' => "#/definitions/{$modelName}"],
+                            'description' => Arr::get($matches, 'description', ''),
+                        ];
+                    } else {
+                        $properties[$variable] = [
+                            '$ref' => "#/definitions/{$modelName}",
+                            'description' => Arr::get($matches, 'description', ''),
+                        ];
+                    }
+                    continue;
+                }
+            }
+
             if (preg_match($pattern, $desctiption, $matches)) {
-                $properties[$matches['variable']] = [
+                $descText = Arr::get($matches, 'description', '');
+                $enum = static::extractEnumFromDescription($descText);
+
+                $prop = [
                     'type' => static::getSafeDataType(Arr::get($matches, 'type', 'string')),
                     'name' => Arr::get($matches, 'variable', ''),
-                    'description' => Arr::get($matches, 'description', ''),
+                    'description' => $descText,
                     'required' => Arr::get($matches, 'optional', '') !== '?',
                 ];
+
+                $format = Arr::get($matches, 'format');
+                if ($format) {
+                    $prop['format'] = $format;
+                }
+                if ($enum !== null) {
+                    $prop['enum'] = $enum;
+                }
+
+                $properties[$matches['variable']] = $prop;
                 continue;
             }
+        }
+
+        $parsedParams = [];
+        foreach ($properties as $variable => $prop) {
+            if (str_contains($variable, '.') || str_contains($variable, '[]')) {
+                $parsedParams[] = [
+                    'variable' => $variable,
+                    'type' => $prop['type'],
+                    'description' => $prop['description'] ?? '',
+                    'required' => $prop['required'] ?? true,
+                ];
+            }
+        }
+
+        if (!empty($parsedParams) && static::hasNestedParameters($parsedParams)) {
+            $nestedSchema = static::buildNestedSchema($parsedParams);
+            return [
+                'description' => 'Response payload',
+                'type' => 'object',
+                'properties' => $nestedSchema,
+            ];
         }
 
         return [
@@ -234,7 +375,7 @@ trait SwaggerApiTrait
      */
     private static function getDocInputOutputPattern()
     {
-        return '/^(?<type>[\S]*?)[\s]*+(?<optional>\?)?\$(?<variable>[\S]*+)([\s]*?(?<description>\S[\S\s]*?))?$/';
+        return '/^(?<type>[\S]*?)(?:\((?<format>[a-zA-Z0-9\-]+)\))?[\s]*+(?<optional>\?)?\$(?<variable>[\S]*+)([\s]*?(?<description>\S[\S\s]*?))?$/';
     }
 
     /**
@@ -251,6 +392,30 @@ trait SwaggerApiTrait
     private static function getDocInputsCallablePattern()
     {
         return '/^\[(?<callable>[\S]*?)\]$/';
+    }
+
+    /**
+     * @return string
+     */
+    private static function getDocModelRefPattern()
+    {
+        return '/^@(?<model>[\w]+)(?<isArray>\[\])?\s*(?:(?<optional>\?)?\$(?<variable>[\S]+)(?:\s+(?<description>.+))?)?$/';
+    }
+
+    /**
+     * @return string
+     */
+    private static function getDocResponsePattern()
+    {
+        return '/^(?<code>\d{3})\s+(?:(?<template>\{[\S]*?\})|(?<description>.+))$/';
+    }
+
+    /**
+     * @return string
+     */
+    private static function getDocDefaultExamplePattern()
+    {
+        return '/^\$(?<variable>[\S]+)\s+(?<value>.+)$/';
     }
 
     /**
@@ -300,12 +465,29 @@ trait SwaggerApiTrait
 
     private static function getInputTags(DocBlock $methodDocBlock, array $middlewareList = [])
     {
-        $inputTagList  = [];
-        $methodTagList = $methodDocBlock->getTagsByName('input');
+        return static::getTagsByNameFromDocBlockAndMiddleware('input', $methodDocBlock, $middlewareList);
+    }
 
-        $addInputToTagList = function ($middleware, &$inputTagList) {
-            if (isset(static::$middlewareInputTagCache[$middleware])) {
-                $inputTagList = array_merge_deep($inputTagList, static::$middlewareInputTagCache[$middleware]);
+    /**
+     * @param string $tagName
+     * @param DocBlock $methodDocBlock
+     * @param array $middlewareList
+     * @return Tag[]
+     * @throws \ReflectionException
+     */
+    private static function getTagsByNameFromDocBlockAndMiddleware(
+        string $tagName,
+        DocBlock $methodDocBlock,
+        array $middlewareList = []
+    ) {
+        $tagList = [];
+        $methodTagList = $methodDocBlock->getTagsByName($tagName);
+        $cacheKey = $tagName;
+
+        $addTagsFromMiddleware = function ($middleware, &$tagList) use ($tagName, $cacheKey) {
+            $key = "{$cacheKey}:{$middleware}";
+            if (isset(static::$middlewareInputTagCache[$key])) {
+                $tagList = array_merge_deep($tagList, static::$middlewareInputTagCache[$key]);
                 return;
             }
 
@@ -314,27 +496,29 @@ trait SwaggerApiTrait
             if (!$middlewareReflection->hasMethod($method)) {
                 $method = 'handle';
                 if (!$middlewareReflection->hasMethod($method)) {
-                    static::$middlewareInputTagCache[$middleware] = [];
+                    static::$middlewareInputTagCache[$key] = [];
                     return;
                 }
             }
 
             $middlewareReflectionMethod = $middlewareReflection->getMethod($method);
-            $middlewareDocBloick        = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
-            $middlewareTagList = $middlewareDocBloick->getTagsByName('input');
-            static::$middlewareInputTagCache[$middleware] = $middlewareTagList;
-            $inputTagList = array_merge_deep($inputTagList, $middlewareTagList);
+            $middlewareDocBlock = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
+            $middlewareTagList = $middlewareDocBlock->getTagsByName($tagName);
+            static::$middlewareInputTagCache[$key] = $middlewareTagList;
+            $tagList = array_merge_deep($tagList, $middlewareTagList);
         };
+
         foreach ($middlewareList as $middleware) {
             if (class_exists($middleware)) {
-                $addInputToTagList($middleware, $inputTagList);
+                $addTagsFromMiddleware($middleware, $tagList);
             } else {
                 foreach (Arr::get(Route::getMiddlewareGroups(), $middleware, []) as $groupedMiddleware) {
-                    $addInputToTagList($groupedMiddleware, $inputTagList);
+                    $addTagsFromMiddleware($groupedMiddleware, $tagList);
                 }
             }
         }
-        return array_merge_deep($inputTagList, $methodTagList);
+
+        return array_merge_deep($tagList, $methodTagList);
     }
 
     /**
@@ -347,20 +531,338 @@ trait SwaggerApiTrait
     }
 
     /**
-     * @param $summary
-     * @param $description
-     * @param array $tags
-     * @param array $parameters
-     * @param array $responses
+     * @param DocBlock $docBlock
+     * @return Tag[]
+     */
+    private static function getResponseTags(DocBlock $docBlock)
+    {
+        return $docBlock->getTagsByName('response');
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     * @return Tag[]
+     */
+    private static function getSecurityTags(DocBlock $docBlock)
+    {
+        return $docBlock->getTagsByName('security');
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     * @return Tag[]
+     */
+    private static function getDefaultTags(DocBlock $docBlock)
+    {
+        return $docBlock->getTagsByName('default');
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     * @return Tag[]
+     */
+    private static function getExampleTags(DocBlock $docBlock)
+    {
+        return $docBlock->getTagsByName('example');
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     * @return bool
+     */
+    private static function isDeprecated(DocBlock $docBlock): bool
+    {
+        return !empty($docBlock->getTagsByName('deprecated'));
+    }
+
+    /**
+     * @param string $controllerKey
+     * @param string $actionKey
+     * @return string
+     */
+    private static function getOperationId(string $controllerKey, string $actionKey): string
+    {
+        return "{$controllerKey}_{$actionKey}";
+    }
+
+    /**
+     * @param string $description
+     * @return array|null
+     */
+    private static function extractEnumFromDescription(string &$description): ?array
+    {
+        if (preg_match('/\[([a-zA-Z0-9_,\-\s]+)\]\s*$/', $description, $matches)) {
+            $description = trim(preg_replace('/\[([a-zA-Z0-9_,\-\s]+)\]\s*$/', '', $description));
+            return array_map('trim', explode(',', $matches[1]));
+        }
+        return null;
+    }
+
+    /**
+     * @param array $headerTags
      * @return array
      */
-    private static function getMethodData($summary, $description, $tags = [], $parameters = [], $responses = [])
+    private static function getHeaderParametersByTags(array $headerTags): array
     {
-        $responses = [
-            'payload' => $responses,
-        ];
+        $parameters = [];
+        $pattern = static::getDocInputOutputPattern();
 
-        if (static::$useResponseTemplates) {
+        foreach ($headerTags as $tag) {
+            $description = $tag->getDescription()->render();
+            if (preg_match($pattern, $description, $matches)) {
+                $parameters[] = [
+                    'in' => 'header',
+                    'name' => Arr::get($matches, 'variable', ''),
+                    'description' => Arr::get($matches, 'description', ''),
+                    'required' => Arr::get($matches, 'optional', '') !== '?',
+                    'type' => static::getSafeDataType(Arr::get($matches, 'type', 'string')),
+                ];
+            }
+        }
+
+        return $parameters;
+    }
+
+    /**
+     * @param array $responseTags
+     * @param array $outputTags
+     * @return array
+     */
+    private static function getResponsesByTags(array $responseTags, array $outputTags): array
+    {
+        $responses = [];
+        $pattern = static::getDocResponsePattern();
+
+        foreach ($responseTags as $tag) {
+            $description = $tag->getDescription()->render();
+            if (preg_match($pattern, $description, $matches)) {
+                $code = $matches['code'];
+                $template = Arr::get($matches, 'template', '');
+
+                if ($template) {
+                    $templateName = trim($template, '{}');
+                    $responses[$code] = [
+                        'description' => $templateName,
+                        'schema' => [
+                            '$ref' => "#/definitions/{$templateName}",
+                        ],
+                    ];
+                } else {
+                    $responses[$code] = [
+                        'description' => Arr::get($matches, 'description', ''),
+                    ];
+                }
+            }
+        }
+
+        return $responses;
+    }
+
+    /**
+     * @param array $securityTags
+     * @return array
+     */
+    private static function parseSecurityTags(array $securityTags): array
+    {
+        $security = [];
+        foreach ($securityTags as $tag) {
+            $name = trim($tag->getDescription()->render());
+            if ($name) {
+                $security[] = [$name => []];
+            }
+        }
+        return $security;
+    }
+
+    /**
+     * @param array $defaultTags
+     * @param array $exampleTags
+     * @return array
+     */
+    private static function parseDefaultAndExampleTags(array $defaultTags, array $exampleTags): array
+    {
+        $result = [];
+        $pattern = static::getDocDefaultExamplePattern();
+
+        foreach ($defaultTags as $tag) {
+            $desc = $tag->getDescription()->render();
+            if (preg_match($pattern, $desc, $matches)) {
+                $result[$matches['variable']]['default'] = static::castTagValue($matches['value']);
+            }
+        }
+
+        foreach ($exampleTags as $tag) {
+            $desc = $tag->getDescription()->render();
+            if (preg_match($pattern, $desc, $matches)) {
+                $result[$matches['variable']]['example'] = static::castTagValue($matches['value']);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param string $value
+     * @return mixed
+     */
+    private static function castTagValue(string $value)
+    {
+        if (is_numeric($value)) {
+            return str_contains($value, '.') ? (float) $value : (int) $value;
+        }
+        if ($value === 'true') {
+            return true;
+        }
+        if ($value === 'false') {
+            return false;
+        }
+        if ($value === 'null') {
+            return null;
+        }
+        return $value;
+    }
+
+    /**
+     * @param array $parsedParams
+     * @return bool
+     */
+    private static function hasNestedParameters(array $parsedParams): bool
+    {
+        foreach ($parsedParams as $param) {
+            $variable = is_array($param) ? ($param['variable'] ?? '') : '';
+            if (str_contains($variable, '.') || str_contains($variable, '[]')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param array $parsedParams
+     * @return array
+     */
+    private static function buildNestedSchema(array $parsedParams): array
+    {
+        $groups = [];
+        foreach ($parsedParams as $param) {
+            $variable = $param['variable'] ?? '';
+            $type = static::getSafeDataType($param['type'] ?? 'string');
+            $description = $param['description'] ?? '';
+
+            $parts = preg_split('/\./', str_replace('[]', '', $variable));
+            $root = $parts[0];
+
+            if (count($parts) === 1 && !str_contains($variable, '[]')) {
+                $groups[$root] = ['type' => $type, 'description' => $description];
+            } else {
+                if (!isset($groups[$root])) {
+                    $groups[$root] = ['type' => 'object', 'properties' => []];
+                }
+                if (count($parts) > 1) {
+                    $child = $parts[1];
+                    $groups[$root]['properties'][$child] = ['type' => $type, 'description' => $description];
+                }
+                if (str_contains($variable, '[]')) {
+                    $groups[$root]['type'] = 'array';
+                }
+            }
+        }
+
+        return static::buildNestedSchemaRecursive($groups);
+    }
+
+    /**
+     * @param array $groups
+     * @return array
+     */
+    private static function buildNestedSchemaRecursive(array $groups): array
+    {
+        $result = [];
+        foreach ($groups as $key => $spec) {
+            $type = $spec['type'] ?? 'object';
+            $description = $spec['description'] ?? '';
+
+            if ($type === 'array' && isset($spec['properties'])) {
+                $result[$key] = [
+                    'type' => 'array',
+                    'description' => $description,
+                    'items' => [
+                        'type' => 'object',
+                        'properties' => $spec['properties'],
+                    ],
+                ];
+            } elseif ($type === 'object' && isset($spec['properties'])) {
+                $result[$key] = [
+                    'type' => 'object',
+                    'description' => $description,
+                    'properties' => $spec['properties'],
+                ];
+            } else {
+                $result[$key] = ['type' => $type, 'description' => $description];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @param array $schema
+     * @return array
+     */
+    private static function getBodyParameterFromNested(array $schema): array
+    {
+        return [
+            'in' => 'body',
+            'name' => 'body',
+            'description' => 'Request body',
+            'required' => true,
+            'schema' => [
+                'type' => 'object',
+                'properties' => $schema,
+            ],
+        ];
+    }
+
+    /**
+     * @param array $parameters
+     * @return array
+     */
+    private static function detectConsumes(array $parameters): array
+    {
+        foreach ($parameters as $param) {
+            if (($param['type'] ?? '') === 'file') {
+                return ['multipart/form-data'];
+            }
+            if (($param['in'] ?? '') === 'body') {
+                return ['application/json'];
+            }
+        }
+        return ['application/x-www-form-urlencoded'];
+    }
+
+    /**
+     * @param $summary
+     * @param $description
+     * @param array $options
+     * @return array
+     */
+    private static function getMethodData($summary, $description, array $options = [])
+    {
+        $tags = $options['tags'] ?? [];
+        $parameters = $options['parameters'] ?? [];
+        $responses = $options['responses'] ?? [];
+        $operationId = $options['operationId'] ?? null;
+        $deprecated = $options['deprecated'] ?? false;
+        $security = $options['security'] ?? [];
+        $consumes = $options['consumes'] ?? ['application/x-www-form-urlencoded'];
+        $hasExplicitResponses = $options['hasExplicitResponses'] ?? false;
+
+        if (!$hasExplicitResponses) {
+            $responses = [
+                'payload' => $responses,
+            ];
+        }
+
+        if (static::$useResponseTemplates && !$hasExplicitResponses) {
             $responses = array_merge_deep($responses, [
                 'success' => [
                     'description' => 'Success response',
@@ -377,17 +879,28 @@ trait SwaggerApiTrait
             ]);
         }
 
-        return [
+        $result = [
             'summary' => $summary,
             'description' => $description,
             'tags' => $tags,
-            'consumes' => [
-                'application/x-www-form-urlencoded'
-            ],
+            'consumes' => $consumes,
             'parameters' => $parameters,
             'responses' => $responses,
-
         ];
+
+        if ($operationId !== null) {
+            $result['operationId'] = $operationId;
+        }
+
+        if ($deprecated) {
+            $result['deprecated'] = true;
+        }
+
+        if (!empty($security)) {
+            $result['security'] = $security;
+        }
+
+        return $result;
     }
 
     /**
@@ -473,6 +986,14 @@ trait SwaggerApiTrait
      * @return array
      */
     protected static function getSwaggerTemplates()
+    {
+        return []; //override in final class
+    }
+
+    /**
+     * @return array
+     */
+    protected static function getSwaggerSecurityDefinitions(): array
     {
         return []; //override in final class
     }
