@@ -1,16 +1,16 @@
 <?php
 
-namespace Components\LaravelApiExample;
+namespace Dskripchenko\LaravelApiExample;
 
-use Components\LaravelApi\Components\BaseModule;
-use Components\LaravelApiExample\Versions\v1\Api as V1;
-use Components\LaravelApiExample\Versions\v1_1\Api as V1_1;
-use Components\LaravelApiExample\Versions\v1_2\Api as V1_2;
-use Components\LaravelApiExample\Versions\v2\Api as V2;
+use Dskripchenko\LaravelApi\Components\BaseModule;
+use Dskripchenko\LaravelApiExample\Versions\v1\Api as V1;
+use Dskripchenko\LaravelApiExample\Versions\v1_1\Api as V1_1;
+use Dskripchenko\LaravelApiExample\Versions\v1_2\Api as V1_2;
+use Dskripchenko\LaravelApiExample\Versions\v2\Api as V2;
 
 /**
  * Class ExampleModule
- * @package Components\LaravelApiExample
+ * @package Dskripchenko\LaravelApiExample
  */
 class ExampleModule extends BaseModule
 {

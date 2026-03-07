@@ -1,11 +1,11 @@
 <?php
-namespace Components\LaravelApiExample;
+namespace Dskripchenko\LaravelApiExample;
 
 use Dskripchenko\LaravelApi\Providers\ApiServiceProvider;
 
 /**
  * Class ExampleApiServiceProvider
- * @package Components\LaravelApiExample
+ * @package Dskripchenko\LaravelApiExample
  */
 class ExampleApiServiceProvider extends ApiServiceProvider
 {

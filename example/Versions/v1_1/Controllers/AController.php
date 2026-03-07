@@ -1,14 +1,14 @@
 <?php
 
-namespace Components\LaravelApiExample\Versions\v1_1\Controllers;
+namespace Dskripchenko\LaravelApiExample\Versions\v1_1\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use \Components\LaravelApiExample\Versions\v1\Controllers\AController as BaseAController;
+use Dskripchenko\LaravelApiExample\Versions\v1\Controllers\AController as BaseAController;
 
 /**
  * Class AController
- * @package Components\LaravelApiExample\Versions\v1_1\Controllers
+ * @package Dskripchenko\LaravelApiExample\Versions\v1_1\Controllers
  */
 class AController extends BaseAController
 {

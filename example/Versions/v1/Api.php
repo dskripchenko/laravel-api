@@ -1,13 +1,13 @@
 <?php
 
-namespace Components\LaravelApiExample\Versions\v1;
+namespace Dskripchenko\LaravelApiExample\Versions\v1;
 
-use Components\LaravelApi\Components\BaseApi;
-use Components\LaravelApiExample\Versions\v1\Controllers\AController;
+use Dskripchenko\LaravelApi\Components\BaseApi;
+use Dskripchenko\LaravelApiExample\Versions\v1\Controllers\AController;
 
 /**
  * Class Api
- * @package Components\LaravelApiExample\Versions\v1
+ * @package Dskripchenko\LaravelApiExample\Versions\v1
  */
 class Api extends BaseApi
 {
