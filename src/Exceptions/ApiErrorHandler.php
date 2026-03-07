@@ -40,17 +40,42 @@ class ApiErrorHandler
 
     /**
      * @param Throwable $e
+     * @return Closure|false
+     */
+    protected function findHandler(Throwable $e): Closure|false
+    {
+        $className = get_class($e);
+        $handler = Arr::get($this->handlers, $className, false);
+        if ($handler) {
+            return $handler;
+        }
+
+        foreach (class_parents($e) as $parent) {
+            $handler = Arr::get($this->handlers, $parent, false);
+            if ($handler) {
+                return $handler;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Throwable $e
      * @return mixed
      */
     public function handle(Throwable $e)
     {
-        $className = get_class($e);
-        $handle    = Arr::get($this->handlers, $className, false);
+        $handle = $this->findHandler($e);
         if (!$handle) {
             $handle = static function (Throwable $e) {
+                $message = app()->hasDebugModeEnabled()
+                    ? $e->getMessage()
+                    : 'Internal server error';
+
                 return ApiResponseHelper::sayError([
-                    'message' => $e->getMessage(),
-                ]);
+                    'message' => $message,
+                ], 500);
             };
         }
 

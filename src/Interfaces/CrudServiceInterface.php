@@ -68,4 +68,16 @@ interface CrudServiceInterface
      * @throws \Exception
      */
     public function delete(int $id): BaseJsonResource;
+
+    /**
+     * @param int $id
+     * @return BaseJsonResource
+     */
+    public function restore(int $id): BaseJsonResource;
+
+    /**
+     * @param int $id
+     * @return BaseJsonResource
+     */
+    public function forceDelete(int $id): BaseJsonResource;
 }

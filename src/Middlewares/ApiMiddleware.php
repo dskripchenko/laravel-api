@@ -30,10 +30,14 @@ abstract class ApiMiddleware
                 'message' => $e->getMessage(),
             ]);
         } catch (Exception $e) {
+            $message = app()->hasDebugModeEnabled()
+                ? $e->getMessage()
+                : 'Internal server error';
+
             return ApiResponseHelper::sayError([
-                'errorKey' => $e->getCode(),
-                'message' => $e->getMessage(),
-            ]);
+                'errorKey' => (string) $e->getCode(),
+                'message' => $message,
+            ], 500);
         }
     }
 

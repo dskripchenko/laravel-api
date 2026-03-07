@@ -27,6 +27,7 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         if ($request->routeIs('api-endpoint')) {
+            $this->report($e);
             return ApiErrorHandler::handle($e);
         }
         return parent::render($request, $e);

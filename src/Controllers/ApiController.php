@@ -54,4 +54,33 @@ class ApiController extends Controller
             'messages' => $messages
         ]);
     }
+
+    /**
+     * @param $payload
+     * @return JsonResponse
+     */
+    public function created($payload = []): JsonResponse
+    {
+        return $this->success($payload, 201);
+    }
+
+    /**
+     * @return JsonResponse
+     */
+    public function noContent(): JsonResponse
+    {
+        return new JsonResponse(null, 204);
+    }
+
+    /**
+     * @param string $message
+     * @return JsonResponse
+     */
+    public function notFound(string $message = 'Not found'): JsonResponse
+    {
+        return $this->error([
+            'errorKey' => 'not_found',
+            'message' => $message,
+        ], 404);
+    }
 }

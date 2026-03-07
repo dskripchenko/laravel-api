@@ -106,4 +106,41 @@ trait MakesHttpApiRequests
     {
         return ApiRequest::createFromBase($symfonyRequest);
     }
+
+    public function assertApiSuccess(TestResponse $response): TestResponse
+    {
+        $response->assertSuccessful();
+        $response->assertJson(['success' => true]);
+
+        return $response;
+    }
+
+    public function assertApiError(TestResponse $response, string $errorKey): TestResponse
+    {
+        $response->assertJson([
+            'success' => false,
+            'payload' => ['errorKey' => $errorKey],
+        ]);
+
+        return $response;
+    }
+
+    public function assertApiValidationError(TestResponse $response, array $fields): TestResponse
+    {
+        $response->assertJson([
+            'success' => false,
+            'payload' => ['errorKey' => 'validation'],
+        ]);
+
+        $data = $response->json();
+        foreach ($fields as $field) {
+            \PHPUnit\Framework\Assert::assertArrayHasKey(
+                $field,
+                $data['payload']['messages'] ?? [],
+                "Validation error missing for field: {$field}"
+            );
+        }
+
+        return $response;
+    }
 }

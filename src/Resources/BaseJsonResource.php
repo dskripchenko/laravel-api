@@ -26,7 +26,7 @@ class BaseJsonResource extends JsonResource
             $data = $data->jsonSerialize();
         }
 
-        if (method_exists($this->resource, 'prepareResponseData')) {
+        if (is_object($this->resource) && method_exists($this->resource, 'prepareResponseData')) {
             $data = $this->resource->prepareResponseData($data);
         }
 
