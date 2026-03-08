@@ -8,7 +8,7 @@
 
 **Laravel-пакет для версионированного API-маршрутизирования, автоматической генерации OpenAPI 3.0 документации и CRUD-скаффолдинга.**
 
-Создавайте версионированные API с автоматически генерируемой Swagger-документацией из PHP-docblock'ов — без YAML/JSON-схем и сложных библиотек аннотаций.
+Создавайте версионированные API с автоматически генерируемой OpenAPI-документацией из PHP-docblock'ов — без YAML/JSON-схем и сложных библиотек аннотаций.
 
 ## Содержание
 
@@ -168,7 +168,7 @@ src/
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
 ├── Services/       ApiResponseHelper, CrudService
-└── Traits/         SwaggerApiTrait, Testing/MakesHttpApiRequests
+└── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
 ## Версионирование API
@@ -289,7 +289,7 @@ V2 автоматически наследует `list`, `show`, `create`, `upda
 class Api extends BaseApi {
     public static bool $useResponseTemplates = true;
 
-    public static function getSwaggerTemplates(): array {
+    public static function getOpenApiTemplates(): array {
         return [
             'OrderResponse' => [
                 'id'         => 'integer!',            // обязательное целое
@@ -303,7 +303,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getSwaggerSecurityDefinitions(): array {
+    public static function getOpenApiSecurityDefinitions(): array {
         return [
             'BearerAuth' => ['type' => 'apiKey', 'name' => 'Authorization', 'in' => 'header'],
         ];
@@ -402,7 +402,7 @@ return [
     'prefix' => 'api',                                          // Префикс URL
     'uri_pattern' => '{version}/{controller}/{action}',          // Шаблон маршрута
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
-    'swagger_path' => 'public/swagger',                          // Выходной путь Swagger JSON
+    'openapi_path' => 'public/openapi',                           // Выходной путь OpenAPI JSON
     'doc_middleware' => [],                                       // Middleware для /api/doc
 ];
 ```
@@ -549,9 +549,9 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 | Класс | Методы |
 |-------|---------|
-| `BaseApi` | `getMethods()`, `make()`, `getSwaggerTemplates()`, `getSwaggerSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
-| `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getSwaggerInputs()`, `getColumnKeys()` |
+| `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 
 ### Middleware
 

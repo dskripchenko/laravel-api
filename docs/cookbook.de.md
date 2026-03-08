@@ -363,18 +363,18 @@ class ApiAuthMiddleware extends ApiMiddleware
 }
 ```
 
-Das `@header`-Tag im Middleware-Docblock wird in die Swagger-Dokumentation aggregiert.
+Das `@header`-Tag im Middleware-Docblock wird in die OpenAPI-Dokumentation aggregiert.
 
 ---
 
-## Rezept 5: Swagger mit Sicherheitsdefinitionen und Vorlagen
+## Rezept 5: OpenAPI mit Sicherheitsdefinitionen und Vorlagen
 
 ```php
 class Api extends BaseApi
 {
     public static bool $useResponseTemplates = true;
 
-    public static function getSwaggerTemplates(): array
+    public static function getOpenApiTemplates(): array
     {
         return [
             'UserResponse' => [
@@ -389,7 +389,7 @@ class Api extends BaseApi
         ];
     }
 
-    public static function getSwaggerSecurityDefinitions(): array
+    public static function getOpenApiSecurityDefinitions(): array
     {
         return [
             'BearerAuth' => [

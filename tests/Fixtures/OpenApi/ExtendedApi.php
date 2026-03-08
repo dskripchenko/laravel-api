@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tests\Fixtures\Swagger;
+namespace Tests\Fixtures\OpenApi;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;
 
 /**
  * Extended API
- * API with extended swagger features
+ * API with extended OpenAPI features
  */
 class ExtendedApi extends BaseApi
 {
@@ -68,7 +68,7 @@ class ExtendedApi extends BaseApi
         ];
     }
 
-    public static function getSwaggerSecurityDefinitions(): array
+    public static function getOpenApiSecurityDefinitions(): array
     {
         return [
             'BearerAuth' => [
@@ -79,7 +79,7 @@ class ExtendedApi extends BaseApi
         ];
     }
 
-    public static function getSwaggerTemplates(): array
+    public static function getOpenApiTemplates(): array
     {
         return [
             'UserResponse' => [

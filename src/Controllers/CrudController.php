@@ -30,9 +30,9 @@ class CrudController extends ApiController
     /**
      * @return array
      */
-    public function getSwaggerMetaInputs(): array
+    public function getOpenApiMetaInputs(): array
     {
-        return $this->crudService->meta()->getSwaggerInputs();
+        return $this->crudService->meta()->getOpenApiInputs();
     }
 
     /**
@@ -57,7 +57,7 @@ class CrudController extends ApiController
 
     /**
      * Создать запись
-     * @input [getSwaggerMetaInputs]
+     * @input [getOpenApiMetaInputs]
      *
      * @param Request $request
      * @return JsonResponse
@@ -85,7 +85,7 @@ class CrudController extends ApiController
      * Обновить запись
      *
      * @input integer $id Идентификатор записи
-     * @input [getSwaggerMetaInputs]
+     * @input [getOpenApiMetaInputs]
      *
      * @param Request $request
      * @param int $id

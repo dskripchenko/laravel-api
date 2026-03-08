@@ -77,11 +77,11 @@ it('delegates delete to crudService', function () {
     expect($data['success'])->toBeTrue();
 });
 
-it('returns swagger meta inputs', function () {
+it('returns OpenAPI meta inputs', function () {
     $meta = (new Meta())->string('name', 'Name', true)->hidden('secret', 'Secret');
     $this->crudService->shouldReceive('meta')->once()->andReturn($meta);
 
-    $inputs = $this->controller->getSwaggerMetaInputs();
+    $inputs = $this->controller->getOpenApiMetaInputs();
     expect($inputs)->toHaveKey('name');
     expect($inputs)->not->toHaveKey('secret');
 });

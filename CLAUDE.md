@@ -112,7 +112,7 @@ class ApiV1_1 extends ApiV1 {
 
 ### OpenAPI 3.0 documentation
 
-**SwaggerApiTrait** generates OpenAPI 3.0 spec from docblock annotations on controller methods. Available at `GET /api/doc`.
+**OpenApiTrait** generates OpenAPI 3.0 spec from docblock annotations on controller methods. Available at `GET /api/doc`.
 
 #### Docblock tags reference
 
@@ -132,7 +132,7 @@ class ApiV1_1 extends ApiV1 {
  * @input array $tags Array of objects
  * @input integer $tags[].id Array item field
  * @input @ModelName Request body as $ref to component schema
- * @input [getSwaggerMetaInputs] Dynamic inputs from Meta component
+ * @input [getOpenApiMetaInputs] Dynamic inputs from Meta component
  *
  * @output integer $id Response field
  * @output string(date-time) $createdAt Formatted output
@@ -174,7 +174,7 @@ Both shorthand and array formats can be mixed in the same template.
 class Api extends BaseApi {
     public static bool $useResponseTemplates = true;
 
-    public static function getSwaggerTemplates(): array {
+    public static function getOpenApiTemplates(): array {
         return [
             // Shorthand syntax
             'UserResponse' => [
@@ -190,7 +190,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getSwaggerSecurityDefinitions(): array {
+    public static function getOpenApiSecurityDefinitions(): array {
         return [
             'BearerAuth' => [
                 'type' => 'apiKey',
@@ -235,7 +235,7 @@ Publishable config `config/laravel-api.php`:
     'prefix' => 'api',
     'uri_pattern' => '{version}/{controller}/{action}',
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
-    'swagger_path' => 'public/swagger',
+    'openapi_path' => 'public/openapi',
     'doc_middleware' => [],
 ]
 ```
@@ -266,13 +266,13 @@ src/
 ├── Resources/         BaseJsonResource, BaseJsonResourceCollection
 ├── Services/          ApiResponseHelper, CrudService
 └── Traits/
-    ├── SwaggerApiTrait
+    ├── OpenApiTrait
     └── Testing/       MakesHttpApiRequests
 config/                laravel-api.php (publishable)
 example/               Full working example with versioned APIs (v1, v1.1, v1.2, v2)
 tests/
 ├── Unit/              Component, controller, service, middleware, trait tests
-├── Feature/           End-to-end CRUD, routing, swagger generation tests
+├── Feature/           End-to-end CRUD, routing, OpenAPI generation tests
 └── Fixtures/          Test helpers, models, controllers, API classes
 ```
 

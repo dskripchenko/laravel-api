@@ -363,18 +363,18 @@ class ApiAuthMiddleware extends ApiMiddleware
 }
 ```
 
-中间件文档注释中的 `@header` 标签会被聚合到 Swagger 文档中。
+中间件文档注释中的 `@header` 标签会被聚合到 OpenAPI 文档中。
 
 ---
 
-## 示例 5：带安全定义和模板的 Swagger
+## 示例 5：带安全定义和模板的 OpenAPI
 
 ```php
 class Api extends BaseApi
 {
     public static bool $useResponseTemplates = true;
 
-    public static function getSwaggerTemplates(): array
+    public static function getOpenApiTemplates(): array
     {
         return [
             'UserResponse' => [
@@ -389,7 +389,7 @@ class Api extends BaseApi
         ];
     }
 
-    public static function getSwaggerSecurityDefinitions(): array
+    public static function getOpenApiSecurityDefinitions(): array
     {
         return [
             'BearerAuth' => [

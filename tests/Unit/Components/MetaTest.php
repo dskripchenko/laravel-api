@@ -87,27 +87,27 @@ it('registers crud with mixed conditions', function () {
     expect($arr['actions']['delete'])->toBeFalse();
 });
 
-it('filters hidden columns from swagger inputs', function () {
+it('filters hidden columns from OpenAPI inputs', function () {
     $meta = (new Meta())
         ->string('name', 'Name', true)
         ->hidden('secret', 'Secret');
-    $inputs = $meta->getSwaggerInputs();
+    $inputs = $meta->getOpenApiInputs();
     expect($inputs)->toHaveKey('name');
     expect($inputs)->not->toHaveKey('secret');
 });
 
-it('formats swagger inputs with required marker', function () {
+it('formats OpenAPI inputs with required marker', function () {
     $meta = (new Meta())
         ->string('name', 'Name', true)
         ->string('bio', 'Bio', false);
-    $inputs = $meta->getSwaggerInputs();
+    $inputs = $meta->getOpenApiInputs();
     expect($inputs['name'])->toContain('$name');
     expect($inputs['bio'])->toContain('?$bio');
 });
 
-it('returns empty swagger inputs for empty meta', function () {
+it('returns empty OpenAPI inputs for empty meta', function () {
     $meta = new Meta();
-    expect($meta->getSwaggerInputs())->toBe([]);
+    expect($meta->getOpenApiInputs())->toBe([]);
 });
 
 it('returns column keys', function () {

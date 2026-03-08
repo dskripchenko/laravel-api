@@ -8,7 +8,7 @@
 
 **用于版本化API路由、OpenAPI 3.0自动文档生成和CRUD脚手架的Laravel包。**
 
-使用PHP文档块自动生成Swagger文档，构建版本化API——无需维护YAML/JSON模式，无需学习注解库。
+使用PHP文档块自动生成OpenAPI文档，构建版本化API——无需维护YAML/JSON模式，无需学习注解库。
 
 ## 目录
 
@@ -168,7 +168,7 @@ src/
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
 ├── Services/       ApiResponseHelper, CrudService
-└── Traits/         SwaggerApiTrait, Testing/MakesHttpApiRequests
+└── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
 ## API版本控制
@@ -289,7 +289,7 @@ V2自动继承V1中的`list`、`show`、`create`、`update`，同时覆盖控制
 class Api extends BaseApi {
     public static bool $useResponseTemplates = true;
 
-    public static function getSwaggerTemplates(): array {
+    public static function getOpenApiTemplates(): array {
         return [
             'OrderResponse' => [
                 'id'         => 'integer!',            // 必填整数
@@ -303,7 +303,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getSwaggerSecurityDefinitions(): array {
+    public static function getOpenApiSecurityDefinitions(): array {
         return [
             'BearerAuth' => ['type' => 'apiKey', 'name' => 'Authorization', 'in' => 'header'],
         ];
@@ -402,7 +402,7 @@ return [
     'prefix' => 'api',                                          // URL前缀
     'uri_pattern' => '{version}/{controller}/{action}',          // 路由模式
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
-    'swagger_path' => 'public/swagger',                          // Swagger JSON输出
+    'openapi_path' => 'public/openapi',                           // OpenAPI JSON输出
     'doc_middleware' => [],                                       // /api/doc的中间件
 ];
 ```
@@ -549,9 +549,9 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 | 类 | 方法 |
 |----|------|
-| `BaseApi` | `getMethods()`, `make()`, `getSwaggerTemplates()`, `getSwaggerSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
-| `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getSwaggerInputs()`, `getColumnKeys()` |
+| `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 
 ### 中间件
 

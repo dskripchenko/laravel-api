@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Tests\Fixtures\Swagger\ShorthandApi;
+use Tests\Fixtures\OpenApi\ShorthandApi;
 
 // === Shorthand string parsing ===
 
 it('parses shorthand required type', function () {
-    $config = ShorthandApi::getSwaggerApiConfig('v1');
+    $config = ShorthandApi::getOpenApiConfig('v1');
     $schema = $config['components']['schemas']['OrderResponse'];
 
     expect($schema['properties']['id']['type'])->toBe('integer');
@@ -17,7 +17,7 @@ it('parses shorthand required type', function () {
 });
 
 it('parses shorthand optional type', function () {
-    $config = ShorthandApi::getSwaggerApiConfig('v1');
+    $config = ShorthandApi::getOpenApiConfig('v1');
     $schema = $config['components']['schemas']['OrderResponse'];
 
     expect($schema['properties']['total']['type'])->toBe('number');
@@ -25,7 +25,7 @@ it('parses shorthand optional type', function () {
 });
 
 it('parses shorthand type with format', function () {
-    $config = ShorthandApi::getSwaggerApiConfig('v1');
+    $config = ShorthandApi::getOpenApiConfig('v1');
     $schema = $config['components']['schemas']['OrderResponse'];
 
     expect($schema['properties']['created_at']['type'])->toBe('string');
@@ -34,7 +34,7 @@ it('parses shorthand type with format', function () {
 });
 
 it('parses shorthand type with format and required', function () {
-    $config = ShorthandApi::getSwaggerApiConfig('v1');
+    $config = ShorthandApi::getOpenApiConfig('v1');
     $schema = $config['components']['schemas']['OrderResponse'];
 
     expect($schema['properties']['email']['type'])->toBe('string');
@@ -43,7 +43,7 @@ it('parses shorthand type with format and required', function () {
 });
 
 it('mixes shorthand and array format in same template', function () {
-    $config = ShorthandApi::getSwaggerApiConfig('v1');
+    $config = ShorthandApi::getOpenApiConfig('v1');
     $schema = $config['components']['schemas']['MixedTemplate'];
 
     expect($schema['properties']['id']['type'])->toBe('integer');
@@ -55,7 +55,7 @@ it('mixes shorthand and array format in same template', function () {
 });
 
 it('resolves @ref in shorthand templates', function () {
-    $config = ShorthandApi::getSwaggerApiConfig('v1');
+    $config = ShorthandApi::getOpenApiConfig('v1');
     $schema = $config['components']['schemas']['OrderWithRef'];
 
     expect($schema['properties']['error']['$ref'])
@@ -69,7 +69,7 @@ it('resolves @ref in shorthand templates', function () {
 // === Integration: @response uses shorthand schemas ===
 
 it('uses shorthand-defined schema in @response', function () {
-    $config = ShorthandApi::getSwaggerApiConfig('v1');
+    $config = ShorthandApi::getOpenApiConfig('v1');
     $responses = $config['paths']['/v1/order/create']['post']['responses'];
 
     $ref201 = $responses['201']['content']['application/json']['schema']['$ref'];
@@ -82,7 +82,7 @@ it('uses shorthand-defined schema in @response', function () {
 // === Backward compatibility: existing array format still works ===
 
 it('existing array format templates still work', function () {
-    $config = \Tests\Fixtures\Swagger\ExtendedApi::getSwaggerApiConfig('v1');
+    $config = \Tests\Fixtures\OpenApi\ExtendedApi::getOpenApiConfig('v1');
     $schema = $config['components']['schemas']['UserResponse'];
 
     expect($schema['properties']['id']['type'])->toBe('integer');

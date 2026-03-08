@@ -1,6 +1,6 @@
 # OpenAPI Docblock Tags Reference
 
-This document describes all docblock tags supported by `SwaggerApiTrait` for automatic OpenAPI 3.0 generation.
+This document describes all docblock tags supported by `OpenApiTrait` for automatic OpenAPI 3.0 generation.
 
 ## @input — Request parameters
 
@@ -110,12 +110,12 @@ Generates:
 @input @OrderCreateRequest
 ```
 
-Generates `$ref: '#/components/schemas/OrderCreateRequest'` in requestBody. The model must be defined in `getSwaggerTemplates()`.
+Generates `$ref: '#/components/schemas/OrderCreateRequest'` in requestBody. The model must be defined in `getOpenApiTemplates()`.
 
 ### Dynamic inputs from method
 
 ```php
-@input [getSwaggerMetaInputs]
+@input [getOpenApiMetaInputs]
 ```
 
 Calls the method on the controller and merges returned inputs.
@@ -209,10 +209,10 @@ Applies a security scheme to the operation.
 @security BearerAuth
 ```
 
-The scheme must be defined in `getSwaggerSecurityDefinitions()` on the Api class:
+The scheme must be defined in `getOpenApiSecurityDefinitions()` on the Api class:
 
 ```php
-public static function getSwaggerSecurityDefinitions(): array {
+public static function getOpenApiSecurityDefinitions(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -277,7 +277,7 @@ Sets an example value for a parameter.
 
 ## Template shorthand syntax
 
-When defining templates in `getSwaggerTemplates()`, you can use a shorthand string notation instead of verbose arrays:
+When defining templates in `getOpenApiTemplates()`, you can use a shorthand string notation instead of verbose arrays:
 
 | Syntax | Meaning | Equivalent array |
 |--------|---------|------------------|
@@ -291,7 +291,7 @@ When defining templates in `getSwaggerTemplates()`, you can use a shorthand stri
 ### Example
 
 ```php
-public static function getSwaggerTemplates(): array {
+public static function getOpenApiTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

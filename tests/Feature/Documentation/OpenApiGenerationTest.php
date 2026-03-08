@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Tests\Fixtures\Versions\v1\TestApi;
-use Tests\Fixtures\Swagger\TemplateApi;
-use Tests\Fixtures\Swagger\ExtendedApi;
+use Tests\Fixtures\OpenApi\TemplateApi;
+use Tests\Fixtures\OpenApi\ExtendedApi;
 
 it('generates valid openapi 3.0 structure', function () {
-    $config = TestApi::getSwaggerApiConfig('v1');
+    $config = TestApi::getOpenApiConfig('v1');
     expect($config['openapi'])->toBe('3.0.0');
     expect($config['info'])->toHaveKeys(['title', 'description', 'version']);
     expect($config['servers'])->toBeArray();
@@ -15,7 +15,7 @@ it('generates valid openapi 3.0 structure', function () {
 });
 
 it('includes all action paths', function () {
-    $config = TestApi::getSwaggerApiConfig('v1');
+    $config = TestApi::getOpenApiConfig('v1');
     $paths = array_keys($config['paths']);
     expect($paths)->toContain('/v1/item/list');
     expect($paths)->toContain('/v1/item/show');
@@ -26,7 +26,7 @@ it('includes all action paths', function () {
 });
 
 it('parses @input tags correctly', function () {
-    $config = TestApi::getSwaggerApiConfig('v1');
+    $config = TestApi::getOpenApiConfig('v1');
     $operation = $config['paths']['/v1/item/create']['post'];
     $contentType = array_key_first($operation['requestBody']['content']);
     $props = $operation['requestBody']['content'][$contentType]['schema']['properties'];
@@ -35,14 +35,14 @@ it('parses @input tags correctly', function () {
 });
 
 it('parses @output tags correctly', function () {
-    $config = TestApi::getSwaggerApiConfig('v1');
+    $config = TestApi::getOpenApiConfig('v1');
     $responseSchema = $config['paths']['/v1/item/show']['get']['responses']['200']['content']['application/json']['schema'];
     expect($responseSchema['properties'])->toHaveKey('id');
     expect($responseSchema['properties'])->toHaveKey('name');
 });
 
 it('includes components schemas with templates', function () {
-    $config = TemplateApi::getSwaggerApiConfig('v1');
+    $config = TemplateApi::getOpenApiConfig('v1');
     expect($config['components']['schemas'])->toHaveKey('Error');
     expect($config['components']['schemas'])->toHaveKey('Success');
     expect($config['components']['schemas'])->toHaveKey('UserResponse');
@@ -54,8 +54,8 @@ it('includes components schemas with templates', function () {
     expect($userDef['required'])->toContain('name');
 });
 
-it('generates extended openapi with all new features', function () {
-    $config = ExtendedApi::getSwaggerApiConfig('v1');
+it('generates extended OpenAPI with all new features', function () {
+    $config = ExtendedApi::getOpenApiConfig('v1');
 
     expect($config['openapi'])->toBe('3.0.0');
     expect($config['components'])->toHaveKey('securitySchemes');
@@ -90,7 +90,7 @@ it('generates extended openapi with all new features', function () {
 });
 
 it('backward compat with simple api', function () {
-    $config = TestApi::getSwaggerApiConfig('v1');
+    $config = TestApi::getOpenApiConfig('v1');
 
     expect($config['openapi'])->toBe('3.0.0');
     expect($config['paths'])->toHaveKey('/v1/item/list');

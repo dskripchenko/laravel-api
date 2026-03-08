@@ -25,7 +25,7 @@ class ApiDocumentationController extends Controller
     {
         $versionList = ApiModule::getApiVersionList();
 
-        $folder = 'public/swagger';
+        $folder = config('laravel-api.openapi_path', 'public/openapi');
 
         if (!Storage::exists($folder)) {
             Storage::makeDirectory($folder);
@@ -40,7 +40,7 @@ class ApiDocumentationController extends Controller
             $filePath = "{$folder}/{$fileName}";
 
             if (!Storage::exists($filePath) || app()->hasDebugModeEnabled()) {
-                $config = $api::getSwaggerApiConfig($version);
+                $config = $api::getOpenApiConfig($version);
                 Storage::put($filePath, json_encode($config));
             } else {
                 $config = json_decode(Storage::get($filePath), true);

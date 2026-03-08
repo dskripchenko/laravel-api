@@ -8,7 +8,7 @@
 
 **A Laravel package for versioned API routing, OpenAPI 3.0 auto-documentation, and CRUD scaffolding.**
 
-Build versioned APIs with automatic Swagger documentation generated from PHP docblocks — no YAML/JSON schemas to maintain, no annotation libraries to learn.
+Build versioned APIs with automatic OpenAPI documentation generated from PHP docblocks — no YAML/JSON schemas to maintain, no annotation libraries to learn.
 
 ## Table of Contents
 
@@ -170,7 +170,7 @@ src/
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
 ├── Services/       ApiResponseHelper, CrudService
 └── Traits/
-    ├── SwaggerApiTrait
+    ├── OpenApiTrait
     └── Testing/       MakesHttpApiRequests
 ```
 
@@ -292,7 +292,7 @@ Enable reusable schemas via `components/schemas`:
 class Api extends BaseApi {
     public static bool $useResponseTemplates = true;
 
-    public static function getSwaggerTemplates(): array {
+    public static function getOpenApiTemplates(): array {
         return [
             'OrderResponse' => [
                 'id'         => 'integer!',            // required integer
@@ -315,7 +315,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getSwaggerSecurityDefinitions(): array {
+    public static function getOpenApiSecurityDefinitions(): array {
         return [
             'BearerAuth' => ['type' => 'apiKey', 'name' => 'Authorization', 'in' => 'header'],
         ];
@@ -430,7 +430,7 @@ return [
     'prefix' => 'api',                                          // URL prefix
     'uri_pattern' => '{version}/{controller}/{action}',          // Route pattern
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
-    'swagger_path' => 'public/swagger',                          // Swagger JSON output
+    'openapi_path' => 'public/openapi',                           // OpenAPI JSON output
     'doc_middleware' => [],                                       // Middleware for /api/doc
 ];
 ```
@@ -579,9 +579,9 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 | Class | Methods |
 |-------|---------|
-| `BaseApi` (all methods are `static`) | `getMethods()`, `make()`, `getSwaggerTemplates()`, `getSwaggerSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` (all methods are `static`) | `getMethods()`, `make()`, `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()`, `getDocMiddleware()` |
-| `Meta` | `string($key, $name)`, `integer($key, $name)`, `number($key, $name)`, `boolean($key, $name)`, `hidden($key, $name)`, `select($key, $name, $items)`, `file($key, $name, $src)`, `action($key, $condition)`, `crud()`, `getSwaggerInputs()`, `getColumnKeys()` |
+| `Meta` | `string($key, $name)`, `integer($key, $name)`, `number($key, $name)`, `boolean($key, $name)`, `hidden($key, $name)`, `select($key, $name, $items)`, `file($key, $name, $src)`, `action($key, $condition)`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 
 ### Middleware
 

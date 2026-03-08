@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Fixtures\Swagger;
+namespace Tests\Fixtures\OpenApi;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;
 
@@ -28,7 +28,7 @@ class ShorthandApi extends BaseApi
         ];
     }
 
-    public static function getSwaggerTemplates(): array
+    public static function getOpenApiTemplates(): array
     {
         return [
             'OrderResponse' => [

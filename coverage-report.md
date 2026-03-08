@@ -43,7 +43,7 @@
 | Resources/BaseJsonResourceCollection | 100.0% | — |
 | Services/ApiResponseHelper | 100.0% | — |
 | Services/CrudService | 84.9% | 67, 72, 86, 118, 236-252 |
-| Traits/SwaggerApiTrait | 94.7% | 93, 96, 101, 128, 211-212, 502-505, 520-521, 661-662, 678-680, 722-731, 810, 852, 855, 894, 897, 1099 |
+| Traits/OpenApiTrait | 94.7% | 93, 96, 101, 128, 211-212, 502-505, 520-521, 661-662, 678-680, 722-731, 810, 852, 855, 894, 897, 1099 |
 | Traits/Testing/MakesHttpApiRequests | 58.8% | 94, 112-144 |
 
 ## Areas with low coverage

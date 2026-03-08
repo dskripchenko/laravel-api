@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Dskripchenko\LaravelApi\Controllers\ApiDocumentationController;
 use Illuminate\Support\Facades\Storage;
 
-it('creates swagger directory if not exists', function () {
+it('creates OpenAPI directory if not exists', function () {
     Storage::fake();
 
     $controller = new ApiDocumentationController();
@@ -16,7 +16,7 @@ it('creates swagger directory if not exists', function () {
         // View rendering may fail in test env
     }
 
-    Storage::assertExists('public/swagger');
+    Storage::assertExists('public/openapi');
 });
 
 it('generates JSON files per version', function () {
@@ -30,11 +30,11 @@ it('generates JSON files per version', function () {
         // View rendering may fail
     }
 
-    Storage::assertExists('public/swagger/v1.json');
-    Storage::assertExists('public/swagger/v2.json');
+    Storage::assertExists('public/openapi/v1.json');
+    Storage::assertExists('public/openapi/v2.json');
 });
 
-it('generated JSON is valid swagger', function () {
+it('generated JSON is valid OpenAPI', function () {
     Storage::fake();
 
     $controller = new ApiDocumentationController();
@@ -45,7 +45,7 @@ it('generated JSON is valid swagger', function () {
         // View rendering may fail
     }
 
-    $content = Storage::get('public/swagger/v1.json');
+    $content = Storage::get('public/openapi/v1.json');
     $data = json_decode($content, true);
     expect($data['openapi'])->toBe('3.0.0');
     expect($data['info'])->toHaveKey('title');

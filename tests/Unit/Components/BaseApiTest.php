@@ -54,9 +54,9 @@ it('returns default empty response as array', function () {
     expect($api::getDefaultEmptyResponse())->toBe([]);
 });
 
-it('returns empty swagger templates by default', function () {
+it('returns empty OpenAPI templates by default', function () {
     $api = new class extends BaseApi {};
-    expect($api::getSwaggerTemplates())->toBe([]);
+    expect($api::getOpenApiTemplates())->toBe([]);
 });
 
 // getPreparedMethods tests

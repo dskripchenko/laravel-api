@@ -12,7 +12,7 @@ it('has expected config keys', function () {
     expect($config)->toHaveKey('prefix');
     expect($config)->toHaveKey('uri_pattern');
     expect($config)->toHaveKey('available_methods');
-    expect($config)->toHaveKey('swagger_path');
+    expect($config)->toHaveKey('openapi_path');
     expect($config)->toHaveKey('doc_middleware');
 });
 

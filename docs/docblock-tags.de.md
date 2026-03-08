@@ -1,6 +1,6 @@
 # OpenAPI Docblock-Tags Referenz
 
-Dieses Dokument beschreibt alle Docblock-Tags, die von `SwaggerApiTrait` fuer die automatische OpenAPI 3.0-Generierung unterstuetzt werden.
+Dieses Dokument beschreibt alle Docblock-Tags, die von `OpenApiTrait` fuer die automatische OpenAPI 3.0-Generierung unterstuetzt werden.
 
 ## @input — Anfrageparameter
 
@@ -110,12 +110,12 @@ Erzeugt:
 @input @OrderCreateRequest
 ```
 
-Erzeugt `$ref: '#/components/schemas/OrderCreateRequest'` im requestBody. Das Modell muss in `getSwaggerTemplates()` definiert sein.
+Erzeugt `$ref: '#/components/schemas/OrderCreateRequest'` im requestBody. Das Modell muss in `getOpenApiTemplates()` definiert sein.
 
 ### Dynamische Eingaben aus Methode
 
 ```php
-@input [getSwaggerMetaInputs]
+@input [getOpenApiMetaInputs]
 ```
 
 Ruft die Methode auf dem Controller auf und fuegt die zurueckgegebenen Eingaben zusammen.
@@ -209,10 +209,10 @@ Wendet ein Sicherheitsschema auf die Operation an.
 @security BearerAuth
 ```
 
-Das Schema muss in `getSwaggerSecurityDefinitions()` der Api-Klasse definiert sein:
+Das Schema muss in `getOpenApiSecurityDefinitions()` der Api-Klasse definiert sein:
 
 ```php
-public static function getSwaggerSecurityDefinitions(): array {
+public static function getOpenApiSecurityDefinitions(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -277,7 +277,7 @@ Setzt einen Beispielwert fuer einen Parameter.
 
 ## Kurzschreibweise fuer Templates
 
-Bei der Definition von Templates in `getSwaggerTemplates()` kann eine Kurzschreibweise als String anstelle von ausfuehrlichen Arrays verwendet werden:
+Bei der Definition von Templates in `getOpenApiTemplates()` kann eine Kurzschreibweise als String anstelle von ausfuehrlichen Arrays verwendet werden:
 
 | Syntax | Bedeutung | Aequivalentes Array |
 |--------|---------|------------------|
@@ -291,7 +291,7 @@ Bei der Definition von Templates in `getSwaggerTemplates()` kann eine Kurzschrei
 ### Beispiel
 
 ```php
-public static function getSwaggerTemplates(): array {
+public static function getOpenApiTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

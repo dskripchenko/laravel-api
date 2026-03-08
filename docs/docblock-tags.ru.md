@@ -1,6 +1,6 @@
 # Справочник OpenAPI Docblock-тегов
 
-Этот документ описывает все docblock-теги, поддерживаемые `SwaggerApiTrait` для автоматической генерации OpenAPI 3.0.
+Этот документ описывает все docblock-теги, поддерживаемые `OpenApiTrait` для автоматической генерации OpenAPI 3.0.
 
 ## @input — Параметры запроса
 
@@ -110,12 +110,12 @@
 @input @OrderCreateRequest
 ```
 
-Генерирует `$ref: '#/components/schemas/OrderCreateRequest'` в requestBody. Модель должна быть определена в `getSwaggerTemplates()`.
+Генерирует `$ref: '#/components/schemas/OrderCreateRequest'` в requestBody. Модель должна быть определена в `getOpenApiTemplates()`.
 
 ### Динамические входные данные из метода
 
 ```php
-@input [getSwaggerMetaInputs]
+@input [getOpenApiMetaInputs]
 ```
 
 Вызывает метод контроллера и объединяет возвращённые входные данные.
@@ -209,10 +209,10 @@
 @security BearerAuth
 ```
 
-Схема должна быть определена в `getSwaggerSecurityDefinitions()` класса Api:
+Схема должна быть определена в `getOpenApiSecurityDefinitions()` класса Api:
 
 ```php
-public static function getSwaggerSecurityDefinitions(): array {
+public static function getOpenApiSecurityDefinitions(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -277,7 +277,7 @@ public static function getSwaggerSecurityDefinitions(): array {
 
 ## Сокращённый синтаксис шаблонов
 
-При определении шаблонов в `getSwaggerTemplates()` можно использовать сокращённую строковую нотацию вместо подробных массивов:
+При определении шаблонов в `getOpenApiTemplates()` можно использовать сокращённую строковую нотацию вместо подробных массивов:
 
 | Синтаксис | Значение | Эквивалентный массив |
 |--------|---------|------------------|
@@ -291,7 +291,7 @@ public static function getSwaggerSecurityDefinitions(): array {
 ### Пример
 
 ```php
-public static function getSwaggerTemplates(): array {
+public static function getOpenApiTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

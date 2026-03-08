@@ -48,7 +48,7 @@ abstract class TestCase extends BaseTestCase
         $ref = new \ReflectionProperty(BaseApiRequest::class, '_instance');
         $ref->setValue(null, null);
 
-        // Reset SwaggerApiTrait caches (access via a class that uses the trait)
+        // Reset OpenApiTrait caches (access via a class that uses the trait)
         $ref = new \ReflectionProperty(TestApi::class, 'docBlockFactory');
         $ref->setValue(null, null);
 

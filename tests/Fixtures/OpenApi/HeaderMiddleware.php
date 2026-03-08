@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Fixtures\Swagger;
+namespace Tests\Fixtures\OpenApi;
 
 use Closure;
 use Dskripchenko\LaravelApi\Middlewares\ApiMiddleware;

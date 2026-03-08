@@ -122,7 +122,7 @@ class Meta
     /**
      * @return array
      */
-    public function getSwaggerInputs(): array
+    public function getOpenApiInputs(): array
     {
         return Collection::make($this->columns)
             ->filter(function ($value) {

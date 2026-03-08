@@ -1,6 +1,6 @@
 # OpenAPI Docblock标签参考
 
-本文档描述了 `SwaggerApiTrait` 支持的所有 docblock 标签，用于自动生成 OpenAPI 3.0 规范。
+本文档描述了 `OpenApiTrait` 支持的所有 docblock 标签，用于自动生成 OpenAPI 3.0 规范。
 
 ## @input — 请求参数
 
@@ -110,12 +110,12 @@
 @input @OrderCreateRequest
 ```
 
-在 requestBody 中生成 `$ref: '#/components/schemas/OrderCreateRequest'`。该模型必须在 `getSwaggerTemplates()` 中定义。
+在 requestBody 中生成 `$ref: '#/components/schemas/OrderCreateRequest'`。该模型必须在 `getOpenApiTemplates()` 中定义。
 
 ### 从方法动态获取输入
 
 ```php
-@input [getSwaggerMetaInputs]
+@input [getOpenApiMetaInputs]
 ```
 
 调用控制器上的方法并合并返回的输入参数。
@@ -209,10 +209,10 @@
 @security BearerAuth
 ```
 
-该方案必须在 Api 类的 `getSwaggerSecurityDefinitions()` 中定义：
+该方案必须在 Api 类的 `getOpenApiSecurityDefinitions()` 中定义：
 
 ```php
-public static function getSwaggerSecurityDefinitions(): array {
+public static function getOpenApiSecurityDefinitions(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -277,7 +277,7 @@ public static function getSwaggerSecurityDefinitions(): array {
 
 ## 模板简写语法
 
-在 `getSwaggerTemplates()` 中定义模板时，可以使用简写字符串表示法代替冗长的数组：
+在 `getOpenApiTemplates()` 中定义模板时，可以使用简写字符串表示法代替冗长的数组：
 
 | 语法 | 含义 | 等效数组 |
 |--------|---------|------------------|
@@ -291,7 +291,7 @@ public static function getSwaggerSecurityDefinitions(): array {
 ### 示例
 
 ```php
-public static function getSwaggerTemplates(): array {
+public static function getOpenApiTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

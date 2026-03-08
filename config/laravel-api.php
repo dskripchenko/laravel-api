@@ -7,7 +7,7 @@ return [
 
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
 
-    'swagger_path' => 'public/swagger',
+    'openapi_path' => 'public/openapi',
 
     'doc_middleware' => [],
 ];

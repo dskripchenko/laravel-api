@@ -11,10 +11,10 @@ use phpDocumentor\Reflection\DocBlock\Tag;
 use phpDocumentor\Reflection\DocBlockFactory;
 
 /**
- * Trait SwaggerApiTrait
+ * Trait OpenApiTrait
  * @package Dskripchenko\LaravelApi\Traits
  */
-trait SwaggerApiTrait
+trait OpenApiTrait
 {
     public static $useResponseTemplates = false;
 
@@ -27,7 +27,7 @@ trait SwaggerApiTrait
      * @return array
      * @throws \ReflectionException
      */
-    public static function getSwaggerApiConfig(string $version)
+    public static function getOpenApiConfig(string $version)
     {
         $reflectionClass = new \ReflectionClass(static::class);
         $docBlock        = static::getDocBlockByComment($reflectionClass->getDocComment());
@@ -46,7 +46,7 @@ trait SwaggerApiTrait
             'servers' => [
                 ['url' => "{$scheme}://{$host}{$basePath}"],
             ],
-            'paths' => static::getSwaggerApiPaths($version),
+            'paths' => static::getOpenApiPaths($version),
         ];
 
         $components = [];
@@ -55,7 +55,7 @@ trait SwaggerApiTrait
             $components['schemas'] = static::getSchemas();
         }
 
-        $securityDefinitions = static::getSwaggerSecurityDefinitions();
+        $securityDefinitions = static::getOpenApiSecurityDefinitions();
         if (!empty($securityDefinitions)) {
             $components['securitySchemes'] = $securityDefinitions;
         }
@@ -73,7 +73,7 @@ trait SwaggerApiTrait
      * @return array
      * @throws \ReflectionException
      */
-    private static function getSwaggerApiPaths(string $version)
+    private static function getOpenApiPaths(string $version)
     {
         $result       = [];
         $methods      = static::getPreparedMethods();
@@ -1082,7 +1082,7 @@ trait SwaggerApiTrait
             ]
         ];
 
-        $templates = static::getSwaggerTemplates();
+        $templates = static::getOpenApiTemplates();
 
         foreach ($templates as &$properties) {
             foreach ($properties as $field => &$definition) {
@@ -1168,7 +1168,7 @@ trait SwaggerApiTrait
     /**
      * @return array
      */
-    protected static function getSwaggerTemplates()
+    protected static function getOpenApiTemplates()
     {
         return []; //override in final class
     }
@@ -1176,7 +1176,7 @@ trait SwaggerApiTrait
     /**
      * @return array
      */
-    protected static function getSwaggerSecurityDefinitions(): array
+    protected static function getOpenApiSecurityDefinitions(): array
     {
         return []; //override in final class
     }

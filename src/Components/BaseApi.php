@@ -5,7 +5,7 @@ namespace Dskripchenko\LaravelApi\Components;
 use Dskripchenko\LaravelApi\Facades\ApiRequest;
 use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Interfaces\ApiInterface;
-use Dskripchenko\LaravelApi\Traits\SwaggerApiTrait;
+use Dskripchenko\LaravelApi\Traits\OpenApiTrait;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,9 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 abstract class BaseApi implements ApiInterface
 {
-    use SwaggerApiTrait {
-        SwaggerApiTrait::getSwaggerTemplates as public getSwaggerTemplatesTrait;
-        SwaggerApiTrait::getSwaggerSecurityDefinitions as public getSwaggerSecurityDefinitionsTrait;
+    use OpenApiTrait {
+        OpenApiTrait::getOpenApiTemplates as public getOpenApiTemplatesTrait;
+        OpenApiTrait::getOpenApiSecurityDefinitions as public getOpenApiSecurityDefinitionsTrait;
     }
 
     /**
@@ -56,17 +56,17 @@ abstract class BaseApi implements ApiInterface
      *
      * @return array
      */
-    public static function getSwaggerTemplates(): array
+    public static function getOpenApiTemplates(): array
     {
-        return static::getSwaggerTemplatesTrait();
+        return static::getOpenApiTemplatesTrait();
     }
 
     /**
      * @return array
      */
-    public static function getSwaggerSecurityDefinitions(): array
+    public static function getOpenApiSecurityDefinitions(): array
     {
-        return static::getSwaggerSecurityDefinitionsTrait();
+        return static::getOpenApiSecurityDefinitionsTrait();
     }
 
     /**
