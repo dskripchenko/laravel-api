@@ -156,16 +156,36 @@ class ApiV1_1 extends ApiV1 {
  */
 ```
 
-**Templates** are enabled via `$useResponseTemplates = true` on the Api class:
+**Templates** are enabled via `$useResponseTemplates = true` on the Api class.
+
+Shorthand string syntax (recommended):
+```
+type           → optional field      e.g. 'number', 'string', 'object'
+type!          → required field      e.g. 'integer!', 'string!'
+type(format)   → with format         e.g. 'string(date-time)', 'string(email)'
+type(format)!  → format + required   e.g. 'string(email)!'
+@ModelName     → $ref to schema      e.g. '@User'
+@ModelName[]   → array of $ref       e.g. '@OrderItem[]'
+```
+
+Both shorthand and array formats can be mixed in the same template.
+
 ```php
 class Api extends BaseApi {
     public static bool $useResponseTemplates = true;
 
     public static function getSwaggerTemplates(): array {
         return [
+            // Shorthand syntax
             'UserResponse' => [
-                'id' => ['type' => 'integer', 'required' => true],
-                'name' => ['type' => 'string', 'required' => true],
+                'id' => 'integer!',
+                'name' => 'string!',
+                'email' => 'string(email)',
+            ],
+            // Array syntax (also supported)
+            'Error' => [
+                'message' => ['type' => 'string', 'required' => true],
+                'code' => ['type' => 'integer'],
             ],
         ];
     }

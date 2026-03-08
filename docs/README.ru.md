@@ -292,8 +292,13 @@ class Api extends BaseApi {
     public static function getSwaggerTemplates(): array {
         return [
             'OrderResponse' => [
-                'id'    => ['type' => 'integer', 'required' => true],
-                'title' => ['type' => 'string',  'required' => true],
+                'id'         => 'integer!',            // обязательное целое
+                'title'      => 'string!',             // обязательная строка
+                'total'      => 'number',              // необязательное число
+                'created_at' => 'string(date-time)',   // с форматом
+                'email'      => 'string(email)!',      // формат + обязательное
+                'customer'   => '@Customer',           // $ref на другую схему
+                'items'      => '@OrderItem[]',        // массив $ref
             ],
         ];
     }
@@ -306,7 +311,9 @@ class Api extends BaseApi {
 }
 ```
 
-> Полный справочник тегов: [docblock-tags.md](docblock-tags.md)
+**Shorthand-синтаксис:** `type` — необязательное, `type!` — обязательное, `type(format)` — с форматом, `@Model` — ссылка, `@Model[]` — массив ссылок. Также поддерживается формат массивов (`['type' => '...', 'required' => true]`).
+
+> Полный справочник тегов: [docblock-tags.ru.md](docblock-tags.ru.md) | Рецепты: [cookbook.ru.md](cookbook.ru.md)
 
 ## CRUD скаффолдинг
 

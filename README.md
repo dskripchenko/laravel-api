@@ -295,8 +295,22 @@ class Api extends BaseApi {
     public static function getSwaggerTemplates(): array {
         return [
             'OrderResponse' => [
-                'id'    => ['type' => 'integer', 'required' => true],
-                'title' => ['type' => 'string',  'required' => true],
+                'id'         => 'integer!',            // required integer
+                'title'      => 'string!',             // required string
+                'total'      => 'number',              // optional number
+                'created_at' => 'string(date-time)',   // with format
+                'email'      => 'string(email)!',      // format + required
+                'customer'   => '@Customer',           // $ref to another schema
+                'items'      => '@OrderItem[]',        // array of $ref
+            ],
+            'Customer' => [
+                'id'   => 'integer!',
+                'name' => 'string!',
+            ],
+            'OrderItem' => [
+                'product_id' => 'integer!',
+                'quantity'   => 'integer',
+                'price'      => 'number',
             ],
         ];
     }
@@ -309,7 +323,20 @@ class Api extends BaseApi {
 }
 ```
 
-> Full tag reference: [docs/docblock-tags.md](docs/docblock-tags.md)
+**Shorthand syntax reference:**
+
+| Syntax | Meaning | Example |
+|--------|---------|---------|
+| `type` | Optional field | `'number'`, `'string'`, `'object'` |
+| `type!` | Required field | `'integer!'`, `'string!'` |
+| `type(format)` | With format | `'string(date-time)'`, `'string(email)'` |
+| `type(format)!` | Format + required | `'string(email)!'` |
+| `@Model` | `$ref` to schema | `'@Customer'` |
+| `@Model[]` | Array of `$ref` | `'@OrderItem[]'` |
+
+Array format (`['type' => 'string', 'required' => true]`) is also supported and can be mixed with shorthand in the same template.
+
+> Full tag reference: [docs/docblock-tags.md](docs/docblock-tags.md) | Cookbook: [docs/cookbook.md](docs/cookbook.md)
 
 ## CRUD Scaffolding
 

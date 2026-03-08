@@ -1,15 +1,15 @@
 # Test Coverage Report
 
 **Package:** dskripchenko/laravel-api
-**Date:** 2026-03-07
+**Date:** 2026-03-08
 **PHP:** 8.5.3 | **Pest:** latest | **Coverage driver:** PCOV
-**Tests:** 261 passed (513 assertions)
+**Tests:** 269 passed (539 assertions)
 
 ## Summary
 
 | Metric | Value |
 |--------|-------|
-| **Total coverage** | **90.3%** |
+| **Total coverage** | **90.5%** |
 | Classes with 100% | 18 / 28 |
 | Classes below 80% | 4 / 28 |
 
@@ -35,7 +35,7 @@
 | Interfaces/CrudServiceInterface | 100.0% | — |
 | Middlewares/ApiMiddleware | 100.0% | — |
 | Middlewares/RequestIdMiddleware | 100.0% | — |
-| Providers/ApiServiceProvider | 95.9% | 78, 109 |
+| Providers/ApiServiceProvider | 95.7% | 74, 105 |
 | Providers/BaseServiceProvider | 100.0% | — |
 | Requests/BaseApiRequest | 97.5% | 60 |
 | Requests/CrudSearchRequest | 100.0% | — |
@@ -43,7 +43,7 @@
 | Resources/BaseJsonResourceCollection | 100.0% | — |
 | Services/ApiResponseHelper | 100.0% | — |
 | Services/CrudService | 84.9% | 67, 72, 86, 118, 236-252 |
-| Traits/SwaggerApiTrait | 94.4% | 93, 96, 101, 128, 211-212, 502-505, 520-521, 661-662, 678-680, 722-731, 810, 852, 855, 894, 897, 1089 |
+| Traits/SwaggerApiTrait | 94.7% | 93, 96, 101, 128, 211-212, 502-505, 520-521, 661-662, 678-680, 722-731, 810, 852, 855, 894, 897, 1099 |
 | Traits/Testing/MakesHttpApiRequests | 58.8% | 94, 112-144 |
 
 ## Areas with low coverage

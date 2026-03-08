@@ -1,12 +1,12 @@
-# OpenAPI Docblock Tags Reference
+# OpenAPI Docblock标签参考
 
-This document describes all docblock tags supported by `SwaggerApiTrait` for automatic OpenAPI 3.0 generation.
+本文档描述了 `SwaggerApiTrait` 支持的所有 docblock 标签，用于自动生成 OpenAPI 3.0 规范。
 
-## @input — Request parameters
+## @input — 请求参数
 
-Defines request input parameters. For GET requests, parameters go to query string. For POST/PUT/PATCH, they go to requestBody.
+定义请求输入参数。对于 GET 请求，参数放入查询字符串中。对于 POST/PUT/PATCH 请求，参数放入 requestBody 中。
 
-### Syntax
+### 语法
 
 ```
 @input type $variableName Description
@@ -17,21 +17,21 @@ Defines request input parameters. For GET requests, parameters go to query strin
 @input [methodName] Dynamic inputs from a method
 ```
 
-### Types
+### 类型
 
-| Type | OpenAPI type | Notes |
-|------|-------------|-------|
-| `string` | `string` | Default fallback for unknown types |
+| 类型 | OpenAPI 类型 | 说明 |
+|------|-------------|------|
+| `string` | `string` | 未知类型的默认回退值 |
 | `integer` | `integer` | |
 | `number` | `number` | |
 | `boolean` | `boolean` | |
-| `file` | `string` (format: `binary`) | Triggers `multipart/form-data` content type |
-| `object` | `object` | Used with dot-notation for nested structures |
-| `array` | `array` | Used with `[]` notation for array items |
+| `file` | `string` (format: `binary`) | 触发 `multipart/form-data` 内容类型 |
+| `object` | `object` | 与点号表示法配合用于嵌套结构 |
+| `array` | `array` | 与 `[]` 表示法配合用于数组元素 |
 
-### Format
+### 格式
 
-Specify format in parentheses after type:
+在类型后的括号中指定格式：
 
 ```php
 @input string(email) $email         // → type: string, format: email
@@ -41,25 +41,25 @@ Specify format in parentheses after type:
 @input integer(int32) $count        // → type: integer, format: int32
 ```
 
-### Enum
+### 枚举
 
-Specify allowed values in square brackets at the end of description:
+在描述末尾的方括号中指定允许的值：
 
 ```php
 @input string $status Status [active,blocked,pending]
 // → enum: ["active", "blocked", "pending"], description: "Status"
 ```
 
-### Optional parameters
+### 可选参数
 
-Prefix variable name with `?`:
+在变量名前加 `?` 前缀：
 
 ```php
 @input string $name Required field       // required: true
 @input string ?$name Optional field      // required: false
 ```
 
-### Dot-notation (nested objects)
+### 点号表示法（嵌套对象）
 
 ```php
 @input object $address Address
@@ -67,7 +67,7 @@ Prefix variable name with `?`:
 @input string $address.zip ZIP code
 ```
 
-Generates nested JSON schema:
+生成嵌套 JSON schema：
 ```json
 {
   "address": {
@@ -80,7 +80,7 @@ Generates nested JSON schema:
 }
 ```
 
-### Array dot-notation
+### 数组点号表示法
 
 ```php
 @input array $tags Tags
@@ -88,7 +88,7 @@ Generates nested JSON schema:
 @input string $tags[].name Tag name
 ```
 
-Generates:
+生成：
 ```json
 {
   "tags": {
@@ -104,29 +104,29 @@ Generates:
 }
 ```
 
-### Model reference
+### 模型引用
 
 ```php
 @input @OrderCreateRequest
 ```
 
-Generates `$ref: '#/components/schemas/OrderCreateRequest'` in requestBody. The model must be defined in `getSwaggerTemplates()`.
+在 requestBody 中生成 `$ref: '#/components/schemas/OrderCreateRequest'`。该模型必须在 `getSwaggerTemplates()` 中定义。
 
-### Dynamic inputs from method
+### 从方法动态获取输入
 
 ```php
 @input [getSwaggerMetaInputs]
 ```
 
-Calls the method on the controller and merges returned inputs.
+调用控制器上的方法并合并返回的输入参数。
 
 ---
 
-## @output — Response fields
+## @output — 响应字段
 
-Defines response body fields for the default 200 response.
+定义默认 200 响应的响应体字段。
 
-### Syntax
+### 语法
 
 ```
 @output type $variableName Description
@@ -135,7 +135,7 @@ Defines response body fields for the default 200 response.
 @output @ModelName[] $field Array of $ref
 ```
 
-### Examples
+### 示例
 
 ```php
 @output integer $id Record ID
@@ -148,40 +148,40 @@ Defines response body fields for the default 200 response.
 
 ---
 
-## @header — Request headers
+## @header — 请求头
 
-Defines header parameters for the operation.
+定义操作的请求头参数。
 
-### Syntax
+### 语法
 
 ```
 @header type $HeaderName Description
 @header type ?$HeaderName Optional header
 ```
 
-### Examples
+### 示例
 
 ```php
 @header string $Authorization Bearer token
 @header string ?$X-Request-Id Optional trace ID
 ```
 
-Headers can also be defined in middleware docblocks — they are aggregated from both the controller method and all middleware in the chain.
+请求头也可以在中间件的 docblock 中定义——它们会从控制器方法和中间件链中的所有中间件聚合而来。
 
 ---
 
-## @response — Multiple HTTP responses
+## @response — 多个 HTTP 响应
 
-Defines responses with specific HTTP status codes. When present, overrides the default 200 response from `@output`.
+定义带有特定 HTTP 状态码的响应。当存在时，将覆盖 `@output` 生成的默认 200 响应。
 
-### Syntax
+### 语法
 
 ```
 @response CODE {TemplateName}
 @response CODE Description text
 ```
 
-### Examples
+### 示例
 
 ```php
 @response 200 {UserResponse}        // → $ref to component schema
@@ -189,27 +189,27 @@ Defines responses with specific HTTP status codes. When present, overrides the d
 @response 404 Not found             // → description only
 ```
 
-If no `@response` tags are present, `@output` is used to build the 200 response.
+如果没有 `@response` 标签，则使用 `@output` 来构建 200 响应。
 
 ---
 
-## @security — Operation security
+## @security — 操作安全
 
-Applies a security scheme to the operation.
+为操作应用安全方案。
 
-### Syntax
+### 语法
 
 ```
 @security SchemeName
 ```
 
-### Example
+### 示例
 
 ```php
 @security BearerAuth
 ```
 
-The scheme must be defined in `getSwaggerSecurityDefinitions()` on the Api class:
+该方案必须在 Api 类的 `getSwaggerSecurityDefinitions()` 中定义：
 
 ```php
 public static function getSwaggerSecurityDefinitions(): array {
@@ -225,11 +225,11 @@ public static function getSwaggerSecurityDefinitions(): array {
 
 ---
 
-## @deprecated — Mark as deprecated
+## @deprecated — 标记为已弃用
 
-Marks the operation as deprecated in the OpenAPI spec.
+在 OpenAPI 规范中将操作标记为已弃用。
 
-### Syntax
+### 语法
 
 ```
 @deprecated Optional explanation
@@ -237,17 +237,17 @@ Marks the operation as deprecated in the OpenAPI spec.
 
 ---
 
-## @default — Default value
+## @default — 默认值
 
-Sets a default value for a parameter.
+为参数设置默认值。
 
-### Syntax
+### 语法
 
 ```
 @default $variableName value
 ```
 
-### Example
+### 示例
 
 ```php
 @input integer ?$page Page number
@@ -256,17 +256,17 @@ Sets a default value for a parameter.
 
 ---
 
-## @example — Example value
+## @example — 示例值
 
-Sets an example value for a parameter.
+为参数设置示例值。
 
-### Syntax
+### 语法
 
 ```
 @example $variableName value
 ```
 
-### Example
+### 示例
 
 ```php
 @input integer ?$page Page number
@@ -275,20 +275,20 @@ Sets an example value for a parameter.
 
 ---
 
-## Template shorthand syntax
+## 模板简写语法
 
-When defining templates in `getSwaggerTemplates()`, you can use a shorthand string notation instead of verbose arrays:
+在 `getSwaggerTemplates()` 中定义模板时，可以使用简写字符串表示法代替冗长的数组：
 
-| Syntax | Meaning | Equivalent array |
+| 语法 | 含义 | 等效数组 |
 |--------|---------|------------------|
-| `'integer'` | Optional integer | `['type' => 'integer']` |
-| `'string!'` | Required string | `['type' => 'string', 'required' => true]` |
-| `'string(email)'` | String with format | `['type' => 'string', 'format' => 'email']` |
-| `'string(date-time)!'` | Format + required | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
-| `'@Customer'` | `$ref` to schema | `['$ref' => '#/components/schemas/Customer']` |
-| `'@OrderItem[]'` | Array of `$ref` | `['type' => 'array', 'items' => ['$ref' => '...']]` |
+| `'integer'` | 可选整数 | `['type' => 'integer']` |
+| `'string!'` | 必填字符串 | `['type' => 'string', 'required' => true]` |
+| `'string(email)'` | 带格式的字符串 | `['type' => 'string', 'format' => 'email']` |
+| `'string(date-time)!'` | 格式 + 必填 | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
+| `'@Customer'` | `$ref` 到 schema | `['$ref' => '#/components/schemas/Customer']` |
+| `'@OrderItem[]'` | `$ref` 数组 | `['type' => 'array', 'items' => ['$ref' => '...']]` |
 
-### Example
+### 示例
 
 ```php
 public static function getSwaggerTemplates(): array {
@@ -306,24 +306,24 @@ public static function getSwaggerTemplates(): array {
 }
 ```
 
-Both formats can be mixed in the same template. The array format (`['type' => '...', 'required' => true]`) is still fully supported.
+两种格式可以在同一个模板中混合使用。数组格式（`['type' => '...', 'required' => true]`）仍然完全支持。
 
 ---
 
-## Content-type auto-detection
+## 内容类型自动检测
 
-The content type for POST requestBody is determined automatically:
+POST requestBody 的内容类型会自动确定：
 
-| Condition | Content-Type |
+| 条件 | Content-Type |
 |-----------|-------------|
-| Has `file` type input | `multipart/form-data` |
-| Has dot-notation (nested) inputs | `application/json` |
-| Has model reference (`@ModelName`) | `application/json` |
-| Flat inputs only | `application/x-www-form-urlencoded` |
+| 包含 `file` 类型输入 | `multipart/form-data` |
+| 包含点号表示法（嵌套）输入 | `application/json` |
+| 包含模型引用（`@ModelName`） | `application/json` |
+| 仅有扁平输入 | `application/x-www-form-urlencoded` |
 
 ---
 
-## Complete example
+## 完整示例
 
 ```php
 /**

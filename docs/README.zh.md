@@ -292,8 +292,13 @@ class Api extends BaseApi {
     public static function getSwaggerTemplates(): array {
         return [
             'OrderResponse' => [
-                'id'    => ['type' => 'integer', 'required' => true],
-                'title' => ['type' => 'string',  'required' => true],
+                'id'         => 'integer!',            // 必填整数
+                'title'      => 'string!',             // 必填字符串
+                'total'      => 'number',              // 可选数字
+                'created_at' => 'string(date-time)',   // 带格式
+                'email'      => 'string(email)!',      // 格式+必填
+                'customer'   => '@Customer',           // $ref引用其他模式
+                'items'      => '@OrderItem[]',        // $ref数组
             ],
         ];
     }
@@ -306,7 +311,9 @@ class Api extends BaseApi {
 }
 ```
 
-> 完整标签参考：[docblock-tags.md](docblock-tags.md)
+**简写语法：** `type` — 可选，`type!` — 必填，`type(format)` — 带格式，`@Model` — 引用，`@Model[]` — 引用数组。数组格式（`['type' => '...', 'required' => true]`）同样支持。
+
+> 完整标签参考：[docblock-tags.zh.md](docblock-tags.zh.md) | 操作指南：[cookbook.zh.md](cookbook.zh.md)
 
 ## CRUD脚手架
 

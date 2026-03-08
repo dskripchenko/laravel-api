@@ -1,8 +1,8 @@
-# Cookbook — Step-by-step Recipes
+# Cookbook — 分步指南
 
-## Recipe 1: Create a versioned API from scratch
+## 示例 1：从零创建版本化 API
 
-### Step 1: Create the API class
+### 步骤 1：创建 API 类
 
 ```php
 // app/Api/V1/Api.php
@@ -14,8 +14,8 @@ use App\Http\Middleware\AuthMiddleware;
 use Dskripchenko\LaravelApi\Components\BaseApi;
 
 /**
- * My API v1
- * Version 1 of the application API
+ * 我的 API v1
+ * 应用程序 API 的第一个版本
  */
 class Api extends BaseApi
 {
@@ -53,7 +53,7 @@ class Api extends BaseApi
 }
 ```
 
-### Step 2: Create the Module
+### 步骤 2：创建模块
 
 ```php
 // app/Api/ApiModule.php
@@ -73,7 +73,7 @@ class ApiModule extends BaseModule
 }
 ```
 
-### Step 3: Create the ServiceProvider
+### 步骤 3：创建 ServiceProvider
 
 ```php
 // app/Providers/ApiServiceProvider.php
@@ -91,7 +91,7 @@ class ApiServiceProvider extends BaseProvider
 }
 ```
 
-### Step 4: Create a controller
+### 步骤 4：创建控制器
 
 ```php
 // app/Api/V1/Controllers/UserController.php
@@ -105,15 +105,15 @@ use Illuminate\Http\Request;
 class UserController extends ApiController
 {
     /**
-     * List all users
-     * Returns a paginated list of users.
+     * 获取所有用户列表
+     * 返回分页的用户列表。
      *
-     * @input integer ?$page Page number
-     * @input integer ?$perPage Items per page
+     * @input integer ?$page 页码
+     * @input integer ?$perPage 每页条数
      *
-     * @output integer $id User ID
-     * @output string $name User name
-     * @output string(email) $email User email
+     * @output integer $id 用户 ID
+     * @output string $name 用户名称
+     * @output string(email) $email 用户邮箱
      */
     public function list(Request $request): JsonResponse
     {
@@ -122,14 +122,14 @@ class UserController extends ApiController
     }
 
     /**
-     * Get user by ID
+     * 根据 ID 获取用户
      *
-     * @input integer $id User ID
+     * @input integer $id 用户 ID
      *
-     * @output integer $id User ID
-     * @output string $name User name
-     * @output string(email) $email User email
-     * @output string(date-time) $createdAt Registration date
+     * @output integer $id 用户 ID
+     * @output string $name 用户名称
+     * @output string(email) $email 用户邮箱
+     * @output string(date-time) $createdAt 注册日期
      */
     public function show(Request $request): JsonResponse
     {
@@ -138,13 +138,13 @@ class UserController extends ApiController
     }
 
     /**
-     * Create a user
+     * 创建用户
      *
-     * @input string $name User name
-     * @input string(email) $email Email address
-     * @input string $password Password
+     * @input string $name 用户名称
+     * @input string(email) $email 邮箱地址
+     * @input string $password 密码
      *
-     * @output integer $id Created user ID
+     * @output integer $id 已创建的用户 ID
      */
     public function create(Request $request): JsonResponse
     {
@@ -154,7 +154,7 @@ class UserController extends ApiController
 }
 ```
 
-### Step 5: Register the provider
+### 步骤 5：注册 Provider
 
 ```php
 // bootstrap/providers.php (Laravel 11+)
@@ -163,19 +163,19 @@ return [
 ];
 ```
 
-### Result
+### 结果
 
-- `GET  /api/v1/user/list` — list users
-- `GET  /api/v1/user/show?id=1` — get user
-- `POST /api/v1/user/create` — create user
-- `POST /api/v1/user/update` — update user
-- `POST /api/v1/user/delete` — delete user
-- `POST /api/v1/order/create` — create order
-- `GET  /api/doc` — API documentation (Scalar)
+- `GET  /api/v1/user/list` — 获取用户列表
+- `GET  /api/v1/user/show?id=1` — 获取用户详情
+- `POST /api/v1/user/create` — 创建用户
+- `POST /api/v1/user/update` — 更新用户
+- `POST /api/v1/user/delete` — 删除用户
+- `POST /api/v1/order/create` — 创建订单
+- `GET  /api/doc` — API 文档（Scalar）
 
 ---
 
-## Recipe 2: Add a new API version
+## 示例 2：添加新的 API 版本
 
 ```php
 // app/Api/V2/Api.php
@@ -184,17 +184,17 @@ namespace App\Api\V2;
 use App\Api\V1\Api as V1;
 use App\Api\V2\Controllers\UserController;
 
-class Api extends V1  // ← inherits all v1 actions
+class Api extends V1  // ← 继承所有 v1 的操作
 {
     public static function getMethods(): array
     {
         return [
             'controllers' => [
                 'user' => [
-                    'controller' => UserController::class, // new controller
+                    'controller' => UserController::class, // 新控制器
                     'actions' => [
-                        'delete' => false,                 // disable delete in v2
-                        'archive',                         // add new action
+                        'delete' => false,                 // 在 v2 中禁用删除
+                        'archive',                         // 添加新操作
                     ],
                 ],
             ],
@@ -203,7 +203,7 @@ class Api extends V1  // ← inherits all v1 actions
 }
 ```
 
-Register in module:
+在模块中注册：
 ```php
 public function getApiVersionList(): array
 {
@@ -216,9 +216,9 @@ public function getApiVersionList(): array
 
 ---
 
-## Recipe 3: CRUD with CrudService
+## 示例 3：使用 CrudService 实现 CRUD
 
-### Step 1: Model + Migration
+### 步骤 1：模型 + 迁移
 
 ```php
 // app/Models/Product.php
@@ -228,7 +228,7 @@ class Product extends Model
 }
 ```
 
-### Step 2: Create the CrudService
+### 步骤 2：创建 CrudService
 
 ```php
 // app/Services/ProductCrudService.php
@@ -248,10 +248,10 @@ class ProductCrudService extends CrudService
     public function meta(): Meta
     {
         return (new Meta())
-            ->string('name', 'Product name')
-            ->string('description', 'Description')
-            ->number('price', 'Price')
-            ->select('status', 'Status', ['active', 'draft', 'archived'])
+            ->string('name', '产品名称')
+            ->string('description', '描述')
+            ->number('price', '价格')
+            ->select('status', '状态', ['active', 'draft', 'archived'])
             ->crud();
     }
 
@@ -272,16 +272,16 @@ class ProductCrudService extends CrudService
 }
 ```
 
-### Step 3: Bind in ServiceProvider
+### 步骤 3：在 ServiceProvider 中绑定
 
 ```php
 use Dskripchenko\LaravelApi\Controllers\CrudController;
 use Dskripchenko\LaravelApi\Interfaces\CrudServiceInterface;
 
-// Single CRUD entity — simple bind:
+// 单个 CRUD 实体 — 简单绑定：
 $this->app->bind(CrudServiceInterface::class, ProductCrudService::class);
 
-// Multiple CRUD entities — use contextual binding:
+// 多个 CRUD 实体 — 使用上下文绑定：
 $this->app->when(ProductController::class)
     ->needs(CrudServiceInterface::class)
     ->give(ProductCrudService::class);
@@ -291,7 +291,7 @@ $this->app->when(OrderController::class)
     ->give(OrderCrudService::class);
 ```
 
-### Step 4: Register in getMethods
+### 步骤 4：在 getMethods 中注册
 
 ```php
 'product' => [
@@ -307,16 +307,16 @@ $this->app->when(OrderController::class)
 ],
 ```
 
-### Result
+### 结果
 
-- `GET  /api/v1/product/meta` — field definitions
-- `POST /api/v1/product/search` — filtered, sorted, paginated list
-- `POST /api/v1/product/create` — create record
-- `GET  /api/v1/product/read?id=1` — read record
-- `POST /api/v1/product/update` — update record
-- `POST /api/v1/product/delete` — delete record
+- `GET  /api/v1/product/meta` — 字段定义
+- `POST /api/v1/product/search` — 过滤、排序、分页列表
+- `POST /api/v1/product/create` — 创建记录
+- `GET  /api/v1/product/read?id=1` — 读取记录
+- `POST /api/v1/product/update` — 更新记录
+- `POST /api/v1/product/delete` — 删除记录
 
-### Search request format
+### 搜索请求格式
 
 ```json
 {
@@ -336,7 +336,7 @@ $this->app->when(OrderController::class)
 
 ---
 
-## Recipe 4: Custom middleware
+## 示例 4：自定义中间件
 
 ```php
 // app/Http/Middleware/ApiAuthMiddleware.php
@@ -348,14 +348,14 @@ use Illuminate\Http\Request;
 use Closure;
 
 /**
- * @header string $Authorization Bearer token
+ * @header string $Authorization Bearer 令牌
  */
 class ApiAuthMiddleware extends ApiMiddleware
 {
     public function run(Request $request, Closure $next)
     {
         if (!$request->bearerToken()) {
-            throw new ApiException('unauthorized', 'Bearer token required');
+            throw new ApiException('unauthorized', '需要提供 Bearer 令牌');
         }
 
         return $next($request);
@@ -363,11 +363,11 @@ class ApiAuthMiddleware extends ApiMiddleware
 }
 ```
 
-The `@header` tag in middleware docblock is aggregated into Swagger documentation.
+中间件文档注释中的 `@header` 标签会被聚合到 Swagger 文档中。
 
 ---
 
-## Recipe 5: Swagger with security and templates
+## 示例 5：带安全定义和模板的 Swagger
 
 ```php
 class Api extends BaseApi
@@ -403,10 +403,10 @@ class Api extends BaseApi
 }
 ```
 
-In controller:
+在控制器中：
 ```php
 /**
- * Get current user
+ * 获取当前用户
  *
  * @response 200 {UserResponse}
  * @response 401 {Error}
@@ -417,7 +417,7 @@ public function me(): JsonResponse { ... }
 
 ---
 
-## Recipe 6: Write tests with MakesHttpApiRequests
+## 示例 6：使用 MakesHttpApiRequests 编写测试
 
 ```php
 use Dskripchenko\LaravelApi\Traits\Testing\MakesHttpApiRequests;
@@ -448,10 +448,10 @@ class UserApiTest extends TestCase
 
 ---
 
-## Recipe 7: Custom error handlers
+## 示例 7：自定义错误处理器
 
 ```php
-// In your AppServiceProvider or ApiServiceProvider
+// 在 AppServiceProvider 或 ApiServiceProvider 中
 use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Services\ApiResponseHelper;
 use Illuminate\Auth\AuthenticationException;
@@ -462,7 +462,7 @@ ApiErrorHandler::addErrorHandler(
     function (ModelNotFoundException $e) {
         return ApiResponseHelper::sayError([
             'errorKey' => 'not_found',
-            'message' => 'Resource not found',
+            'message' => '资源未找到',
         ], 404);
     }
 );
@@ -472,10 +472,10 @@ ApiErrorHandler::addErrorHandler(
     function (AuthenticationException $e) {
         return ApiResponseHelper::sayError([
             'errorKey' => 'unauthenticated',
-            'message' => 'Authentication required',
+            'message' => '需要身份验证',
         ], 401);
     }
 );
 ```
 
-Handlers support inheritance: a handler for `Exception` will catch `RuntimeException` via `class_parents()` traversal.
+处理器支持继承：为 `Exception` 注册的处理器将通过 `class_parents()` 遍历捕获 `RuntimeException`。

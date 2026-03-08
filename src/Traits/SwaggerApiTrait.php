@@ -1084,8 +1084,18 @@ trait SwaggerApiTrait
 
         $templates = static::getSwaggerTemplates();
 
+        foreach ($templates as &$properties) {
+            foreach ($properties as $field => &$definition) {
+                if (is_string($definition)) {
+                    $definition = static::parseShorthandType($definition);
+                }
+            }
+            unset($definition);
+        }
+        unset($properties);
+
         array_walk_recursive($templates, function (&$item, $key) {
-            if (strpos($item, '@') !== false) {
+            if (is_string($item) && strpos($item, '@') !== false) {
                 $item = ['$ref' => str_replace('@', '#/components/schemas/', $item)];
             }
         });
@@ -1101,6 +1111,58 @@ trait SwaggerApiTrait
     private static function isHasTemplate($name)
     {
         return Arr::has(static::getRawTemplates(), $name);
+    }
+
+    /**
+     * Parses shorthand type string into a full attribute array.
+     *
+     * Format: "type(format)!" where (format) and ! are optional.
+     * Examples: "integer!", "string(date-time)", "number", "string(email)!"
+     * Ref syntax "@ModelName" and "@ModelName[]" are passed through as-is.
+     *
+     * @param string $shorthand
+     * @return array
+     */
+    private static function parseShorthandType(string $shorthand): array
+    {
+        $shorthand = trim($shorthand);
+
+        // @ref array syntax: @ModelName[]
+        if (preg_match('/^@(.+)\[\]$/', $shorthand, $m)) {
+            return [
+                'type' => 'array',
+                'items' => ['$ref' => '#/components/schemas/' . $m[1]],
+            ];
+        }
+
+        // @ref syntax: @ModelName
+        if (str_starts_with($shorthand, '@')) {
+            return ['$ref' => '#/components/schemas/' . substr($shorthand, 1)];
+        }
+
+        $required = false;
+        if (str_ends_with($shorthand, '!')) {
+            $required = true;
+            $shorthand = substr($shorthand, 0, -1);
+        }
+
+        $format = null;
+        if (preg_match('/^(\w+)\(([^)]+)\)$/', $shorthand, $m)) {
+            $shorthand = $m[1];
+            $format = $m[2];
+        }
+
+        $result = ['type' => $shorthand];
+
+        if ($format !== null) {
+            $result['format'] = $format;
+        }
+
+        if ($required) {
+            $result['required'] = true;
+        }
+
+        return $result;
     }
 
     /**

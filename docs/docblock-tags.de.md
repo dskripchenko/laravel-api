@@ -1,10 +1,10 @@
-# OpenAPI Docblock Tags Reference
+# OpenAPI Docblock-Tags Referenz
 
-This document describes all docblock tags supported by `SwaggerApiTrait` for automatic OpenAPI 3.0 generation.
+Dieses Dokument beschreibt alle Docblock-Tags, die von `SwaggerApiTrait` fuer die automatische OpenAPI 3.0-Generierung unterstuetzt werden.
 
-## @input — Request parameters
+## @input — Anfrageparameter
 
-Defines request input parameters. For GET requests, parameters go to query string. For POST/PUT/PATCH, they go to requestBody.
+Definiert Eingabeparameter fuer Anfragen. Bei GET-Anfragen werden die Parameter als Query-String uebergeben. Bei POST/PUT/PATCH werden sie im requestBody uebergeben.
 
 ### Syntax
 
@@ -17,21 +17,21 @@ Defines request input parameters. For GET requests, parameters go to query strin
 @input [methodName] Dynamic inputs from a method
 ```
 
-### Types
+### Typen
 
-| Type | OpenAPI type | Notes |
+| Typ | OpenAPI-Typ | Hinweise |
 |------|-------------|-------|
-| `string` | `string` | Default fallback for unknown types |
+| `string` | `string` | Standard-Fallback fuer unbekannte Typen |
 | `integer` | `integer` | |
 | `number` | `number` | |
 | `boolean` | `boolean` | |
-| `file` | `string` (format: `binary`) | Triggers `multipart/form-data` content type |
-| `object` | `object` | Used with dot-notation for nested structures |
-| `array` | `array` | Used with `[]` notation for array items |
+| `file` | `string` (format: `binary`) | Loest den Content-Type `multipart/form-data` aus |
+| `object` | `object` | Wird mit Punkt-Notation fuer verschachtelte Strukturen verwendet |
+| `array` | `array` | Wird mit `[]`-Notation fuer Array-Elemente verwendet |
 
 ### Format
 
-Specify format in parentheses after type:
+Format wird in Klammern nach dem Typ angegeben:
 
 ```php
 @input string(email) $email         // → type: string, format: email
@@ -43,23 +43,23 @@ Specify format in parentheses after type:
 
 ### Enum
 
-Specify allowed values in square brackets at the end of description:
+Erlaubte Werte werden in eckigen Klammern am Ende der Beschreibung angegeben:
 
 ```php
 @input string $status Status [active,blocked,pending]
 // → enum: ["active", "blocked", "pending"], description: "Status"
 ```
 
-### Optional parameters
+### Optionale Parameter
 
-Prefix variable name with `?`:
+Variablennamen werden mit `?` vorangestellt:
 
 ```php
 @input string $name Required field       // required: true
 @input string ?$name Optional field      // required: false
 ```
 
-### Dot-notation (nested objects)
+### Punkt-Notation (verschachtelte Objekte)
 
 ```php
 @input object $address Address
@@ -67,7 +67,7 @@ Prefix variable name with `?`:
 @input string $address.zip ZIP code
 ```
 
-Generates nested JSON schema:
+Erzeugt ein verschachteltes JSON-Schema:
 ```json
 {
   "address": {
@@ -80,7 +80,7 @@ Generates nested JSON schema:
 }
 ```
 
-### Array dot-notation
+### Array-Punkt-Notation
 
 ```php
 @input array $tags Tags
@@ -88,7 +88,7 @@ Generates nested JSON schema:
 @input string $tags[].name Tag name
 ```
 
-Generates:
+Erzeugt:
 ```json
 {
   "tags": {
@@ -104,27 +104,27 @@ Generates:
 }
 ```
 
-### Model reference
+### Modell-Referenz
 
 ```php
 @input @OrderCreateRequest
 ```
 
-Generates `$ref: '#/components/schemas/OrderCreateRequest'` in requestBody. The model must be defined in `getSwaggerTemplates()`.
+Erzeugt `$ref: '#/components/schemas/OrderCreateRequest'` im requestBody. Das Modell muss in `getSwaggerTemplates()` definiert sein.
 
-### Dynamic inputs from method
+### Dynamische Eingaben aus Methode
 
 ```php
 @input [getSwaggerMetaInputs]
 ```
 
-Calls the method on the controller and merges returned inputs.
+Ruft die Methode auf dem Controller auf und fuegt die zurueckgegebenen Eingaben zusammen.
 
 ---
 
-## @output — Response fields
+## @output — Antwortfelder
 
-Defines response body fields for the default 200 response.
+Definiert Antwortfelder fuer die Standard-200-Antwort.
 
 ### Syntax
 
@@ -135,7 +135,7 @@ Defines response body fields for the default 200 response.
 @output @ModelName[] $field Array of $ref
 ```
 
-### Examples
+### Beispiele
 
 ```php
 @output integer $id Record ID
@@ -148,9 +148,9 @@ Defines response body fields for the default 200 response.
 
 ---
 
-## @header — Request headers
+## @header — Anfrage-Header
 
-Defines header parameters for the operation.
+Definiert Header-Parameter fuer die Operation.
 
 ### Syntax
 
@@ -159,20 +159,20 @@ Defines header parameters for the operation.
 @header type ?$HeaderName Optional header
 ```
 
-### Examples
+### Beispiele
 
 ```php
 @header string $Authorization Bearer token
 @header string ?$X-Request-Id Optional trace ID
 ```
 
-Headers can also be defined in middleware docblocks — they are aggregated from both the controller method and all middleware in the chain.
+Header koennen auch in Middleware-Docblocks definiert werden — sie werden sowohl aus der Controller-Methode als auch aus allen Middlewares in der Kette aggregiert.
 
 ---
 
-## @response — Multiple HTTP responses
+## @response — Mehrere HTTP-Antworten
 
-Defines responses with specific HTTP status codes. When present, overrides the default 200 response from `@output`.
+Definiert Antworten mit bestimmten HTTP-Statuscodes. Wenn vorhanden, ueberschreibt dies die Standard-200-Antwort von `@output`.
 
 ### Syntax
 
@@ -181,7 +181,7 @@ Defines responses with specific HTTP status codes. When present, overrides the d
 @response CODE Description text
 ```
 
-### Examples
+### Beispiele
 
 ```php
 @response 200 {UserResponse}        // → $ref to component schema
@@ -189,13 +189,13 @@ Defines responses with specific HTTP status codes. When present, overrides the d
 @response 404 Not found             // → description only
 ```
 
-If no `@response` tags are present, `@output` is used to build the 200 response.
+Wenn keine `@response`-Tags vorhanden sind, wird `@output` verwendet, um die 200-Antwort zu erstellen.
 
 ---
 
-## @security — Operation security
+## @security — Operations-Sicherheit
 
-Applies a security scheme to the operation.
+Wendet ein Sicherheitsschema auf die Operation an.
 
 ### Syntax
 
@@ -203,13 +203,13 @@ Applies a security scheme to the operation.
 @security SchemeName
 ```
 
-### Example
+### Beispiel
 
 ```php
 @security BearerAuth
 ```
 
-The scheme must be defined in `getSwaggerSecurityDefinitions()` on the Api class:
+Das Schema muss in `getSwaggerSecurityDefinitions()` der Api-Klasse definiert sein:
 
 ```php
 public static function getSwaggerSecurityDefinitions(): array {
@@ -225,9 +225,9 @@ public static function getSwaggerSecurityDefinitions(): array {
 
 ---
 
-## @deprecated — Mark as deprecated
+## @deprecated — Als veraltet markieren
 
-Marks the operation as deprecated in the OpenAPI spec.
+Markiert die Operation als veraltet in der OpenAPI-Spezifikation.
 
 ### Syntax
 
@@ -237,9 +237,9 @@ Marks the operation as deprecated in the OpenAPI spec.
 
 ---
 
-## @default — Default value
+## @default — Standardwert
 
-Sets a default value for a parameter.
+Setzt einen Standardwert fuer einen Parameter.
 
 ### Syntax
 
@@ -247,7 +247,7 @@ Sets a default value for a parameter.
 @default $variableName value
 ```
 
-### Example
+### Beispiel
 
 ```php
 @input integer ?$page Page number
@@ -256,9 +256,9 @@ Sets a default value for a parameter.
 
 ---
 
-## @example — Example value
+## @example — Beispielwert
 
-Sets an example value for a parameter.
+Setzt einen Beispielwert fuer einen Parameter.
 
 ### Syntax
 
@@ -266,7 +266,7 @@ Sets an example value for a parameter.
 @example $variableName value
 ```
 
-### Example
+### Beispiel
 
 ```php
 @input integer ?$page Page number
@@ -275,20 +275,20 @@ Sets an example value for a parameter.
 
 ---
 
-## Template shorthand syntax
+## Kurzschreibweise fuer Templates
 
-When defining templates in `getSwaggerTemplates()`, you can use a shorthand string notation instead of verbose arrays:
+Bei der Definition von Templates in `getSwaggerTemplates()` kann eine Kurzschreibweise als String anstelle von ausfuehrlichen Arrays verwendet werden:
 
-| Syntax | Meaning | Equivalent array |
+| Syntax | Bedeutung | Aequivalentes Array |
 |--------|---------|------------------|
-| `'integer'` | Optional integer | `['type' => 'integer']` |
-| `'string!'` | Required string | `['type' => 'string', 'required' => true]` |
-| `'string(email)'` | String with format | `['type' => 'string', 'format' => 'email']` |
-| `'string(date-time)!'` | Format + required | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
-| `'@Customer'` | `$ref` to schema | `['$ref' => '#/components/schemas/Customer']` |
-| `'@OrderItem[]'` | Array of `$ref` | `['type' => 'array', 'items' => ['$ref' => '...']]` |
+| `'integer'` | Optionaler Integer | `['type' => 'integer']` |
+| `'string!'` | Erforderlicher String | `['type' => 'string', 'required' => true]` |
+| `'string(email)'` | String mit Format | `['type' => 'string', 'format' => 'email']` |
+| `'string(date-time)!'` | Format + erforderlich | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
+| `'@Customer'` | `$ref` auf Schema | `['$ref' => '#/components/schemas/Customer']` |
+| `'@OrderItem[]'` | Array von `$ref` | `['type' => 'array', 'items' => ['$ref' => '...']]` |
 
-### Example
+### Beispiel
 
 ```php
 public static function getSwaggerTemplates(): array {
@@ -306,24 +306,24 @@ public static function getSwaggerTemplates(): array {
 }
 ```
 
-Both formats can be mixed in the same template. The array format (`['type' => '...', 'required' => true]`) is still fully supported.
+Beide Formate koennen im selben Template gemischt werden. Das Array-Format (`['type' => '...', 'required' => true]`) wird weiterhin vollstaendig unterstuetzt.
 
 ---
 
-## Content-type auto-detection
+## Automatische Content-Type-Erkennung
 
-The content type for POST requestBody is determined automatically:
+Der Content-Type fuer POST-requestBody wird automatisch bestimmt:
 
-| Condition | Content-Type |
+| Bedingung | Content-Type |
 |-----------|-------------|
-| Has `file` type input | `multipart/form-data` |
-| Has dot-notation (nested) inputs | `application/json` |
-| Has model reference (`@ModelName`) | `application/json` |
-| Flat inputs only | `application/x-www-form-urlencoded` |
+| Enthaelt Eingabe vom Typ `file` | `multipart/form-data` |
+| Enthaelt Punkt-Notation (verschachtelte) Eingaben | `application/json` |
+| Enthaelt Modell-Referenz (`@ModelName`) | `application/json` |
+| Nur flache Eingaben | `application/x-www-form-urlencoded` |
 
 ---
 
-## Complete example
+## Vollstaendiges Beispiel
 
 ```php
 /**

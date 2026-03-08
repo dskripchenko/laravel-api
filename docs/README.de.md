@@ -292,8 +292,13 @@ class Api extends BaseApi {
     public static function getSwaggerTemplates(): array {
         return [
             'OrderResponse' => [
-                'id'    => ['type' => 'integer', 'required' => true],
-                'title' => ['type' => 'string',  'required' => true],
+                'id'         => 'integer!',            // Pflichtfeld Integer
+                'title'      => 'string!',             // Pflichtfeld String
+                'total'      => 'number',              // Optionales Feld
+                'created_at' => 'string(date-time)',   // Mit Format
+                'email'      => 'string(email)!',      // Format + Pflicht
+                'customer'   => '@Customer',           // $ref zu anderem Schema
+                'items'      => '@OrderItem[]',        // Array von $ref
             ],
         ];
     }
@@ -306,7 +311,9 @@ class Api extends BaseApi {
 }
 ```
 
-> Vollständige Tag-Referenz: [docblock-tags.md](docblock-tags.md)
+**Shorthand-Syntax:** `type` — optional, `type!` — Pflicht, `type(format)` — mit Format, `@Model` — Referenz, `@Model[]` — Array von Referenzen. Das Array-Format (`['type' => '...', 'required' => true]`) wird ebenfalls unterstützt.
+
+> Vollständige Tag-Referenz: [docblock-tags.de.md](docblock-tags.de.md) | Rezepte: [cookbook.de.md](cookbook.de.md)
 
 ## CRUD-Gerüstbau
 

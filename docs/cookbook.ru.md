@@ -1,8 +1,8 @@
-# Cookbook — Step-by-step Recipes
+# Cookbook — Пошаговые рецепты
 
-## Recipe 1: Create a versioned API from scratch
+## Рецепт 1: Создание версионированного API с нуля
 
-### Step 1: Create the API class
+### Шаг 1: Создайте класс API
 
 ```php
 // app/Api/V1/Api.php
@@ -14,8 +14,8 @@ use App\Http\Middleware\AuthMiddleware;
 use Dskripchenko\LaravelApi\Components\BaseApi;
 
 /**
- * My API v1
- * Version 1 of the application API
+ * Мой API v1
+ * Версия 1 API приложения
  */
 class Api extends BaseApi
 {
@@ -53,7 +53,7 @@ class Api extends BaseApi
 }
 ```
 
-### Step 2: Create the Module
+### Шаг 2: Создайте модуль
 
 ```php
 // app/Api/ApiModule.php
@@ -73,7 +73,7 @@ class ApiModule extends BaseModule
 }
 ```
 
-### Step 3: Create the ServiceProvider
+### Шаг 3: Создайте ServiceProvider
 
 ```php
 // app/Providers/ApiServiceProvider.php
@@ -91,7 +91,7 @@ class ApiServiceProvider extends BaseProvider
 }
 ```
 
-### Step 4: Create a controller
+### Шаг 4: Создайте контроллер
 
 ```php
 // app/Api/V1/Controllers/UserController.php
@@ -105,15 +105,15 @@ use Illuminate\Http\Request;
 class UserController extends ApiController
 {
     /**
-     * List all users
-     * Returns a paginated list of users.
+     * Список всех пользователей
+     * Возвращает пагинированный список пользователей.
      *
-     * @input integer ?$page Page number
-     * @input integer ?$perPage Items per page
+     * @input integer ?$page Номер страницы
+     * @input integer ?$perPage Количество элементов на странице
      *
-     * @output integer $id User ID
-     * @output string $name User name
-     * @output string(email) $email User email
+     * @output integer $id ID пользователя
+     * @output string $name Имя пользователя
+     * @output string(email) $email Email пользователя
      */
     public function list(Request $request): JsonResponse
     {
@@ -122,14 +122,14 @@ class UserController extends ApiController
     }
 
     /**
-     * Get user by ID
+     * Получить пользователя по ID
      *
-     * @input integer $id User ID
+     * @input integer $id ID пользователя
      *
-     * @output integer $id User ID
-     * @output string $name User name
-     * @output string(email) $email User email
-     * @output string(date-time) $createdAt Registration date
+     * @output integer $id ID пользователя
+     * @output string $name Имя пользователя
+     * @output string(email) $email Email пользователя
+     * @output string(date-time) $createdAt Дата регистрации
      */
     public function show(Request $request): JsonResponse
     {
@@ -138,13 +138,13 @@ class UserController extends ApiController
     }
 
     /**
-     * Create a user
+     * Создать пользователя
      *
-     * @input string $name User name
-     * @input string(email) $email Email address
-     * @input string $password Password
+     * @input string $name Имя пользователя
+     * @input string(email) $email Адрес электронной почты
+     * @input string $password Пароль
      *
-     * @output integer $id Created user ID
+     * @output integer $id ID созданного пользователя
      */
     public function create(Request $request): JsonResponse
     {
@@ -154,7 +154,7 @@ class UserController extends ApiController
 }
 ```
 
-### Step 5: Register the provider
+### Шаг 5: Зарегистрируйте провайдер
 
 ```php
 // bootstrap/providers.php (Laravel 11+)
@@ -163,19 +163,19 @@ return [
 ];
 ```
 
-### Result
+### Результат
 
-- `GET  /api/v1/user/list` — list users
-- `GET  /api/v1/user/show?id=1` — get user
-- `POST /api/v1/user/create` — create user
-- `POST /api/v1/user/update` — update user
-- `POST /api/v1/user/delete` — delete user
-- `POST /api/v1/order/create` — create order
-- `GET  /api/doc` — API documentation (Scalar)
+- `GET  /api/v1/user/list` — список пользователей
+- `GET  /api/v1/user/show?id=1` — получить пользователя
+- `POST /api/v1/user/create` — создать пользователя
+- `POST /api/v1/user/update` — обновить пользователя
+- `POST /api/v1/user/delete` — удалить пользователя
+- `POST /api/v1/order/create` — создать заказ
+- `GET  /api/doc` — документация API (Scalar)
 
 ---
 
-## Recipe 2: Add a new API version
+## Рецепт 2: Добавление новой версии API
 
 ```php
 // app/Api/V2/Api.php
@@ -184,17 +184,17 @@ namespace App\Api\V2;
 use App\Api\V1\Api as V1;
 use App\Api\V2\Controllers\UserController;
 
-class Api extends V1  // ← inherits all v1 actions
+class Api extends V1  // ← наследует все действия v1
 {
     public static function getMethods(): array
     {
         return [
             'controllers' => [
                 'user' => [
-                    'controller' => UserController::class, // new controller
+                    'controller' => UserController::class, // новый контроллер
                     'actions' => [
-                        'delete' => false,                 // disable delete in v2
-                        'archive',                         // add new action
+                        'delete' => false,                 // отключить delete в v2
+                        'archive',                         // добавить новое действие
                     ],
                 ],
             ],
@@ -203,7 +203,7 @@ class Api extends V1  // ← inherits all v1 actions
 }
 ```
 
-Register in module:
+Зарегистрируйте в модуле:
 ```php
 public function getApiVersionList(): array
 {
@@ -216,9 +216,9 @@ public function getApiVersionList(): array
 
 ---
 
-## Recipe 3: CRUD with CrudService
+## Рецепт 3: CRUD с CrudService
 
-### Step 1: Model + Migration
+### Шаг 1: Модель + Миграция
 
 ```php
 // app/Models/Product.php
@@ -228,7 +228,7 @@ class Product extends Model
 }
 ```
 
-### Step 2: Create the CrudService
+### Шаг 2: Создайте CrudService
 
 ```php
 // app/Services/ProductCrudService.php
@@ -248,10 +248,10 @@ class ProductCrudService extends CrudService
     public function meta(): Meta
     {
         return (new Meta())
-            ->string('name', 'Product name')
-            ->string('description', 'Description')
-            ->number('price', 'Price')
-            ->select('status', 'Status', ['active', 'draft', 'archived'])
+            ->string('name', 'Название товара')
+            ->string('description', 'Описание')
+            ->number('price', 'Цена')
+            ->select('status', 'Статус', ['active', 'draft', 'archived'])
             ->crud();
     }
 
@@ -272,16 +272,16 @@ class ProductCrudService extends CrudService
 }
 ```
 
-### Step 3: Bind in ServiceProvider
+### Шаг 3: Привязка в ServiceProvider
 
 ```php
 use Dskripchenko\LaravelApi\Controllers\CrudController;
 use Dskripchenko\LaravelApi\Interfaces\CrudServiceInterface;
 
-// Single CRUD entity — simple bind:
+// Одна CRUD-сущность — простая привязка:
 $this->app->bind(CrudServiceInterface::class, ProductCrudService::class);
 
-// Multiple CRUD entities — use contextual binding:
+// Несколько CRUD-сущностей — используйте контекстную привязку:
 $this->app->when(ProductController::class)
     ->needs(CrudServiceInterface::class)
     ->give(ProductCrudService::class);
@@ -291,7 +291,7 @@ $this->app->when(OrderController::class)
     ->give(OrderCrudService::class);
 ```
 
-### Step 4: Register in getMethods
+### Шаг 4: Регистрация в getMethods
 
 ```php
 'product' => [
@@ -307,16 +307,16 @@ $this->app->when(OrderController::class)
 ],
 ```
 
-### Result
+### Результат
 
-- `GET  /api/v1/product/meta` — field definitions
-- `POST /api/v1/product/search` — filtered, sorted, paginated list
-- `POST /api/v1/product/create` — create record
-- `GET  /api/v1/product/read?id=1` — read record
-- `POST /api/v1/product/update` — update record
-- `POST /api/v1/product/delete` — delete record
+- `GET  /api/v1/product/meta` — определения полей
+- `POST /api/v1/product/search` — фильтрованный, сортированный, пагинированный список
+- `POST /api/v1/product/create` — создать запись
+- `GET  /api/v1/product/read?id=1` — прочитать запись
+- `POST /api/v1/product/update` — обновить запись
+- `POST /api/v1/product/delete` — удалить запись
 
-### Search request format
+### Формат поискового запроса
 
 ```json
 {
@@ -336,7 +336,7 @@ $this->app->when(OrderController::class)
 
 ---
 
-## Recipe 4: Custom middleware
+## Рецепт 4: Пользовательский middleware
 
 ```php
 // app/Http/Middleware/ApiAuthMiddleware.php
@@ -348,14 +348,14 @@ use Illuminate\Http\Request;
 use Closure;
 
 /**
- * @header string $Authorization Bearer token
+ * @header string $Authorization Bearer-токен
  */
 class ApiAuthMiddleware extends ApiMiddleware
 {
     public function run(Request $request, Closure $next)
     {
         if (!$request->bearerToken()) {
-            throw new ApiException('unauthorized', 'Bearer token required');
+            throw new ApiException('unauthorized', 'Требуется Bearer-токен');
         }
 
         return $next($request);
@@ -363,11 +363,11 @@ class ApiAuthMiddleware extends ApiMiddleware
 }
 ```
 
-The `@header` tag in middleware docblock is aggregated into Swagger documentation.
+Тег `@header` в docblock middleware агрегируется в Swagger-документацию.
 
 ---
 
-## Recipe 5: Swagger with security and templates
+## Рецепт 5: Swagger с безопасностью и шаблонами
 
 ```php
 class Api extends BaseApi
@@ -403,10 +403,10 @@ class Api extends BaseApi
 }
 ```
 
-In controller:
+В контроллере:
 ```php
 /**
- * Get current user
+ * Получить текущего пользователя
  *
  * @response 200 {UserResponse}
  * @response 401 {Error}
@@ -417,7 +417,7 @@ public function me(): JsonResponse { ... }
 
 ---
 
-## Recipe 6: Write tests with MakesHttpApiRequests
+## Рецепт 6: Написание тестов с MakesHttpApiRequests
 
 ```php
 use Dskripchenko\LaravelApi\Traits\Testing\MakesHttpApiRequests;
@@ -448,10 +448,10 @@ class UserApiTest extends TestCase
 
 ---
 
-## Recipe 7: Custom error handlers
+## Рецепт 7: Пользовательские обработчики ошибок
 
 ```php
-// In your AppServiceProvider or ApiServiceProvider
+// В вашем AppServiceProvider или ApiServiceProvider
 use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Services\ApiResponseHelper;
 use Illuminate\Auth\AuthenticationException;
@@ -462,7 +462,7 @@ ApiErrorHandler::addErrorHandler(
     function (ModelNotFoundException $e) {
         return ApiResponseHelper::sayError([
             'errorKey' => 'not_found',
-            'message' => 'Resource not found',
+            'message' => 'Ресурс не найден',
         ], 404);
     }
 );
@@ -472,10 +472,10 @@ ApiErrorHandler::addErrorHandler(
     function (AuthenticationException $e) {
         return ApiResponseHelper::sayError([
             'errorKey' => 'unauthenticated',
-            'message' => 'Authentication required',
+            'message' => 'Требуется аутентификация',
         ], 401);
     }
 );
 ```
 
-Handlers support inheritance: a handler for `Exception` will catch `RuntimeException` via `class_parents()` traversal.
+Обработчики поддерживают наследование: обработчик для `Exception` перехватит `RuntimeException` через обход `class_parents()`.
