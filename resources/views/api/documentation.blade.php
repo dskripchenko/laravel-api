@@ -2,33 +2,17 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Автодокументация</title>
-        <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@3.12.1/swagger-ui.css">
-        <link rel="stylesheet" type="text/css" href="/swagger-themes/theme-flattop.css">
+        <title>API Documentation</title>
     </head>
     <body>
-        <div id="swagger-ui"></div>
-        <script src="https://unpkg.com/swagger-ui-dist@3.12.1/swagger-ui-standalone-preset.js"></script>
-        <script src="https://unpkg.com/swagger-ui-dist@3.12.1/swagger-ui-bundle.js"></script>
+        <div id="app"></div>
+        <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
         <script>
-            window.onload = function () {
-                SwaggerUIBundle({
-                    urls: JSON.parse('{!! $filesJsonData !!}'),
-                    dom_id: '#swagger-ui',
-                    deepLinking: true,
-                    validatorUrl: false,
-                    presets: [
-                        SwaggerUIBundle.presets.apis,
-                        SwaggerUIStandalonePreset
-                    ],
-                    plugins: [
-                        SwaggerUIBundle.plugins.DownloadUrl
-                    ],
-                    layout: "StandaloneLayout"
-                })
-            }
+            var sources = JSON.parse('{!! $filesJsonData !!}').map(function (item) {
+                return { url: item.url, title: item.name };
+            });
+            Scalar.createApiReference('#app', { sources: sources });
         </script>
     </body>
 </html>

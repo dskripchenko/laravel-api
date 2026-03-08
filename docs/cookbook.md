@@ -171,7 +171,7 @@ return [
 - `POST /api/v1/user/update` — update user
 - `POST /api/v1/user/delete` — delete user
 - `POST /api/v1/order/create` — create order
-- `GET  /api/doc` — Swagger UI
+- `GET  /api/doc` — API documentation (Scalar)
 
 ---
 

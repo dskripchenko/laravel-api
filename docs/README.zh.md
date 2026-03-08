@@ -83,7 +83,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 
 **结果：**
 - `GET /api/v1/user/list` — API端点
-- `GET /api/doc` — 自动生成的Swagger UI
+- `GET /api/doc` — 自动生成的API文档 (Scalar)
 
 ## 功能特性
 
@@ -117,13 +117,9 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 composer require dskripchenko/laravel-api
 ```
 
-### 发布资源文件
+### 发布配置文件
 
 ```bash
-# Swagger UI主题
-php artisan vendor:publish --provider="Dskripchenko\LaravelApi\Providers\ApiServiceProvider"
-
-# 配置文件
 php artisan vendor:publish --tag=laravel-api-config
 ```
 

@@ -83,7 +83,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 
 **Result:**
 - `GET /api/v1/user/list` — API endpoint
-- `GET /api/doc` — Auto-generated Swagger UI
+- `GET /api/doc` — Auto-generated API documentation (Scalar)
 
 ## Features
 
@@ -117,13 +117,9 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 composer require dskripchenko/laravel-api
 ```
 
-### Publish assets
+### Publish config
 
 ```bash
-# Swagger UI theme (publishes to public/swagger/)
-php artisan vendor:publish --provider="Dskripchenko\LaravelApi\Providers\ApiServiceProvider"
-
-# Configuration file (publishes config/laravel-api.php)
 php artisan vendor:publish --tag=laravel-api-config
 ```
 
