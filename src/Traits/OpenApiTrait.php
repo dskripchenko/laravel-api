@@ -368,11 +368,25 @@ trait OpenApiTrait
             ];
         }
 
-        return [
+        $requiredFields = [];
+        foreach ($properties as $variable => $prop) {
+            if (!empty($prop['required'])) {
+                $requiredFields[] = $variable;
+            }
+            unset($properties[$variable]['required']);
+        }
+
+        $schema = [
             'description' => 'Response payload',
             'type' => 'object',
             'properties' => $properties,
         ];
+
+        if (!empty($requiredFields)) {
+            $schema['required'] = $requiredFields;
+        }
+
+        return $schema;
     }
 
     /**
@@ -947,6 +961,9 @@ trait OpenApiTrait
             }
             if (isset($responseData['properties'])) {
                 $schema['properties'] = $responseData['properties'];
+            }
+            if (isset($responseData['required'])) {
+                $schema['required'] = $responseData['required'];
             }
         }
 

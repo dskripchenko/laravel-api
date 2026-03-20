@@ -62,6 +62,10 @@ class ExtendedApi extends BaseApi
                             'action' => 'fileUploadAction',
                             'method' => 'post',
                         ],
+                        'optionalOutputAction' => [
+                            'action' => 'optionalOutputAction',
+                            'method' => 'get',
+                        ],
                     ],
                 ],
             ],

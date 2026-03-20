@@ -387,6 +387,67 @@ it('example from @example tag', function () {
     expect($pageParam['example'])->toBe(3);
 });
 
+// === Phase 6: Optional @output ===
+
+it('marks required @output fields in required array', function () {
+    $config = ExtendedApi::getOpenApiConfig('v1');
+    $responseSchema = $config['paths']['/v1/extended/optionalOutputAction']['get']['responses']['200']['content']['application/json']['schema'];
+
+    expect($responseSchema['required'])->toContain('id');
+    expect($responseSchema['required'])->toContain('name');
+    expect($responseSchema['required'])->not->toContain('email');
+    expect($responseSchema['required'])->not->toContain('phone');
+});
+
+it('includes optional @output fields in properties', function () {
+    $config = ExtendedApi::getOpenApiConfig('v1');
+    $responseSchema = $config['paths']['/v1/extended/optionalOutputAction']['get']['responses']['200']['content']['application/json']['schema'];
+
+    expect($responseSchema['properties'])->toHaveKey('id');
+    expect($responseSchema['properties'])->toHaveKey('name');
+    expect($responseSchema['properties'])->toHaveKey('email');
+    expect($responseSchema['properties'])->toHaveKey('phone');
+});
+
+it('does not leak required flag into individual output properties', function () {
+    $config = ExtendedApi::getOpenApiConfig('v1');
+    $responseSchema = $config['paths']['/v1/extended/optionalOutputAction']['get']['responses']['200']['content']['application/json']['schema'];
+
+    foreach ($responseSchema['properties'] as $prop) {
+        expect($prop)->not->toHaveKey('required');
+    }
+});
+
+it('omits required array when all @output fields are optional', function () {
+    $apiClass = new class extends BaseApi {
+        public static $useResponseTemplates = false;
+
+        public static function getMethods(): array
+        {
+            return [
+                'controllers' => [
+                    'test' => [
+                        'controller' => \Tests\Fixtures\OpenApi\AllOptionalOutputController::class,
+                        'actions' => [
+                            'allOptional' => [
+                                'action' => 'allOptional',
+                                'method' => 'get',
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
+    };
+
+    $config = $apiClass::getOpenApiConfig('v1');
+    $responseSchema = $config['paths']['/v1/test/allOptional']['get']['responses']['200']['content']['application/json']['schema'];
+
+    expect($responseSchema)->not->toHaveKey('required');
+    expect($responseSchema['properties'])->toHaveKey('foo');
+    expect($responseSchema['properties'])->toHaveKey('bar');
+});
+
 // === No consumes at operation level in OAS3 ===
 
 it('does not include consumes at operation level', function () {

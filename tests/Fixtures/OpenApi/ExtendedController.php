@@ -179,6 +179,25 @@ class ExtendedController extends ApiController
     }
 
     /**
+     * Optional output action
+     * Action with required and optional output fields
+     *
+     * @input integer $id User ID
+     *
+     * @output integer $id User ID
+     * @output string $name User name
+     * @output string ?$email User email
+     * @output string ?$phone User phone
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function optionalOutputAction(Request $request): JsonResponse
+    {
+        return $this->success(['id' => 1, 'name' => 'John']);
+    }
+
+    /**
      * File upload action
      * Action with file upload
      *
