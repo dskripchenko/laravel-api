@@ -557,3 +557,52 @@ export interface UserShowOutput {
 | `enum` | `'a' \| 'b' \| 'c'` |
 
 Component schemas from `getOpenApiTemplates()` are generated as named interfaces. Each operation produces `{Controller}{Action}Input` and `{Controller}{Action}Output` types.
+
+---
+
+## Recipe 9: Named routes
+
+All API actions are automatically registered as named Laravel routes. The naming pattern is `api.{version}.{controller}.{action}`.
+
+### Auto-generated names
+
+```php
+// getMethods()
+'user' => [
+    'controller' => UserController::class,
+    'actions' => [
+        'list' => ['method' => ['get']],  // → api.v1.user.list
+        'show' => ['method' => ['get']],  // → api.v1.user.show
+        'create',                          // → api.v1.user.create
+    ],
+],
+```
+
+### Custom names
+
+Use the `name` key in action config to override the auto-generated name:
+
+```php
+'list' => [
+    'action' => 'list',
+    'method' => ['get'],
+    'name' => 'users.index',             // → api.v1.users.index
+],
+```
+
+The version prefix `api.{version}.` is always added automatically.
+
+### Using named routes in code
+
+```php
+// Generate URL
+$url = route('api.v1.user.list');        // → /api/v1/user/list
+
+// In Blade templates
+<a href="{{ route('api.v1.user.show') }}">User</a>
+
+// URL facade
+$url = URL::route('api.v1.user.list');
+```
+
+The catch-all `api-endpoint` route is preserved as a fallback for any requests that don't match a named route.

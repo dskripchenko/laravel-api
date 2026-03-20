@@ -103,6 +103,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Трассировка запросов** | `RequestIdMiddleware` — распространение `X-Request-Id` + контекст логов |
 | **Необязательные поля ответа** | `@output string ?$email` — помечает поля ответа как необязательные в OpenAPI-схеме |
 | **Генерация TypeScript** | `api:generate-types` — генерирует TS-интерфейсы из OpenAPI-спецификации |
+| **Именованные маршруты** | Каждый action регистрируется как именованный Laravel-маршрут — `route('api.v1.user.list')` |
 | **Помощники тестирования** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Публикуемая конфигурация** | `config/laravel-api.php` — префикс, шаблон URI, HTTP методы |
 
@@ -220,6 +221,7 @@ V2 автоматически наследует `list`, `show`, `create`, `upda
     'create' => [
         'action' => 'store',             // явное имя метода
         'method' => ['post'],            // разрешённые HTTP методы (по умолчанию: ['post'])
+        'name' => 'orders.store',        // имя маршрута: api.{version}.orders.store
         'middleware' => [RateLimit::class],
         'exclude-middleware' => [LogMiddleware::class],
         'exclude-all-middleware' => false,

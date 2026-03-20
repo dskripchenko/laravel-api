@@ -557,3 +557,52 @@ export interface UserShowOutput {
 | `enum` | `'a' \| 'b' \| 'c'` |
 
 `getOpenApiTemplates()` 中的组件 schema 会生成为命名接口。每个操作会生成 `{Controller}{Action}Input` 和 `{Controller}{Action}Output` 类型。
+
+---
+
+## 示例 9：命名路由
+
+所有 API 操作会自动注册为命名的 Laravel 路由。命名模式为 `api.{version}.{controller}.{action}`。
+
+### 自动命名
+
+```php
+// getMethods()
+'user' => [
+    'controller' => UserController::class,
+    'actions' => [
+        'list' => ['method' => ['get']],  // → api.v1.user.list
+        'show' => ['method' => ['get']],  // → api.v1.user.show
+        'create',                          // → api.v1.user.create
+    ],
+],
+```
+
+### 自定义命名
+
+使用 action 配置中的 `name` 键来覆盖自动生成的名称：
+
+```php
+'list' => [
+    'action' => 'list',
+    'method' => ['get'],
+    'name' => 'users.index',             // → api.v1.users.index
+],
+```
+
+版本前缀 `api.{version}.` 会自动添加。
+
+### 在代码中使用
+
+```php
+// 生成 URL
+$url = route('api.v1.user.list');        // → /api/v1/user/list
+
+// 在 Blade 模板中
+<a href="{{ route('api.v1.user.show') }}">用户</a>
+
+// URL Facade
+$url = URL::route('api.v1.user.list');
+```
+
+Catch-all 路由 `api-endpoint` 作为回退保留。

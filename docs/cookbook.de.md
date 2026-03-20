@@ -557,3 +557,52 @@ export interface UserShowOutput {
 | `enum` | `'a' \| 'b' \| 'c'` |
 
 Komponentenschemata aus `getOpenApiTemplates()` werden als benannte Interfaces generiert. Fuer jede Operation werden `{Controller}{Action}Input`- und `{Controller}{Action}Output`-Typen erstellt.
+
+---
+
+## Rezept 9: Benannte Routen
+
+Alle API-Aktionen werden automatisch als benannte Laravel-Routen registriert. Das Namensmuster ist `api.{version}.{controller}.{action}`.
+
+### Automatische Namen
+
+```php
+// getMethods()
+'user' => [
+    'controller' => UserController::class,
+    'actions' => [
+        'list' => ['method' => ['get']],  // → api.v1.user.list
+        'show' => ['method' => ['get']],  // → api.v1.user.show
+        'create',                          // → api.v1.user.create
+    ],
+],
+```
+
+### Benutzerdefinierte Namen
+
+Verwenden Sie den `name`-Schluessel in der Action-Konfiguration:
+
+```php
+'list' => [
+    'action' => 'list',
+    'method' => ['get'],
+    'name' => 'users.index',             // → api.v1.users.index
+],
+```
+
+Das Versionspraefix `api.{version}.` wird automatisch hinzugefuegt.
+
+### Verwendung im Code
+
+```php
+// URL generieren
+$url = route('api.v1.user.list');        // → /api/v1/user/list
+
+// In Blade-Templates
+<a href="{{ route('api.v1.user.show') }}">Benutzer</a>
+
+// URL-Facade
+$url = URL::route('api.v1.user.list');
+```
+
+Die Catch-all-Route `api-endpoint` bleibt als Fallback erhalten.

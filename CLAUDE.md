@@ -76,6 +76,7 @@ public static function getMethods(): array
                     'create' => [
                         'action' => 'store',                  // explicit method name
                         'method' => ['post'],                 // HTTP methods (default: ['post'])
+                        'name' => 'users.store',              // route: api.{version}.users.store
                         'middleware' => [AdminMiddleware::class],
                         'exclude-middleware' => [],
                         'exclude-all-middleware' => false,

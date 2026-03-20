@@ -103,6 +103,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **请求追踪** | `RequestIdMiddleware` —— `X-Request-Id`传播 + 日志上下文 |
 | **可选响应字段** | `@output string ?$email` —— 在OpenAPI schema中将响应字段标记为可选 |
 | **TypeScript生成** | `api:generate-types` —— 从OpenAPI规范生成TS接口 |
+| **命名路由** | 每个操作注册为命名的 Laravel 路由 — `route('api.v1.user.list')` |
 | **测试助手** | `assertApiSuccess()`、`assertApiError()`、`assertApiValidationError()` |
 | **可发布配置** | `config/laravel-api.php` —— 前缀、URI模式、HTTP方法 |
 
@@ -220,6 +221,7 @@ V2自动继承V1中的`list`、`show`、`create`、`update`，同时覆盖控制
     'create' => [
         'action' => 'store',             // 显式方法名
         'method' => ['post'],            // 允许的HTTP方法（默认：['post']）
+        'name' => 'orders.store',        // 路由名称：api.{version}.orders.store
         'middleware' => [RateLimit::class],
         'exclude-middleware' => [LogMiddleware::class],
         'exclude-all-middleware' => false,

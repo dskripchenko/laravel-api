@@ -103,6 +103,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Request Tracing** | `RequestIdMiddleware` — `X-Request-Id` Propagation + Log Context |
 | **Optionale Ausgabefelder** | `@output string ?$email` — markiert Antwortfelder als optional im OpenAPI-Schema |
 | **TypeScript-Generierung** | `api:generate-types` — generiert TS-Interfaces aus der OpenAPI-Spezifikation |
+| **Benannte Routen** | Jede Action wird als benannte Laravel-Route registriert — `route('api.v1.user.list')` |
 | **Test-Helfer** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Veröffentlichbare Konfiguration** | `config/laravel-api.php` — Präfix, URI-Muster, HTTP-Methoden |
 
@@ -220,6 +221,7 @@ V2 erbt automatisch `list`, `show`, `create`, `update` von V1, während der Cont
     'create' => [
         'action' => 'store',             // expliziter Methodenname
         'method' => ['post'],            // erlaubte HTTP-Methoden (Standard: ['post'])
+        'name' => 'orders.store',        // Routenname: api.{version}.orders.store
         'middleware' => [RateLimit::class],
         'exclude-middleware' => [LogMiddleware::class],
         'exclude-all-middleware' => false,

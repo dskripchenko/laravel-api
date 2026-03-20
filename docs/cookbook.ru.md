@@ -557,3 +557,52 @@ export interface UserShowOutput {
 | `enum` | `'a' \| 'b' \| 'c'` |
 
 Схемы компонентов из `getOpenApiTemplates()` генерируются как именованные интерфейсы. Для каждой операции создаются типы `{Controller}{Action}Input` и `{Controller}{Action}Output`.
+
+---
+
+## Рецепт 9: Именованные маршруты
+
+Все API-действия автоматически регистрируются как именованные маршруты Laravel. Шаблон именования: `api.{version}.{controller}.{action}`.
+
+### Автоматические имена
+
+```php
+// getMethods()
+'user' => [
+    'controller' => UserController::class,
+    'actions' => [
+        'list' => ['method' => ['get']],  // → api.v1.user.list
+        'show' => ['method' => ['get']],  // → api.v1.user.show
+        'create',                          // → api.v1.user.create
+    ],
+],
+```
+
+### Ручное именование
+
+Используйте ключ `name` в конфигурации action для переопределения автоматического имени:
+
+```php
+'list' => [
+    'action' => 'list',
+    'method' => ['get'],
+    'name' => 'users.index',             // → api.v1.users.index
+],
+```
+
+Префикс версии `api.{version}.` добавляется автоматически.
+
+### Использование в коде
+
+```php
+// Генерация URL
+$url = route('api.v1.user.list');        // → /api/v1/user/list
+
+// В Blade-шаблонах
+<a href="{{ route('api.v1.user.show') }}">Пользователь</a>
+
+// Фасад URL
+$url = URL::route('api.v1.user.list');
+```
+
+Catch-all маршрут `api-endpoint` сохранён как fallback для запросов, не совпавших с именованным маршрутом.
