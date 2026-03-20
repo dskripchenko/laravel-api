@@ -2,6 +2,7 @@
 
 namespace Dskripchenko\LaravelApi\Providers;
 
+use Dskripchenko\LaravelApi\Console\Commands\ApiGenerateTypes;
 use Dskripchenko\LaravelApi\Console\Commands\ApiInstall;
 use Dskripchenko\LaravelApi\Controllers\ApiDocumentationController;
 use Dskripchenko\LaravelApi\Exceptions\ApiErrorHandler;
@@ -60,6 +61,7 @@ class ApiServiceProvider extends ServiceProvider
         $this->commands(
             [
                 ApiInstall::class,
+                ApiGenerateTypes::class,
             ]
         );
 
