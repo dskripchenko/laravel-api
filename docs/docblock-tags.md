@@ -130,6 +130,7 @@ Defines response body fields for the default 200 response.
 
 ```
 @output type $variableName Description
+@output type ?$variableName Optional response field
 @output type(format) $variableName Description
 @output @ModelName $field Field as $ref
 @output @ModelName[] $field Array of $ref
@@ -144,6 +145,15 @@ Defines response body fields for the default 200 response.
 @output @User[] $users List of users         // → type: array, items.$ref: '#/components/schemas/User'
 @output object $address Address
 @output string $address.city City            // nested output
+```
+
+### Optional output fields
+
+Prefix variable name with `?` to mark a response field as optional. Required fields are listed in the `required` array in the generated OpenAPI schema.
+
+```php
+@output integer $id Required field        // in "required" array
+@output string ?$email Optional field     // not in "required" array
 ```
 
 ---
@@ -343,6 +353,7 @@ The content type for POST requestBody is determined automatically:
  *
  * @output integer $id Order ID
  * @output string(date-time) $createdAt Creation timestamp
+ * @output string ?$notes Optional notes
  * @output @User $createdBy Creator
  *
  * @header string $Authorization Bearer token

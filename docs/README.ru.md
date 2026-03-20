@@ -101,6 +101,8 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Параметры заголовков** | `@header string $Authorization` — агрегация из контроллера и middleware |
 | **Soft deletes** | Встроенные `restore()` и `forceDelete()` в CrudService |
 | **Трассировка запросов** | `RequestIdMiddleware` — распространение `X-Request-Id` + контекст логов |
+| **Необязательные поля ответа** | `@output string ?$email` — помечает поля ответа как необязательные в OpenAPI-схеме |
+| **Генерация TypeScript** | `api:generate-types` — генерирует TS-интерфейсы из OpenAPI-спецификации |
 | **Помощники тестирования** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Публикуемая конфигурация** | `config/laravel-api.php` — префикс, шаблон URI, HTTP методы |
 
@@ -167,7 +169,7 @@ src/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
 └── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
@@ -254,6 +256,7 @@ V2 автоматически наследует `list`, `show`, `create`, `upda
  *
  * @output integer $id ID созданного заказа
  * @output string(date-time) $createdAt Временная метка
+ * @output string ?$notes Примечания
  */
 ```
 
@@ -387,6 +390,27 @@ class ProductTest extends TestCase
     }
 }
 ```
+
+## Генерация TypeScript
+
+Генерация TypeScript-интерфейсов из OpenAPI-спецификации:
+
+```bash
+php artisan api:generate-types                                    # Все версии → resources/js/shared/api/types.ts
+php artisan api:generate-types --version=v1                       # Конкретная версия
+php artisan api:generate-types --output=frontend/src/api/types.ts # Свой путь
+```
+
+Для `@output integer $id` и `@output string ?$email` генератор создаёт:
+
+```typescript
+export interface UserShowOutput {
+  id: number;
+  email?: string;
+}
+```
+
+Генерируются схемы компонентов, входные и выходные типы операций. Подробности в [cookbook.ru.md](cookbook.ru.md#рецепт-8-генерация-typescript-интерфейсов).
 
 ## Конфигурация
 

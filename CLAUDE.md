@@ -15,6 +15,7 @@ composer install
 vendor/bin/pest              # Run all tests
 vendor/bin/pest --filter="test name"   # Single test
 vendor/bin/pest tests/Unit/            # Directory
+php artisan api:generate-types         # Generate TS interfaces from OpenAPI spec
 ```
 
 ## Architecture
@@ -134,7 +135,8 @@ class ApiV1_1 extends ApiV1 {
  * @input @ModelName Request body as $ref to component schema
  * @input [getOpenApiMetaInputs] Dynamic inputs from Meta component
  *
- * @output integer $id Response field
+ * @output integer $id Response field (required by default)
+ * @output string ?$email Optional response field
  * @output string(date-time) $createdAt Formatted output
  * @output @User $user $ref to component schema
  * @output @User[] $users Array of $ref
@@ -255,7 +257,7 @@ Publishable config `config/laravel-api.php`:
 ```
 src/
 ├── Components/        BaseApi, BaseModule, Meta
-├── Console/Commands/  ApiInstall, BaseCommand
+├── Console/Commands/  ApiInstall, ApiGenerateTypes, BaseCommand
 ├── Controllers/       ApiController, CrudController, ApiDocumentationController
 ├── Exceptions/        ApiException, ApiErrorHandler, Handler
 ├── Facades/           ApiRequest, ApiModule, ApiErrorHandler
@@ -264,7 +266,7 @@ src/
 ├── Providers/         ApiServiceProvider, BaseServiceProvider
 ├── Requests/          BaseApiRequest, CrudSearchRequest
 ├── Resources/         BaseJsonResource, BaseJsonResourceCollection
-├── Services/          ApiResponseHelper, CrudService
+├── Services/          ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
 └── Traits/
     ├── OpenApiTrait
     └── Testing/       MakesHttpApiRequests

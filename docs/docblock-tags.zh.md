@@ -130,6 +130,7 @@
 
 ```
 @output type $variableName Description
+@output type ?$variableName 可选响应字段
 @output type(format) $variableName Description
 @output @ModelName $field Field as $ref
 @output @ModelName[] $field Array of $ref
@@ -144,6 +145,15 @@
 @output @User[] $users List of users         // → type: array, items.$ref: '#/components/schemas/User'
 @output object $address Address
 @output string $address.city City            // nested output
+```
+
+### 可选响应字段
+
+在变量名前加 `?` 前缀，将响应字段标记为可选。必填字段会列在生成的 OpenAPI schema 的 `required` 数组中。
+
+```php
+@output integer $id 必填字段        // 在 "required" 数组中
+@output string ?$email 可选字段     // 不在 "required" 数组中
 ```
 
 ---
@@ -343,6 +353,7 @@ POST requestBody 的内容类型会自动确定：
  *
  * @output integer $id Order ID
  * @output string(date-time) $createdAt Creation timestamp
+ * @output string ?$notes 可选备注
  * @output @User $createdBy Creator
  *
  * @header string $Authorization Bearer token

@@ -130,6 +130,7 @@
 
 ```
 @output type $variableName Description
+@output type ?$variableName Необязательное поле ответа
 @output type(format) $variableName Description
 @output @ModelName $field Field as $ref
 @output @ModelName[] $field Array of $ref
@@ -144,6 +145,15 @@
 @output @User[] $users List of users         // → type: array, items.$ref: '#/components/schemas/User'
 @output object $address Address
 @output string $address.city City            // nested output
+```
+
+### Необязательные поля ответа
+
+Добавьте префикс `?` к имени переменной, чтобы пометить поле ответа как необязательное. Обязательные поля перечисляются в массиве `required` в сгенерированной OpenAPI-схеме.
+
+```php
+@output integer $id Обязательное поле     // попадает в "required"
+@output string ?$email Необязательное поле // не попадает в "required"
 ```
 
 ---
@@ -343,6 +353,7 @@ public static function getOpenApiTemplates(): array {
  *
  * @output integer $id Order ID
  * @output string(date-time) $createdAt Creation timestamp
+ * @output string ?$notes Примечания
  * @output @User $createdBy Creator
  *
  * @header string $Authorization Bearer token

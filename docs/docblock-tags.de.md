@@ -130,6 +130,7 @@ Definiert Antwortfelder fuer die Standard-200-Antwort.
 
 ```
 @output type $variableName Description
+@output type ?$variableName Optionales Antwortfeld
 @output type(format) $variableName Description
 @output @ModelName $field Field as $ref
 @output @ModelName[] $field Array of $ref
@@ -144,6 +145,15 @@ Definiert Antwortfelder fuer die Standard-200-Antwort.
 @output @User[] $users List of users         // → type: array, items.$ref: '#/components/schemas/User'
 @output object $address Address
 @output string $address.city City            // nested output
+```
+
+### Optionale Antwortfelder
+
+Variablennamen werden mit `?` vorangestellt, um ein Antwortfeld als optional zu markieren. Erforderliche Felder werden im `required`-Array im generierten OpenAPI-Schema aufgelistet.
+
+```php
+@output integer $id Erforderliches Feld    // im "required"-Array
+@output string ?$email Optionales Feld     // nicht im "required"-Array
 ```
 
 ---
@@ -343,6 +353,7 @@ Der Content-Type fuer POST-requestBody wird automatisch bestimmt:
  *
  * @output integer $id Order ID
  * @output string(date-time) $createdAt Creation timestamp
+ * @output string ?$notes Optionale Anmerkungen
  * @output @User $createdBy Creator
  *
  * @header string $Authorization Bearer token

@@ -479,3 +479,81 @@ ApiErrorHandler::addErrorHandler(
 ```
 
 Handlers support inheritance: a handler for `Exception` will catch `RuntimeException` via `class_parents()` traversal.
+
+---
+
+## Recipe 8: Generate TypeScript interfaces
+
+The `api:generate-types` command generates TypeScript interfaces from your OpenAPI spec.
+
+### Basic usage
+
+```bash
+php artisan api:generate-types
+```
+
+By default, types are written to `resources/js/shared/api/types.ts`.
+
+### Options
+
+```bash
+# Generate for a specific API version
+php artisan api:generate-types --version=v1
+
+# Custom output path
+php artisan api:generate-types --output=frontend/src/api/types.ts
+```
+
+### What gets generated
+
+Given this controller:
+
+```php
+class UserController extends ApiController
+{
+    /**
+     * Get user by ID
+     *
+     * @input integer $id User ID
+     *
+     * @output integer $id User ID
+     * @output string $name User name
+     * @output string ?$email User email
+     * @output string ?$phone User phone
+     */
+    public function show(Request $request): JsonResponse
+    {
+        return $this->success(User::findOrFail($request->input('id'))->toArray());
+    }
+}
+```
+
+The generator produces:
+
+```typescript
+export interface UserShowInput {
+  id: number;
+}
+
+export interface UserShowOutput {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+}
+```
+
+### Type mapping
+
+| OpenAPI | TypeScript |
+|---------|-----------|
+| `string` | `string` |
+| `integer`, `number` | `number` |
+| `boolean` | `boolean` |
+| `file`, `string(binary)` | `File` |
+| `object` (no properties) | `Record<string, unknown>` |
+| `array` + items | `Type[]` |
+| `$ref` | Interface name |
+| `enum` | `'a' \| 'b' \| 'c'` |
+
+Component schemas from `getOpenApiTemplates()` are generated as named interfaces. Each operation produces `{Controller}{Action}Input` and `{Controller}{Action}Output` types.

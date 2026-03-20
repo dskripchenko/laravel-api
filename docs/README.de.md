@@ -101,6 +101,8 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Header-Parameter** | `@header string $Authorization` — aggregiert aus Controller + Middleware |
 | **Soft Deletes** | Integriertes `restore()` und `forceDelete()` in CrudService |
 | **Request Tracing** | `RequestIdMiddleware` — `X-Request-Id` Propagation + Log Context |
+| **Optionale Ausgabefelder** | `@output string ?$email` — markiert Antwortfelder als optional im OpenAPI-Schema |
+| **TypeScript-Generierung** | `api:generate-types` — generiert TS-Interfaces aus der OpenAPI-Spezifikation |
 | **Test-Helfer** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Veröffentlichbare Konfiguration** | `config/laravel-api.php` — Präfix, URI-Muster, HTTP-Methoden |
 
@@ -167,7 +169,7 @@ src/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
 └── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
@@ -254,6 +256,7 @@ Die Dokumentation wird automatisch aus PHP-Docblöcken generiert. Keine YAML- od
  *
  * @output integer $id Created order ID
  * @output string(date-time) $createdAt Timestamp
+ * @output string ?$notes Optionale Anmerkungen
  */
 ```
 
@@ -387,6 +390,27 @@ class ProductTest extends TestCase
     }
 }
 ```
+
+## TypeScript-Generierung
+
+TypeScript-Interfaces aus der OpenAPI-Spezifikation generieren:
+
+```bash
+php artisan api:generate-types                                    # Alle Versionen → resources/js/shared/api/types.ts
+php artisan api:generate-types --version=v1                       # Bestimmte Version
+php artisan api:generate-types --output=frontend/src/api/types.ts # Benutzerdefinierter Pfad
+```
+
+Fuer `@output integer $id` und `@output string ?$email` erzeugt der Generator:
+
+```typescript
+export interface UserShowOutput {
+  id: number;
+  email?: string;
+}
+```
+
+Komponentenschemata, Eingabe- und Ausgabetypen werden generiert. Details in [cookbook.de.md](cookbook.de.md#rezept-8-typescript-interfaces-generieren).
 
 ## Konfiguration
 

@@ -101,6 +101,8 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Header parameters** | `@header string $Authorization` — aggregated from controller + middleware |
 | **Soft deletes** | Built-in `restore()` and `forceDelete()` in CrudService |
 | **Request tracing** | `RequestIdMiddleware` — `X-Request-Id` propagation + log context |
+| **Optional output fields** | `@output string ?$email` — marks response fields as optional in OpenAPI schema |
+| **TypeScript generation** | `api:generate-types` — generates TS interfaces from OpenAPI spec |
 | **Test helpers** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Publishable config** | `config/laravel-api.php` — prefix, URI pattern, HTTP methods |
 
@@ -159,7 +161,7 @@ Every response is wrapped in a standard envelope:
 ```
 src/
 ├── Components/        BaseApi, BaseModule, Meta
-├── Console/Commands/  ApiInstall, BaseCommand
+├── Console/Commands/  ApiInstall, ApiGenerateTypes, BaseCommand
 ├── Controllers/       ApiController, CrudController, ApiDocumentationController
 ├── Exceptions/        ApiException, ApiErrorHandler, Handler
 ├── Facades/        ApiRequest, ApiModule, ApiErrorHandler
@@ -168,7 +170,7 @@ src/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
 └── Traits/
     ├── OpenApiTrait
     └── Testing/       MakesHttpApiRequests
@@ -257,6 +259,7 @@ Documentation is generated automatically from PHP docblocks. No YAML or JSON fil
  *
  * @output integer $id Created order ID
  * @output string(date-time) $createdAt Timestamp
+ * @output string ?$notes Optional notes
  */
 ```
 
@@ -415,6 +418,27 @@ class ProductTest extends TestCase
     }
 }
 ```
+
+## TypeScript Generation
+
+Generate TypeScript interfaces from your OpenAPI spec:
+
+```bash
+php artisan api:generate-types                                    # All versions → resources/js/shared/api/types.ts
+php artisan api:generate-types --version=v1                       # Specific version
+php artisan api:generate-types --output=frontend/src/api/types.ts # Custom path
+```
+
+Given `@output integer $id` and `@output string ?$email`, the generator produces:
+
+```typescript
+export interface UserShowOutput {
+  id: number;
+  email?: string;
+}
+```
+
+Component schemas, operation inputs, and outputs are all generated. See [docs/cookbook.md](docs/cookbook.md#recipe-8-generate-typescript-interfaces) for details.
 
 ## Configuration
 

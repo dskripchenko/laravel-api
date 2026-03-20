@@ -479,3 +479,81 @@ ApiErrorHandler::addErrorHandler(
 ```
 
 Handler unterstützen Vererbung: Ein Handler für `Exception` fängt auch `RuntimeException` ab, da die Elternklassen über `class_parents()` durchlaufen werden.
+
+---
+
+## Rezept 8: TypeScript-Interfaces generieren
+
+Der Befehl `api:generate-types` generiert TypeScript-Interfaces aus der OpenAPI-Spezifikation.
+
+### Grundlegende Verwendung
+
+```bash
+php artisan api:generate-types
+```
+
+Standardmaessig werden die Typen in `resources/js/shared/api/types.ts` geschrieben.
+
+### Optionen
+
+```bash
+# Nur fuer eine bestimmte API-Version generieren
+php artisan api:generate-types --version=v1
+
+# Benutzerdefinierter Ausgabepfad
+php artisan api:generate-types --output=frontend/src/api/types.ts
+```
+
+### Was wird generiert
+
+Fuer diesen Controller:
+
+```php
+class UserController extends ApiController
+{
+    /**
+     * Benutzer nach ID abrufen
+     *
+     * @input integer $id Benutzer-ID
+     *
+     * @output integer $id Benutzer-ID
+     * @output string $name Benutzername
+     * @output string ?$email E-Mail
+     * @output string ?$phone Telefon
+     */
+    public function show(Request $request): JsonResponse
+    {
+        return $this->success(User::findOrFail($request->input('id'))->toArray());
+    }
+}
+```
+
+Der Generator erzeugt:
+
+```typescript
+export interface UserShowInput {
+  id: number;
+}
+
+export interface UserShowOutput {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+}
+```
+
+### Typ-Zuordnung
+
+| OpenAPI | TypeScript |
+|---------|-----------|
+| `string` | `string` |
+| `integer`, `number` | `number` |
+| `boolean` | `boolean` |
+| `file`, `string(binary)` | `File` |
+| `object` (ohne Eigenschaften) | `Record<string, unknown>` |
+| `array` + items | `Type[]` |
+| `$ref` | Interface-Name |
+| `enum` | `'a' \| 'b' \| 'c'` |
+
+Komponentenschemata aus `getOpenApiTemplates()` werden als benannte Interfaces generiert. Fuer jede Operation werden `{Controller}{Action}Input`- und `{Controller}{Action}Output`-Typen erstellt.

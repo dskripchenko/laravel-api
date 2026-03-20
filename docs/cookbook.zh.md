@@ -479,3 +479,81 @@ ApiErrorHandler::addErrorHandler(
 ```
 
 处理器支持继承：为 `Exception` 注册的处理器将通过 `class_parents()` 遍历捕获 `RuntimeException`。
+
+---
+
+## 示例 8：生成 TypeScript 接口
+
+`api:generate-types` 命令从 OpenAPI 规范生成 TypeScript 接口。
+
+### 基本用法
+
+```bash
+php artisan api:generate-types
+```
+
+默认情况下，类型文件写入 `resources/js/shared/api/types.ts`。
+
+### 选项
+
+```bash
+# 仅为特定 API 版本生成
+php artisan api:generate-types --version=v1
+
+# 自定义输出路径
+php artisan api:generate-types --output=frontend/src/api/types.ts
+```
+
+### 生成内容
+
+给定以下控制器：
+
+```php
+class UserController extends ApiController
+{
+    /**
+     * 根据ID获取用户
+     *
+     * @input integer $id 用户ID
+     *
+     * @output integer $id 用户ID
+     * @output string $name 用户名
+     * @output string ?$email 邮箱
+     * @output string ?$phone 电话
+     */
+    public function show(Request $request): JsonResponse
+    {
+        return $this->success(User::findOrFail($request->input('id'))->toArray());
+    }
+}
+```
+
+生成器输出：
+
+```typescript
+export interface UserShowInput {
+  id: number;
+}
+
+export interface UserShowOutput {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+}
+```
+
+### 类型映射
+
+| OpenAPI | TypeScript |
+|---------|-----------|
+| `string` | `string` |
+| `integer`, `number` | `number` |
+| `boolean` | `boolean` |
+| `file`, `string(binary)` | `File` |
+| `object`（无属性） | `Record<string, unknown>` |
+| `array` + items | `Type[]` |
+| `$ref` | 接口名称 |
+| `enum` | `'a' \| 'b' \| 'c'` |
+
+`getOpenApiTemplates()` 中的组件 schema 会生成为命名接口。每个操作会生成 `{Controller}{Action}Input` 和 `{Controller}{Action}Output` 类型。

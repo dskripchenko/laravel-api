@@ -101,6 +101,8 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **头部参数** | `@header string $Authorization` —— 聚合来自控制器和中间件 |
 | **软删除** | CrudService中内置的`restore()`和`forceDelete()` |
 | **请求追踪** | `RequestIdMiddleware` —— `X-Request-Id`传播 + 日志上下文 |
+| **可选响应字段** | `@output string ?$email` —— 在OpenAPI schema中将响应字段标记为可选 |
+| **TypeScript生成** | `api:generate-types` —— 从OpenAPI规范生成TS接口 |
 | **测试助手** | `assertApiSuccess()`、`assertApiError()`、`assertApiValidationError()` |
 | **可发布配置** | `config/laravel-api.php` —— 前缀、URI模式、HTTP方法 |
 
@@ -167,7 +169,7 @@ src/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
 └── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
@@ -254,6 +256,7 @@ V2自动继承V1中的`list`、`show`、`create`、`update`，同时覆盖控制
  *
  * @output integer $id 创建的订单ID
  * @output string(date-time) $createdAt 时间戳
+ * @output string ?$notes 可选备注
  */
 ```
 
@@ -387,6 +390,27 @@ class ProductTest extends TestCase
     }
 }
 ```
+
+## TypeScript 生成
+
+从 OpenAPI 规范生成 TypeScript 接口：
+
+```bash
+php artisan api:generate-types                                    # 所有版本 → resources/js/shared/api/types.ts
+php artisan api:generate-types --version=v1                       # 指定版本
+php artisan api:generate-types --output=frontend/src/api/types.ts # 自定义路径
+```
+
+对于 `@output integer $id` 和 `@output string ?$email`，生成器输出：
+
+```typescript
+export interface UserShowOutput {
+  id: number;
+  email?: string;
+}
+```
+
+组件 schema、操作输入和输出类型均会生成。详情参见 [cookbook.zh.md](cookbook.zh.md#示例-8生成-typescript-接口)。
 
 ## 配置
 

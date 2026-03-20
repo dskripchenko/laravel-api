@@ -479,3 +479,81 @@ ApiErrorHandler::addErrorHandler(
 ```
 
 Обработчики поддерживают наследование: обработчик для `Exception` перехватит `RuntimeException` через обход `class_parents()`.
+
+---
+
+## Рецепт 8: Генерация TypeScript-интерфейсов
+
+Команда `api:generate-types` генерирует TypeScript-интерфейсы из OpenAPI-спецификации.
+
+### Базовое использование
+
+```bash
+php artisan api:generate-types
+```
+
+По умолчанию типы записываются в `resources/js/shared/api/types.ts`.
+
+### Опции
+
+```bash
+# Генерация для конкретной версии API
+php artisan api:generate-types --version=v1
+
+# Указать путь к файлу
+php artisan api:generate-types --output=frontend/src/api/types.ts
+```
+
+### Что генерируется
+
+Для контроллера:
+
+```php
+class UserController extends ApiController
+{
+    /**
+     * Получить пользователя по ID
+     *
+     * @input integer $id ID пользователя
+     *
+     * @output integer $id ID пользователя
+     * @output string $name Имя
+     * @output string ?$email Email
+     * @output string ?$phone Телефон
+     */
+    public function show(Request $request): JsonResponse
+    {
+        return $this->success(User::findOrFail($request->input('id'))->toArray());
+    }
+}
+```
+
+Генератор создаёт:
+
+```typescript
+export interface UserShowInput {
+  id: number;
+}
+
+export interface UserShowOutput {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+}
+```
+
+### Маппинг типов
+
+| OpenAPI | TypeScript |
+|---------|-----------|
+| `string` | `string` |
+| `integer`, `number` | `number` |
+| `boolean` | `boolean` |
+| `file`, `string(binary)` | `File` |
+| `object` (без свойств) | `Record<string, unknown>` |
+| `array` + items | `Type[]` |
+| `$ref` | Имя интерфейса |
+| `enum` | `'a' \| 'b' \| 'c'` |
+
+Схемы компонентов из `getOpenApiTemplates()` генерируются как именованные интерфейсы. Для каждой операции создаются типы `{Controller}{Action}Input` и `{Controller}{Action}Output`.
