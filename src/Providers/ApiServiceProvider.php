@@ -2,6 +2,7 @@
 
 namespace Dskripchenko\LaravelApi\Providers;
 
+use Dskripchenko\LaravelApi\Console\Commands\ApiExport;
 use Dskripchenko\LaravelApi\Console\Commands\ApiGenerateTypes;
 use Dskripchenko\LaravelApi\Console\Commands\ApiInstall;
 use Dskripchenko\LaravelApi\Controllers\ApiDocumentationController;
@@ -62,6 +63,7 @@ class ApiServiceProvider extends ServiceProvider
             [
                 ApiInstall::class,
                 ApiGenerateTypes::class,
+                ApiExport::class,
             ]
         );
 
