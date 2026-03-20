@@ -124,4 +124,66 @@ class BaseModule
     {
         return [];
     }
+
+    /**
+     * Returns route definitions for all versions and actions.
+     *
+     * Each entry: ['version' => ..., 'controller' => ..., 'action' => ..., 'methods' => [...], 'name' => ..., 'uri' => ...]
+     *
+     * @return array
+     */
+    public function getRouteDefinitions(): array
+    {
+        $definitions = [];
+        $prefix = $this->getApiPrefix();
+        $uriPattern = $this->getApiUriPattern();
+
+        foreach ($this->getApiVersionList() as $version => $apiClass) {
+            if (!is_subclass_of($apiClass, BaseApi::class)) {
+                continue;
+            }
+
+            $methods = $apiClass::getPreparedMethods();
+            $controllers = Arr::get($methods, 'controllers', []);
+
+            foreach ($controllers as $controllerKey => $controllerConfig) {
+                $actions = Arr::get($controllerConfig, 'actions', []);
+
+                foreach ($actions as $actionKey => $actionConfig) {
+                    if ($actionConfig === false) {
+                        continue;
+                    }
+
+                    $httpMethods = Arr::get($actionConfig, 'method', ['post']);
+                    if (!$httpMethods) {
+                        $httpMethods = ['post'];
+                    }
+                    if (!is_array($httpMethods)) {
+                        $httpMethods = [$httpMethods];
+                    }
+
+                    $customName = is_array($actionConfig) ? Arr::get($actionConfig, 'name') : null;
+                    $nameSuffix = $customName ?: "{$controllerKey}.{$actionKey}";
+                    $routeName = "api.{$version}.{$nameSuffix}";
+
+                    $uri = str_replace(
+                        ['{version}', '{controller}', '{action}'],
+                        [$version, $controllerKey, $actionKey],
+                        $uriPattern
+                    );
+
+                    $definitions[] = [
+                        'version' => $version,
+                        'controller' => $controllerKey,
+                        'action' => $actionKey,
+                        'methods' => $httpMethods,
+                        'name' => $routeName,
+                        'uri' => $uri,
+                    ];
+                }
+            }
+        }
+
+        return $definitions;
+    }
 }

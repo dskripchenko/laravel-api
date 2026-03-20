@@ -301,9 +301,9 @@ RAW_STR;
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    private static function getPreparedMethods(): array
+    public static function getPreparedMethods(): array
     {
         if (!isset(static::$preparedMethods[static::class])) {
             static::$preparedMethods[static::class] = [];

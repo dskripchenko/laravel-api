@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static array getApiVersionList()
  * @method static mixed makeApi()
  * @method static BaseApi|null getApi(string $version = null)
+ * @method static array getRouteDefinitions()
+ * @method static array getDocMiddleware()
  *
  * @see \Dskripchenko\LaravelApi\Components\BaseModule
  */

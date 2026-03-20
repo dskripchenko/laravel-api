@@ -108,6 +108,14 @@ class ApiServiceProvider extends ServiceProvider
             })->name('api-doc')
                 ->middleware(ApiModule::getDocMiddleware());
 
+            $routeDefinitions = ApiModule::getRouteDefinitions();
+            foreach ($routeDefinitions as $definition) {
+                Route::match($definition['methods'], $definition['uri'], function () {
+                    return ApiModule::makeApi();
+                })->name($definition['name'])
+                    ->middleware($middlewareGroupName);
+            }
+
             Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function () {
                 return ApiModule::makeApi();
             })->name('api-endpoint')
