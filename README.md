@@ -104,6 +104,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Optional output fields** | `@output string ?$email` — marks response fields as optional in OpenAPI schema |
 | **TypeScript generation** | `api:generate-types` — generates TS interfaces from OpenAPI spec |
 | **Named routes** | Each action registered as a named Laravel route — `route('api.v1.user.list')` |
+| **API export** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
 | **Test helpers** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Publishable config** | `config/laravel-api.php` — prefix, URI pattern, HTTP methods |
 
@@ -441,6 +442,19 @@ export interface UserShowOutput {
 ```
 
 Component schemas, operation inputs, and outputs are all generated. See [docs/cookbook.md](docs/cookbook.md#recipe-8-generate-typescript-interfaces) for details.
+
+## API Export
+
+Export your API spec in multiple formats:
+
+```bash
+php artisan api:export --format=postman    # Postman Collection v2.1
+php artisan api:export --format=http       # JetBrains/VS Code .http files
+php artisan api:export --format=markdown   # Standalone documentation
+php artisan api:export --format=curl       # Bash script with curl commands
+```
+
+Options: `--version=v1` (specific version), `--output=path` (custom file). By default, generates per-version files (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
 
 ## Configuration
 

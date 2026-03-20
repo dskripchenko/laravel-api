@@ -104,6 +104,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **可选响应字段** | `@output string ?$email` —— 在OpenAPI schema中将响应字段标记为可选 |
 | **TypeScript生成** | `api:generate-types` —— 从OpenAPI规范生成TS接口 |
 | **命名路由** | 每个操作注册为命名的 Laravel 路由 — `route('api.v1.user.list')` |
+| **API导出** | `api:export` —— Postman Collection、HTTP Client (.http)、Markdown、cURL |
 | **测试助手** | `assertApiSuccess()`、`assertApiError()`、`assertApiValidationError()` |
 | **可发布配置** | `config/laravel-api.php` —— 前缀、URI模式、HTTP方法 |
 
@@ -413,6 +414,19 @@ export interface UserShowOutput {
 ```
 
 组件 schema、操作输入和输出类型均会生成。详情参见 [cookbook.zh.md](cookbook.zh.md#示例-8生成-typescript-接口)。
+
+## API 导出
+
+将 API 规范导出为多种格式：
+
+```bash
+php artisan api:export --format=postman    # Postman Collection v2.1
+php artisan api:export --format=http       # PHPStorm/VS Code .http 文件
+php artisan api:export --format=markdown   # 独立 Markdown 文档
+php artisan api:export --format=curl       # 包含 curl 命令的 Bash 脚本
+```
+
+选项：`--version=v1`（指定版本），`--output=path`（自定义路径）。默认按版本生成文件（`v1.json`、`v1.http`、`v1.md`、`v1.sh`）。
 
 ## 配置
 

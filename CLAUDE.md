@@ -16,6 +16,7 @@ vendor/bin/pest              # Run all tests
 vendor/bin/pest --filter="test name"   # Single test
 vendor/bin/pest tests/Unit/            # Directory
 php artisan api:generate-types         # Generate TS interfaces from OpenAPI spec
+php artisan api:export --format=postman    # Export as Postman Collection
 ```
 
 ## Architecture

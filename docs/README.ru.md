@@ -104,6 +104,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Необязательные поля ответа** | `@output string ?$email` — помечает поля ответа как необязательные в OpenAPI-схеме |
 | **Генерация TypeScript** | `api:generate-types` — генерирует TS-интерфейсы из OpenAPI-спецификации |
 | **Именованные маршруты** | Каждый action регистрируется как именованный Laravel-маршрут — `route('api.v1.user.list')` |
+| **Экспорт API** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
 | **Помощники тестирования** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Публикуемая конфигурация** | `config/laravel-api.php` — префикс, шаблон URI, HTTP методы |
 
@@ -413,6 +414,19 @@ export interface UserShowOutput {
 ```
 
 Генерируются схемы компонентов, входные и выходные типы операций. Подробности в [cookbook.ru.md](cookbook.ru.md#рецепт-8-генерация-typescript-интерфейсов).
+
+## Экспорт API
+
+Экспорт спецификации API в различных форматах:
+
+```bash
+php artisan api:export --format=postman    # Postman Collection v2.1
+php artisan api:export --format=http       # .http файлы для PHPStorm/VS Code
+php artisan api:export --format=markdown   # Автономная документация
+php artisan api:export --format=curl       # Bash-скрипт с curl командами
+```
+
+Опции: `--version=v1` (конкретная версия), `--output=path` (свой путь). По умолчанию генерирует файлы по версиям (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
 
 ## Конфигурация
 

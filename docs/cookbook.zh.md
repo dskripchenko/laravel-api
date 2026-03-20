@@ -606,3 +606,51 @@ $url = URL::route('api.v1.user.list');
 ```
 
 Catch-all 路由 `api-endpoint` 作为回退保留。
+
+---
+
+## 示例 10：以不同格式导出 API
+
+`api:export` 命令将 OpenAPI 规范转换为即用格式。
+
+### Postman Collection
+
+```bash
+php artisan api:export --format=postman
+```
+
+生成 Postman Collection v2.1 JSON 文件。导入 Postman 后，所有端点按控制器分组，包含预填参数和环境变量（`{{baseUrl}}`、`{{token}}`）。
+
+### HTTP Client 文件
+
+```bash
+php artisan api:export --format=http
+```
+
+生成 `.http` 文件，兼容 JetBrains IDE（PHPStorm、IntelliJ）和 VS Code REST Client 扩展。包含 `{{host}}` 变量和所有请求体类型。
+
+### Markdown 文档
+
+```bash
+php artisan api:export --format=markdown
+```
+
+生成独立的 Markdown 文档，包含目录、参数表、请求体字段（含必填/可选标记）和响应代码。
+
+### cURL 脚本
+
+```bash
+php artisan api:export --format=curl
+```
+
+生成包含即用 curl 命令的 Bash 脚本。包含 `BASE_URL` 和 `TOKEN` 变量、JSON/表单/multipart 请求体和授权头。
+
+### 通用选项
+
+```bash
+# 导出特定版本
+php artisan api:export --format=postman --version=v1
+
+# 自定义输出路径
+php artisan api:export --format=markdown --output=docs/api.md
+```

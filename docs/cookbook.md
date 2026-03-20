@@ -606,3 +606,51 @@ $url = URL::route('api.v1.user.list');
 ```
 
 The catch-all `api-endpoint` route is preserved as a fallback for any requests that don't match a named route.
+
+---
+
+## Recipe 10: Export API in different formats
+
+The `api:export` command converts your OpenAPI spec into ready-to-use formats.
+
+### Postman Collection
+
+```bash
+php artisan api:export --format=postman
+```
+
+Generates a Postman Collection v2.1 JSON file. Import it in Postman to get all endpoints grouped by controller, with pre-filled parameters, request bodies, and environment variables (`{{baseUrl}}`, `{{token}}`).
+
+### HTTP Client files
+
+```bash
+php artisan api:export --format=http
+```
+
+Generates `.http` files compatible with JetBrains IDEs (PHPStorm, IntelliJ) and VS Code REST Client extension. Includes `{{host}}` variables and all request body types.
+
+### Markdown documentation
+
+```bash
+php artisan api:export --format=markdown
+```
+
+Generates standalone Markdown documentation with table of contents, parameter tables, request body fields with required/optional markers, response codes, and deprecated endpoint markers.
+
+### cURL scripts
+
+```bash
+php artisan api:export --format=curl
+```
+
+Generates a bash script with ready-to-run curl commands. Includes `BASE_URL` and `TOKEN` variables, JSON/form/multipart bodies, and authorization headers for secured endpoints.
+
+### Common options
+
+```bash
+# Export specific version only
+php artisan api:export --format=postman --version=v1
+
+# Custom output file (all versions merged)
+php artisan api:export --format=markdown --output=docs/api.md
+```

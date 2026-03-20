@@ -606,3 +606,51 @@ $url = URL::route('api.v1.user.list');
 ```
 
 Catch-all маршрут `api-endpoint` сохранён как fallback для запросов, не совпавших с именованным маршрутом.
+
+---
+
+## Рецепт 10: Экспорт API в различных форматах
+
+Команда `api:export` конвертирует OpenAPI-спецификацию в готовые к использованию форматы.
+
+### Postman Collection
+
+```bash
+php artisan api:export --format=postman
+```
+
+Генерирует Postman Collection v2.1 JSON. Импортируйте в Postman — получите все эндпоинты, сгруппированные по контроллерам, с предзаполненными параметрами и переменными окружения (`{{baseUrl}}`, `{{token}}`).
+
+### HTTP Client файлы
+
+```bash
+php artisan api:export --format=http
+```
+
+Генерирует `.http` файлы для JetBrains IDE (PHPStorm, IntelliJ) и VS Code REST Client. Включает переменные `{{host}}` и все типы тел запросов.
+
+### Markdown документация
+
+```bash
+php artisan api:export --format=markdown
+```
+
+Генерирует автономную Markdown-документацию с оглавлением, таблицами параметров, полями тела запроса с маркерами обязательности и кодами ответов.
+
+### cURL скрипты
+
+```bash
+php artisan api:export --format=curl
+```
+
+Генерирует bash-скрипт с готовыми curl-командами. Включает переменные `BASE_URL` и `TOKEN`, JSON/form/multipart тела и заголовки авторизации.
+
+### Общие опции
+
+```bash
+# Экспорт конкретной версии
+php artisan api:export --format=postman --version=v1
+
+# Свой путь (все версии в один файл)
+php artisan api:export --format=markdown --output=docs/api.md
+```

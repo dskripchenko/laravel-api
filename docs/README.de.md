@@ -104,6 +104,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Optionale Ausgabefelder** | `@output string ?$email` — markiert Antwortfelder als optional im OpenAPI-Schema |
 | **TypeScript-Generierung** | `api:generate-types` — generiert TS-Interfaces aus der OpenAPI-Spezifikation |
 | **Benannte Routen** | Jede Action wird als benannte Laravel-Route registriert — `route('api.v1.user.list')` |
+| **API-Export** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
 | **Test-Helfer** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Veröffentlichbare Konfiguration** | `config/laravel-api.php` — Präfix, URI-Muster, HTTP-Methoden |
 
@@ -413,6 +414,19 @@ export interface UserShowOutput {
 ```
 
 Komponentenschemata, Eingabe- und Ausgabetypen werden generiert. Details in [cookbook.de.md](cookbook.de.md#rezept-8-typescript-interfaces-generieren).
+
+## API-Export
+
+API-Spezifikation in verschiedenen Formaten exportieren:
+
+```bash
+php artisan api:export --format=postman    # Postman Collection v2.1
+php artisan api:export --format=http       # .http-Dateien fuer PHPStorm/VS Code
+php artisan api:export --format=markdown   # Eigenstaendige Dokumentation
+php artisan api:export --format=curl       # Bash-Skript mit curl-Befehlen
+```
+
+Optionen: `--version=v1` (bestimmte Version), `--output=path` (benutzerdefinierter Pfad). Standardmaessig werden Dateien pro Version generiert (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
 
 ## Konfiguration
 
