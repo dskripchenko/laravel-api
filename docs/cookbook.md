@@ -498,7 +498,7 @@ By default, types are written to `resources/js/shared/api/types.ts`.
 
 ```bash
 # Generate for a specific API version
-php artisan api:generate-types --version=v1
+php artisan api:generate-types --api-version=v1
 
 # Custom output path
 php artisan api:generate-types --output=frontend/src/api/types.ts
@@ -649,7 +649,7 @@ Generates a bash script with ready-to-run curl commands. Includes `BASE_URL` and
 
 ```bash
 # Export specific version only
-php artisan api:export --format=postman --version=v1
+php artisan api:export --format=postman --api-version=v1
 
 # Custom output file (all versions merged)
 php artisan api:export --format=markdown --output=docs/api.md

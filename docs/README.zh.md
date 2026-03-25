@@ -400,7 +400,7 @@ class ProductTest extends TestCase
 
 ```bash
 php artisan api:generate-types                                    # 所有版本 → resources/js/shared/api/types.ts
-php artisan api:generate-types --version=v1                       # 指定版本
+php artisan api:generate-types --api-version=v1                       # 指定版本
 php artisan api:generate-types --output=frontend/src/api/types.ts # 自定义路径
 ```
 
@@ -426,7 +426,7 @@ php artisan api:export --format=markdown   # 独立 Markdown 文档
 php artisan api:export --format=curl       # 包含 curl 命令的 Bash 脚本
 ```
 
-选项：`--version=v1`（指定版本），`--output=path`（自定义路径）。默认按版本生成文件（`v1.json`、`v1.http`、`v1.md`、`v1.sh`）。
+选项：`--api-version=v1`（指定版本），`--output=path`（自定义路径）。默认按版本生成文件（`v1.json`、`v1.http`、`v1.md`、`v1.sh`）。
 
 ## 配置
 

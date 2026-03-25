@@ -498,7 +498,7 @@ php artisan api:generate-types
 
 ```bash
 # 仅为特定 API 版本生成
-php artisan api:generate-types --version=v1
+php artisan api:generate-types --api-version=v1
 
 # 自定义输出路径
 php artisan api:generate-types --output=frontend/src/api/types.ts
@@ -649,7 +649,7 @@ php artisan api:export --format=curl
 
 ```bash
 # 导出特定版本
-php artisan api:export --format=postman --version=v1
+php artisan api:export --format=postman --api-version=v1
 
 # 自定义输出路径
 php artisan api:export --format=markdown --output=docs/api.md

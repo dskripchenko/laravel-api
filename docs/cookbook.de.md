@@ -498,7 +498,7 @@ Standardmaessig werden die Typen in `resources/js/shared/api/types.ts` geschrieb
 
 ```bash
 # Nur fuer eine bestimmte API-Version generieren
-php artisan api:generate-types --version=v1
+php artisan api:generate-types --api-version=v1
 
 # Benutzerdefinierter Ausgabepfad
 php artisan api:generate-types --output=frontend/src/api/types.ts
@@ -649,7 +649,7 @@ Generiert ein Bash-Skript mit fertigen curl-Befehlen. Enthaelt `BASE_URL`- und `
 
 ```bash
 # Bestimmte Version exportieren
-php artisan api:export --format=postman --version=v1
+php artisan api:export --format=postman --api-version=v1
 
 # Benutzerdefinierter Ausgabepfad
 php artisan api:export --format=markdown --output=docs/api.md

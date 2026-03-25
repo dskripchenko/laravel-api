@@ -400,7 +400,7 @@ class ProductTest extends TestCase
 
 ```bash
 php artisan api:generate-types                                    # Все версии → resources/js/shared/api/types.ts
-php artisan api:generate-types --version=v1                       # Конкретная версия
+php artisan api:generate-types --api-version=v1                       # Конкретная версия
 php artisan api:generate-types --output=frontend/src/api/types.ts # Свой путь
 ```
 
@@ -426,7 +426,7 @@ php artisan api:export --format=markdown   # Автономная докумен
 php artisan api:export --format=curl       # Bash-скрипт с curl командами
 ```
 
-Опции: `--version=v1` (конкретная версия), `--output=path` (свой путь). По умолчанию генерирует файлы по версиям (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
+Опции: `--api-version=v1` (конкретная версия), `--output=path` (свой путь). По умолчанию генерирует файлы по версиям (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
 
 ## Конфигурация
 

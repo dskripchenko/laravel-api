@@ -400,7 +400,7 @@ TypeScript-Interfaces aus der OpenAPI-Spezifikation generieren:
 
 ```bash
 php artisan api:generate-types                                    # Alle Versionen → resources/js/shared/api/types.ts
-php artisan api:generate-types --version=v1                       # Bestimmte Version
+php artisan api:generate-types --api-version=v1                       # Bestimmte Version
 php artisan api:generate-types --output=frontend/src/api/types.ts # Benutzerdefinierter Pfad
 ```
 
@@ -426,7 +426,7 @@ php artisan api:export --format=markdown   # Eigenstaendige Dokumentation
 php artisan api:export --format=curl       # Bash-Skript mit curl-Befehlen
 ```
 
-Optionen: `--version=v1` (bestimmte Version), `--output=path` (benutzerdefinierter Pfad). Standardmaessig werden Dateien pro Version generiert (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
+Optionen: `--api-version=v1` (bestimmte Version), `--output=path` (benutzerdefinierter Pfad). Standardmaessig werden Dateien pro Version generiert (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
 
 ## Konfiguration
 

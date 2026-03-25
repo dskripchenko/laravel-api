@@ -12,7 +12,7 @@ class ApiGenerateTypes extends Command
 {
     protected $signature = 'api:generate-types
         {--output= : Output file path (default: resources/js/shared/api/types.ts)}
-        {--version= : Generate only for specific API version}';
+        {--api-version= : Generate only for specific API version}';
 
     protected $description = 'Generate TypeScript interfaces from OpenAPI spec';
 
@@ -20,7 +20,7 @@ class ApiGenerateTypes extends Command
     {
         $generator = new OpenApiTypeScriptGenerator();
         $versionList = ApiModule::getApiVersionList();
-        $filterVersion = $this->option('version');
+        $filterVersion = $this->option('api-version');
 
         $allContent = [];
 

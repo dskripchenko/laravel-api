@@ -16,7 +16,7 @@ class ApiExport extends Command
     protected $signature = 'api:export
         {--format=postman : Export format (postman, http, markdown, curl)}
         {--output= : Output file path}
-        {--version= : Generate only for specific API version}';
+        {--api-version= : Generate only for specific API version}';
 
     protected $description = 'Export API spec in various formats (Postman, HTTP Client, Markdown, cURL)';
 
@@ -41,7 +41,7 @@ class ApiExport extends Command
         $exporter = new $exporterClass();
 
         $versionList = ApiModule::getApiVersionList();
-        $filterVersion = $this->option('version');
+        $filterVersion = $this->option('api-version');
 
         $results = [];
 

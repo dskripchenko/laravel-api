@@ -498,7 +498,7 @@ php artisan api:generate-types
 
 ```bash
 # Генерация для конкретной версии API
-php artisan api:generate-types --version=v1
+php artisan api:generate-types --api-version=v1
 
 # Указать путь к файлу
 php artisan api:generate-types --output=frontend/src/api/types.ts
@@ -649,7 +649,7 @@ php artisan api:export --format=curl
 
 ```bash
 # Экспорт конкретной версии
-php artisan api:export --format=postman --version=v1
+php artisan api:export --format=postman --api-version=v1
 
 # Свой путь (все версии в один файл)
 php artisan api:export --format=markdown --output=docs/api.md
