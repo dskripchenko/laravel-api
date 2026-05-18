@@ -265,11 +265,9 @@ RAW_STR;
     }
 
     /**
-     * @param $controllerKey
-     * @param $actionKey
      * @return array
      */
-    private static function getMiddlewareByControllerAndActionKey(
+    public static function getMiddlewareByControllerAndActionKey(
         $controllerKey,
         $actionKey
     ): array {

@@ -115,3 +115,15 @@ it('backward compat with simple api', function () {
     // No consumes at operation level
     expect($config['paths']['/v1/item/list']['get'])->not->toHaveKey('consumes');
 });
+
+it('keeps raw templates per API class across sequential generations', function () {
+    $templateConfig = TemplateApi::getOpenApiConfig('v1');
+    $extendedConfig = ExtendedApi::getOpenApiConfig('v1');
+
+    expect($templateConfig['components']['schemas'])->toHaveKey('UserResponse');
+    expect($templateConfig['components']['schemas'])->not->toHaveKey('ValidationError');
+
+    expect($extendedConfig['components']['schemas'])->toHaveKey('UserResponse');
+    expect($extendedConfig['components']['schemas'])->toHaveKey('ValidationError');
+    expect($extendedConfig['components']['schemas'])->toHaveKey('OrderCreateRequest');
+});

@@ -11,7 +11,7 @@ it('routes GET request to correct controller action', function () {
 });
 
 it('routes POST request to correct controller action', function () {
-    $response = $this->api('v1', 'item', 'create', ['name' => 'New']);
+    $response = $this->api('v1', 'item', 'create', ['name' => 'New'], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['success'])->toBeTrue();
@@ -47,7 +47,7 @@ it('returns error for wrong HTTP method', function () {
 });
 
 it('handles aliased action', function () {
-    $response = $this->api('v1', 'item', 'remove');
+    $response = $this->api('v1', 'item', 'remove', [], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['payload']['deleted'])->toBeTrue();
@@ -61,13 +61,13 @@ it('returns success envelope format', function () {
 });
 
 it('passes request data to controller', function () {
-    $response = $this->api('v1', 'item', 'create', ['name' => 'TestItem']);
+    $response = $this->api('v1', 'item', 'create', ['name' => 'TestItem'], ['X-Auth-Token' => 'token']);
     $data = $response->json();
     expect($data['payload']['name'])->toBe('TestItem');
 });
 
 it('supports GET method on show action', function () {
-    $response = $this->api('v1', 'item', 'show', ['id' => 42]);
+    $response = $this->api('v1', 'item', 'show', ['id' => 42], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['payload']['name'])->toBe('test');
@@ -80,14 +80,14 @@ it('registers api-doc route', function () {
 });
 
 it('supports update with POST method', function () {
-    $response = $this->api('v1', 'item', 'update', ['id' => 5, 'name' => 'Updated']);
+    $response = $this->api('v1', 'item', 'update', ['id' => 5, 'name' => 'Updated'], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['payload']['name'])->toBe('Updated');
 });
 
 it('handles list action', function () {
-    $response = $this->api('v1', 'item', 'list');
+    $response = $this->api('v1', 'item', 'list', [], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['payload'])->toHaveKey('items');

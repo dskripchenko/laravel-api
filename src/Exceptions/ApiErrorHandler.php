@@ -4,8 +4,10 @@ namespace Dskripchenko\LaravelApi\Exceptions;
 
 use Dskripchenko\LaravelApi\Services\ApiResponseHelper;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 use Closure;
 use Exception;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
 /**
@@ -36,6 +38,21 @@ class ApiErrorHandler
                 'message' => $e->getMessage(),
             ]);
         });
+
+        $this->addErrorHandler(ValidationException::class, function (ValidationException $e) {
+            return ApiResponseHelper::sayError([
+                'errorKey' => 'validation_error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], $e->status);
+        });
+
+        $this->addErrorHandler(HttpExceptionInterface::class, function (HttpExceptionInterface $e) {
+            return ApiResponseHelper::sayError([
+                'errorKey' => 'http_error',
+                'message' => $e->getMessage(),
+            ], $e->getStatusCode());
+        });
     }
 
     /**
@@ -52,6 +69,13 @@ class ApiErrorHandler
 
         foreach (class_parents($e) as $parent) {
             $handler = Arr::get($this->handlers, $parent, false);
+            if ($handler) {
+                return $handler;
+            }
+        }
+
+        foreach (class_implements($e) as $interface) {
+            $handler = Arr::get($this->handlers, $interface, false);
             if ($handler) {
                 return $handler;
             }

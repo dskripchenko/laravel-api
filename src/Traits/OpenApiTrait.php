@@ -20,7 +20,8 @@ trait OpenApiTrait
 
     protected static ?DocBlockFactory $docBlockFactory = null;
 
-    protected static ?array $cachedRawTemplates = null;
+    /** @var array<class-string, array<string, mixed>> */
+    protected static array $cachedRawTemplatesByClass = [];
 
     /**
      * @param string $version
@@ -480,6 +481,8 @@ trait OpenApiTrait
      * @return Tag[]
      * @throws \ReflectionException
      */
+
+    /** @var array<class-string, array<string, array>> */
     protected static array $middlewareInputTagCache = [];
 
     private static function getInputTags(DocBlock $methodDocBlock, array $middlewareList = [])
@@ -505,8 +508,12 @@ trait OpenApiTrait
 
         $addTagsFromMiddleware = function ($middleware, &$tagList) use ($tagName, $cacheKey) {
             $key = "{$cacheKey}:{$middleware}";
-            if (isset(static::$middlewareInputTagCache[$key])) {
-                $tagList = array_merge_deep($tagList, static::$middlewareInputTagCache[$key]);
+            $classCache = &static::$middlewareInputTagCache[static::class];
+            if (! isset($classCache)) {
+                $classCache = [];
+            }
+            if (isset($classCache[$key])) {
+                $tagList = array_merge_deep($tagList, $classCache[$key]);
                 return;
             }
 
@@ -515,7 +522,7 @@ trait OpenApiTrait
             if (!$middlewareReflection->hasMethod($method)) {
                 $method = 'handle';
                 if (!$middlewareReflection->hasMethod($method)) {
-                    static::$middlewareInputTagCache[$key] = [];
+                    $classCache[$key] = [];
                     return;
                 }
             }
@@ -523,7 +530,7 @@ trait OpenApiTrait
             $middlewareReflectionMethod = $middlewareReflection->getMethod($method);
             $middlewareDocBlock = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
             $middlewareTagList = $middlewareDocBlock->getTagsByName($tagName);
-            static::$middlewareInputTagCache[$key] = $middlewareTagList;
+            $classCache[$key] = $middlewareTagList;
             $tagList = array_merge_deep($tagList, $middlewareTagList);
         };
 
@@ -1072,8 +1079,8 @@ trait OpenApiTrait
      */
     private static function getRawTemplates()
     {
-        if (static::$cachedRawTemplates !== null) {
-            return static::$cachedRawTemplates;
+        if (isset(static::$cachedRawTemplatesByClass[static::class])) {
+            return static::$cachedRawTemplatesByClass[static::class];
         }
 
         $defaultTemplates = [
@@ -1117,8 +1124,8 @@ trait OpenApiTrait
             }
         });
 
-        static::$cachedRawTemplates = array_merge_deep($defaultTemplates, $templates);
-        return static::$cachedRawTemplates;
+        static::$cachedRawTemplatesByClass[static::class] = array_merge_deep($defaultTemplates, $templates);
+        return static::$cachedRawTemplatesByClass[static::class];
     }
 
     /**

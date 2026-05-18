@@ -126,10 +126,6 @@ class BaseModule
     }
 
     /**
-     * Returns route definitions for all versions and actions.
-     *
-     * Each entry: ['version' => ..., 'controller' => ..., 'action' => ..., 'methods' => [...], 'name' => ..., 'uri' => ...]
-     *
      * @return array
      */
     public function getRouteDefinitions(): array
@@ -179,6 +175,10 @@ class BaseModule
                         'methods' => $httpMethods,
                         'name' => $routeName,
                         'uri' => $uri,
+                        'middleware' => $apiClass::getMiddlewareByControllerAndActionKey(
+                            $controllerKey,
+                            $actionKey
+                        ),
                     ];
                 }
             }

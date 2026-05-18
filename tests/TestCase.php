@@ -30,6 +30,7 @@ abstract class TestCase extends BaseTestCase
 
     protected function getEnvironmentSetUp($app): void
     {
+        $app['config']->set('app.debug', true);
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite', [
             'driver' => 'sqlite',
@@ -52,8 +53,8 @@ abstract class TestCase extends BaseTestCase
         $ref = new \ReflectionProperty(TestApi::class, 'docBlockFactory');
         $ref->setValue(null, null);
 
-        $ref = new \ReflectionProperty(TestApi::class, 'cachedRawTemplates');
-        $ref->setValue(null, null);
+        $ref = new \ReflectionProperty(TestApi::class, 'cachedRawTemplatesByClass');
+        $ref->setValue(null, []);
 
         $ref = new \ReflectionProperty(TestApi::class, 'middlewareInputTagCache');
         $ref->setValue(null, []);

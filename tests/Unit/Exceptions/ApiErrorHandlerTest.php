@@ -84,6 +84,30 @@ it('returns JsonResponse from default handler', function () {
     expect($response)->toBeInstanceOf(JsonResponse::class);
 });
 
+it('handles HttpExceptionInterface implementations with their status code', function () {
+    $handler = new ApiErrorHandler();
+    $e = new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('thing not found');
+    $response = $handler->handle($e);
+
+    $data = $response->getData(true);
+    expect($response->getStatusCode())->toBe(404);
+    expect($data['success'])->toBeFalse();
+    expect($data['payload']['errorKey'])->toBe('http_error');
+    expect($data['payload']['message'])->toBe('thing not found');
+});
+
+it('handles ValidationException with errors payload and 422', function () {
+    $handler = new ApiErrorHandler();
+    $validator = validator(['email' => null], ['email' => 'required']);
+    $e = new \Illuminate\Validation\ValidationException($validator);
+    $response = $handler->handle($e);
+
+    $data = $response->getData(true);
+    expect($response->getStatusCode())->toBe(422);
+    expect($data['payload']['errorKey'])->toBe('validation_error');
+    expect($data['payload']['errors'])->toHaveKey('email');
+});
+
 it('handles exception with empty message', function () {
     $handler = new ApiErrorHandler();
     $e = new ApiException('empty', '');

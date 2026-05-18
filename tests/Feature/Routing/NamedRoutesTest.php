@@ -47,12 +47,12 @@ it('named routes handle requests correctly', function () {
 });
 
 it('named routes respect HTTP methods', function () {
-    $response = $this->get(route('api.v1.item.list'));
+    $response = $this->get(route('api.v1.item.list'), ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['success'])->toBeTrue();
 
-    $response = $this->post(route('api.v1.item.create'), ['name' => 'Test']);
+    $response = $this->post(route('api.v1.item.create'), ['name' => 'Test'], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['success'])->toBeTrue();
@@ -70,7 +70,7 @@ it('aliased action routes are accessible by name', function () {
     $url = route('api.v1.item.remove');
     expect($url)->toContain('/api/v1/item/remove');
 
-    $response = $this->post($url);
+    $response = $this->post($url, [], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['payload']['deleted'])->toBeTrue();
@@ -78,7 +78,7 @@ it('aliased action routes are accessible by name', function () {
 
 it('v2 named routes work with inherited actions', function () {
     // v2 inherits 'list' from v1
-    $response = $this->get(route('api.v2.item.list'));
+    $response = $this->get(route('api.v2.item.list'), ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['success'])->toBeTrue();

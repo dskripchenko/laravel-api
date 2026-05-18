@@ -51,9 +51,15 @@ it('returns empty middleware for non-existent action', function () {
     expect($middleware)->toBe([]);
 });
 
-it('api routes process requests without enforcement of getMethods middleware', function () {
-    // Middleware in getMethods is metadata, not enforced during request
+it('per-action middleware from getMethods runs at request time', function () {
     $response = $this->api('v1', 'item', 'list');
+    $data = $response->json();
+    expect($data['success'])->toBeFalse();
+    expect($data['payload']['errorKey'])->toBe('auth_error');
+});
+
+it('per-action middleware passes when its precondition is met', function () {
+    $response = $this->api('v1', 'item', 'list', [], ['X-Auth-Token' => 'token']);
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['success'])->toBeTrue();
