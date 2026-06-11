@@ -1,0 +1,18 @@
+<!-- STARTER logo (dark backgrounds). Editable draft — refine in Figma/Inkscape.
+     Convert <text> to outlines before any final/published use. Tile center = (30, 32). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 64" width="250" height="64" role="img" aria-label="laravel-api">
+  <!-- icon tile (lighter + subtle border so it reads on dark pages) -->
+  <rect x="2.5" y="4.5" width="55" height="55" rx="14" fill="#2A2F3A" stroke="#3A4150" stroke-width="1"/>
+  <!-- braces: symmetric about x=30, vertically centered at y=32 -->
+  <g font-family="'JetBrains Mono','SFMono-Regular',ui-monospace,monospace" font-weight="700" font-size="30" fill="#F9492B">
+    <text x="27" y="32" text-anchor="end"   dominant-baseline="central">{</text>
+    <text x="33" y="32" text-anchor="start" dominant-baseline="central">}</text>
+  </g>
+  <!-- chevron drawn as a stroke: bbox centered on (30, 32) -->
+  <path d="M 28 28 L 32 33.5 L 28 39" fill="none" stroke="#FFFFFF"
+        stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- wordmark -->
+  <text x="72" y="41" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-weight="600" font-size="26" letter-spacing="0.4">
+    <tspan fill="#E8EAF0">laravel</tspan><tspan fill="#6B7280">-</tspan><tspan fill="#F9492B">api</tspan>
+  </text>
+</svg>
