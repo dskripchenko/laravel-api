@@ -4,7 +4,7 @@
 [![Latest Version](https://img.shields.io/packagist/v/dskripchenko/laravel-api?logo=packagist&logoColor=white)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![Total Downloads](https://img.shields.io/packagist/dt/dskripchenko/laravel-api)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE.md)
-[![Laravel](https://img.shields.io/badge/Laravel-11.x--12.x-red.svg)](https://laravel.com)
+[![Laravel](https://img.shields.io/badge/Laravel-11.x--13.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://www.php.net)
 
 🌐 [English](../README.md) | [Русский](README.ru.md) | [Deutsch](README.de.md)
@@ -116,7 +116,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 ### 系统要求
 
 - PHP 8.2+
-- Laravel 11.x — 12.x
+- Laravel 11.x — 13.x
 
 ### 安装步骤
 

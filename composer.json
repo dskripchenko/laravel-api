@@ -25,7 +25,7 @@
         "php": "^8.2",
         "ext-json": "*",
         "dskripchenko/php-array-helper": "^1.0",
-        "laravel/framework": "^11.0 || ^12.0",
+        "laravel/framework": "^11.0 || ^12.0 || ^13.0",
         "phpdocumentor/reflection-docblock": "^6.0"
     },
     "require-dev": {

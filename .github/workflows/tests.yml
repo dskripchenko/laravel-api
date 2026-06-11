@@ -14,9 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { php: '8.2', laravel: '12.*', testbench: '10.*' }
-          - { php: '8.3', laravel: '12.*', testbench: '10.*' }
-          - { php: '8.4', laravel: '12.*', testbench: '10.*' }
+          - { php: '8.2', laravel: '12.*', testbench: '10.*', pest: '^3.0' }
+          - { php: '8.3', laravel: '12.*', testbench: '10.*', pest: '^3.0' }
+          - { php: '8.4', laravel: '12.*', testbench: '10.*', pest: '^3.0' }
+          - { php: '8.3', laravel: '13.*', testbench: '11.*', pest: '^4.0' }
+          - { php: '8.4', laravel: '13.*', testbench: '11.*', pest: '^4.0' }
 
     name: PHP ${{ matrix.php }} · Laravel ${{ matrix.laravel }}
 
@@ -45,8 +47,11 @@ jobs:
       - name: Constrain dependencies to the matrix
         run: |
           composer require --no-update --no-interaction \
-            "laravel/framework:${{ matrix.laravel }}" \
-            "orchestra/testbench:${{ matrix.testbench }}"
+            "laravel/framework:${{ matrix.laravel }}"
+          composer require --no-update --no-interaction --dev \
+            "orchestra/testbench:${{ matrix.testbench }}" \
+            "pestphp/pest:${{ matrix.pest }}" \
+            "pestphp/pest-plugin-laravel:${{ matrix.pest }}"
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-interaction --no-progress
