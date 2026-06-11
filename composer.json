@@ -22,10 +22,11 @@
         }
     ],
     "require": {
+        "php": "^8.2",
         "ext-json": "*",
         "dskripchenko/php-array-helper": "^1.0",
-        "laravel/framework": "6.*|7.*|8.*|9.*|10.*|11.*|12.*",
-        "phpdocumentor/reflection-docblock": "*"
+        "laravel/framework": "^11.0 || ^12.0",
+        "phpdocumentor/reflection-docblock": "^6.0"
     },
     "require-dev": {
         "pestphp/pest": "^3.0",

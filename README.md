@@ -4,8 +4,8 @@
 [![Latest Version](https://img.shields.io/packagist/v/dskripchenko/laravel-api?logo=packagist&logoColor=white)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![Total Downloads](https://img.shields.io/packagist/dt/dskripchenko/laravel-api)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![Laravel](https://img.shields.io/badge/Laravel-6.x--12.x-red.svg)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.1%2B-purple.svg)](https://www.php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-11.x--12.x-red.svg)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://www.php.net)
 
 🌐 [Русский](docs/README.ru.md) | [Deutsch](docs/README.de.md) | [中文](docs/README.zh.md)
 
@@ -115,8 +115,8 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 
 ### Requirements
 
-- PHP 8.1+
-- Laravel 6.x — 12.x
+- PHP 8.2+
+- Laravel 11.x — 12.x
 
 ### Install
 
