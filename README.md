@@ -1,6 +1,9 @@
 # dskripchenko/laravel-api
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+[![Tests](https://img.shields.io/github/actions/workflow/status/dskripchenko/laravel-api/tests.yml?branch=master&label=tests&logo=github)](https://github.com/dskripchenko/laravel-api/actions/workflows/tests.yml)
+[![Latest Version](https://img.shields.io/packagist/v/dskripchenko/laravel-api?logo=packagist&logoColor=white)](https://packagist.org/packages/dskripchenko/laravel-api)
+[![Total Downloads](https://img.shields.io/packagist/dt/dskripchenko/laravel-api)](https://packagist.org/packages/dskripchenko/laravel-api)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![Laravel](https://img.shields.io/badge/Laravel-6.x--12.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-purple.svg)](https://www.php.net)
 
