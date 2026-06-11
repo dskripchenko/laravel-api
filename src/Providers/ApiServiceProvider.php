@@ -110,6 +110,11 @@ class ApiServiceProvider extends ServiceProvider
             })->name('api-doc')
                 ->middleware(ApiModule::getDocMiddleware());
 
+            Route::get('doc/{version}', static function (string $version) {
+                return app()->call(ApiDocumentationController::class . '@source', ['version' => $version]);
+            })->name('api-doc-source')
+                ->middleware(ApiModule::getDocMiddleware());
+
             $routeDefinitions = ApiModule::getRouteDefinitions();
             foreach ($routeDefinitions as $definition) {
                 $perActionMiddleware = (array) ($definition['middleware'] ?? []);
