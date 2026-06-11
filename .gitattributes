@@ -1,0 +1,11 @@
+# Keep the installable Composer package lean: exclude dev/docs/marketing
+# files from `composer require` dists. These stay in the repo (and still
+# render on GitHub/Packagist, which read from the repo, not the dist).
+/.github        export-ignore
+/docs           export-ignore
+/tests          export-ignore
+/.gitignore     export-ignore
+/.gitattributes export-ignore
+/phpunit.xml         export-ignore
+/CLAUDE.md           export-ignore
+/coverage-report.md  export-ignore

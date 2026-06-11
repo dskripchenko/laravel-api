@@ -1,0 +1,62 @@
+<!-- COVER TEMPLATE — Habr (КДПВ / og:image), 1200×630. Editable draft.
+     Replace: HEADLINE, TAGLINE. Optionally swap the right "docs card" for a real
+     screenshot of /api/doc (Scalar). Convert <text> to outlines for a pixel-perfect export. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" font-family="'Space Grotesk','Inter',system-ui,sans-serif">
+  <!-- background -->
+  <rect width="1200" height="630" fill="#181C26"/>
+  <rect width="1200" height="6" fill="#F9492B"/>
+
+  <!-- logo: icon + wordmark -->
+  <g transform="translate(56,46) scale(0.85)">
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="#20242E"/>
+    <g font-family="'JetBrains Mono',ui-monospace,monospace" font-weight="700" font-size="34" fill="#F9492B">
+      <text x="29" y="32" text-anchor="end"   dominant-baseline="central">{</text>
+      <text x="35" y="32" text-anchor="start" dominant-baseline="central">}</text>
+    </g>
+    <path d="M 29.5 27 L 34.5 33.5 L 29.5 40" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="122" y="89" font-size="30" font-weight="600" letter-spacing="0.4">
+    <tspan fill="#E8EAF0">laravel</tspan><tspan fill="#6B7280">-</tspan><tspan fill="#F9492B">api</tspan>
+  </text>
+
+  <!-- HEADLINE (RU) -->
+  <text x="56" y="266" font-size="46" font-weight="700" fill="#E8EAF0">OpenAPI-доки из вашего</text>
+  <text x="56" y="330" font-size="46" font-weight="700"><tspan fill="#F9492B">PHPDoc</tspan><tspan fill="#E8EAF0"> — без аннотаций</tspan></text>
+
+  <!-- TAGLINE (RU) -->
+  <text x="58" y="392" font-size="24" fill="#8A93A6">Версионированный API на Laravel ·</text>
+  <text x="58" y="426" font-size="24" fill="#8A93A6">интерактивная дока на /api/doc, прямо из кода</text>
+
+  <!-- footer url -->
+  <text x="58" y="566" font-size="20" font-weight="500" fill="#5A6373">github.com/dskripchenko/laravel-api</text>
+
+  <!-- MOTIF: docblock card → arrow → docs card (right column) -->
+  <!-- code card -->
+  <g font-family="'JetBrains Mono',ui-monospace,monospace" font-size="20">
+    <rect x="724" y="150" width="430" height="180" rx="14" fill="#20242E" stroke="#2C3140"/>
+    <text x="748" y="188" fill="#5A6373">/**</text>
+    <text x="748" y="220"><tspan fill="#F9492B">@input</tspan><tspan fill="#8A93A6">  string </tspan><tspan fill="#E8EAF0">$status</tspan></text>
+    <text x="748" y="252"><tspan fill="#8A93A6">  [</tspan><tspan fill="#7FB2FF">open,done</tspan><tspan fill="#8A93A6">]</tspan></text>
+    <text x="748" y="284"><tspan fill="#F9492B">@output</tspan><tspan fill="#8A93A6"> integer </tspan><tspan fill="#E8EAF0">$id</tspan></text>
+    <text x="748" y="316" fill="#5A6373"> */</text>
+  </g>
+
+  <!-- arrow (down) -->
+  <path d="M 939 346 L 939 384 M 928 374 L 939 385 L 950 374" fill="none" stroke="#F9492B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- docs card (mock of /api/doc) -->
+  <g>
+    <rect x="724" y="400" width="430" height="180" rx="14" fill="#F4F5F7"/>
+    <rect x="724" y="400" width="430" height="40" rx="14" fill="#E7E9EE"/>
+    <rect x="724" y="424" width="430" height="16" fill="#E7E9EE"/>
+    <text x="748" y="427" font-size="17" font-weight="600" fill="#5A6373">/api/doc</text>
+    <!-- method pill -->
+    <rect x="748" y="462" width="64" height="28" rx="6" fill="#F9492B"/>
+    <text x="759" y="481" font-size="16" font-weight="700" fill="#FFFFFF" font-family="'JetBrains Mono',ui-monospace,monospace">POST</text>
+    <rect x="824" y="467" width="120" height="16" rx="4" fill="#C7CCD6"/>
+    <!-- schema rows -->
+    <rect x="748" y="510" width="360" height="13" rx="4" fill="#D5D9E1"/>
+    <rect x="748" y="534" width="300" height="13" rx="4" fill="#D5D9E1"/>
+    <rect x="748" y="558" width="330" height="13" rx="4" fill="#D5D9E1"/>
+  </g>
+</svg>
