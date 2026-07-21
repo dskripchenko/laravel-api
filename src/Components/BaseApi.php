@@ -324,7 +324,13 @@ RAW_STR;
     /**
      * @return array
      */
-    private static function getNormalizedMethods(): array
+    /**
+     * Protected (5.1.1): наследники могут строить собственный prepared-кеш
+     * без родительского merge (напр. панельные Api-версии в laravel-admin).
+     *
+     * @return array
+     */
+    protected static function getNormalizedMethods(): array
     {
         $methods = static::getMethods();
         foreach (Arr::get($methods, 'controllers', []) as $controllerKey => $controller) {
