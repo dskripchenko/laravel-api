@@ -51,3 +51,27 @@ it('generated JSON is valid OpenAPI', function () {
     expect($data['info'])->toHaveKey('title');
     expect($data['paths'])->not->toBeEmpty();
 });
+
+it('passes a configurable documentation script URL to the view', function () {
+    Storage::fake();
+    config()->set('laravel-api.documentation_script', '/vendor/scalar/api-reference.js');
+
+    $controller = new ApiDocumentationController();
+    $view = $controller->index();
+
+    expect($view->getData()['documentationScript'])->toBe('/vendor/scalar/api-reference.js');
+});
+
+it('documentation view renders configured script and a fallback block', function () {
+    Storage::fake();
+    config()->set('laravel-api.documentation_script', '/vendor/scalar/api-reference.js');
+
+    $html = view('api_module::api/documentation', [
+        'filesJsonData' => json_encode([['url' => '/openapi/v1.json', 'name' => 'V1']]),
+        'documentationScript' => (string) config('laravel-api.documentation_script'),
+    ])->render();
+
+    expect($html)->toContain('src="/vendor/scalar/api-reference.js"');
+    expect($html)->not->toContain('cdn.jsdelivr.net');
+    expect($html)->toContain('api-doc-fallback');
+});

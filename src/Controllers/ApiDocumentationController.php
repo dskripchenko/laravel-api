@@ -48,6 +48,10 @@ class ApiDocumentationController extends Controller
 
         return view('api_module::api/documentation', [
             'filesJsonData' => json_encode($filesData),
+            'documentationScript' => (string) config(
+                'laravel-api.documentation_script',
+                'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
+            ),
         ]);
     }
 
