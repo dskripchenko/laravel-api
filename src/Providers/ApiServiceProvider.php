@@ -2,6 +2,7 @@
 
 namespace Dskripchenko\LaravelApi\Providers;
 
+use Dskripchenko\LaravelApi\Console\Commands\ApiDocClear;
 use Dskripchenko\LaravelApi\Console\Commands\ApiExport;
 use Dskripchenko\LaravelApi\Console\Commands\ApiGenerateTypes;
 use Dskripchenko\LaravelApi\Console\Commands\ApiInstall;
@@ -64,8 +65,17 @@ class ApiServiceProvider extends ServiceProvider
                 ApiInstall::class,
                 ApiGenerateTypes::class,
                 ApiExport::class,
+                ApiDocClear::class,
             ]
         );
+
+        // Cached OpenAPI specs (ApiDocumentationController) live in storage and
+        // are only rebuilt when missing or in debug mode; deployments with a
+        // persistent storage volume would keep serving stale docs. Hook the
+        // cleanup into `optimize:clear`.
+        if (method_exists($this, 'optimizes')) {
+            $this->optimizes(clear: 'api:doc-clear', key: 'laravel-api-doc');
+        }
 
         parent::register();
     }

@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.1.3
+
+### Added
+- `api:doc-clear` command — clears cached OpenAPI spec files
+  (`openapi_path`, default `public/openapi`), all versions or a single one
+  via `--api-version=`. Specs rebuild on the next `/api/doc` request.
+- The provider hooks the cleanup into `optimize:clear` (Laravel 11+
+  `ServiceProvider::optimizes()`): deployments that persist the storage
+  directory no longer serve stale API docs after a release.
+
 ## 5.1.2
 
 ### Added
