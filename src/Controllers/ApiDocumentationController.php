@@ -29,7 +29,7 @@ class ApiDocumentationController extends Controller
      */
     public function index()
     {
-        $versionList = ApiModule::getApiVersionList();
+        $versionList = $this->listableVersions();
 
         // Generate (and cache) every version first so the spec files exist
         // before we build the URLs that point at them.
@@ -53,6 +53,24 @@ class ApiDocumentationController extends Controller
                 'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
             ),
         ]);
+    }
+
+    /**
+     * Versions shown in the reference UI.
+     *
+     * Not every API version is meant for outside readers: admin panels and
+     * other internal surfaces are part of the same module, and listing them
+     * publishes their whole endpoint map. `laravel-api.hidden_versions` keeps
+     * them out of the index; their specs stay reachable by direct URL for
+     * whoever needs them.
+     *
+     * @return array<string, class-string<BaseApi>>
+     */
+    protected function listableVersions(): array
+    {
+        $hidden = (array) config('laravel-api.hidden_versions', []);
+
+        return array_diff_key(ApiModule::getApiVersionList(), array_flip($hidden));
     }
 
     /**

@@ -96,3 +96,23 @@ it('documentation view survives apostrophes and newlines in spec titles', functi
     expect($html)->toContain('\u0027');
     expect($html)->not->toMatch("/var sources = .*endpoint'ов/");
 });
+
+it('keeps hidden versions out of the reference index', function () {
+    Storage::fake();
+    config()->set('laravel-api.hidden_versions', ['v2']);
+
+    $data = (new ApiDocumentationController())->index()->getData();
+    $names = array_column($data['filesData'], 'url');
+
+    expect(implode(' ', $names))->toContain('v1')->not->toContain('v2');
+});
+
+it('still serves a hidden version by direct URL', function () {
+    Storage::fake();
+    config()->set('laravel-api.hidden_versions', ['v2']);
+
+    $response = (new ApiDocumentationController())->source('v2');
+
+    expect($response->getStatusCode())->toBe(200);
+    expect($response->getData(true))->toHaveKey('openapi');
+});
