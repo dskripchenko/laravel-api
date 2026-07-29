@@ -67,11 +67,32 @@ it('documentation view renders configured script and a fallback block', function
     config()->set('laravel-api.documentation_script', '/vendor/scalar/api-reference.js');
 
     $html = view('api_module::api/documentation', [
-        'filesJsonData' => json_encode([['url' => '/openapi/v1.json', 'name' => 'V1']]),
+        'filesData' => [['url' => '/openapi/v1.json', 'name' => 'V1']],
         'documentationScript' => (string) config('laravel-api.documentation_script'),
     ])->render();
 
     expect($html)->toContain('src="/vendor/scalar/api-reference.js"');
     expect($html)->not->toContain('cdn.jsdelivr.net');
     expect($html)->toContain('api-doc-fallback');
+    // Список спек рендерится сервером — он не должен зависеть от JS.
+    expect($html)->toContain('href="/openapi/v1.json"');
+});
+
+it('documentation view survives apostrophes and newlines in spec titles', function () {
+    Storage::fake();
+
+    // Раньше JSON клался в JS-строку в одинарных кавычках: апостроф ронял
+    // скрипт синтаксической ошибкой, а перенос строки — сам JSON.parse.
+    $html = view('api_module::api/documentation', [
+        'filesData' => [[
+            'url' => '/openapi/v1.json',
+            'name' => "Admin API — описание endpoint'ов\nи caller's flow",
+        ]],
+        'documentationScript' => '/vendor/scalar/api-reference.js',
+    ])->render();
+
+    expect($html)->not->toContain("JSON.parse('");
+    // Апостроф внутри JS-литерала обязан быть экранирован (@json → \u0027).
+    expect($html)->toContain('\u0027');
+    expect($html)->not->toMatch("/var sources = .*endpoint'ов/");
 });

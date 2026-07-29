@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.1.4
+
+### Fixed
+- **`/api/doc` rendered a blank page whenever a spec title contained an
+  apostrophe or a newline.** The spec list was embedded as raw JSON inside
+  a single-quoted JavaScript string: an apostrophe (`endpoint'ов`,
+  `caller's`) broke the script with a syntax error, and an escaped newline
+  broke `JSON.parse` itself. Nothing rendered — not even the fallback
+  list, since the same broken script populated it. The payload is now
+  emitted through Blade's `json` directive (`JSON_HEX_APOS|JSON_HEX_QUOT`),
+  and the fallback list of raw specs is rendered server-side, so it no
+  longer depends on JavaScript at all.
+
 ## 5.1.3
 
 ### Added

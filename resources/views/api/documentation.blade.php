@@ -18,21 +18,26 @@
             <h1>API Documentation</h1>
             <p>Интерактивная документация загружается… Если она не появилась —
                рендерер недоступен (нет соединения с CDN). Сырые OpenAPI-спеки:</p>
-            <ul id="api-doc-fallback-list"></ul>
+            <ul id="api-doc-fallback-list">
+                @foreach ($filesData as $file)
+                    <li><a href="{{ $file['url'] }}">{{ $file['name'] ?: $file['url'] }}</a></li>
+                @endforeach
+            </ul>
         </div>
 
         <div id="app"></div>
         <script src="{{ $documentationScript ?? 'https://cdn.jsdelivr.net/npm/@scalar/api-reference' }}"></script>
         <script>
-            var sources = JSON.parse('{!! $filesJsonData !!}').map(function (item) {
+            // Спеки встраиваются как JS-литерал (Blade-директива json,
+            // JSON_HEX_APOS|JSON_HEX_QUOT). Раньше JSON клался в строку в
+            // ОДИНАРНЫХ кавычках: любой апостроф в описании версии
+            // («endpoint'ов», «caller's») ронял скрипт синтаксической
+            // ошибкой, а экранированный перенос строки — сам JSON.parse.
+            // Страница оставалась пустой, и даже fallback-список не
+            // строился — его наполнял тот же сломанный скрипт (теперь
+            // список рендерится на сервере).
+            var sources = @json($filesData).map(function (item) {
                 return { url: item.url, title: item.name };
-            });
-            var list = document.getElementById('api-doc-fallback-list');
-            sources.forEach(function (s) {
-                var li = document.createElement('li');
-                var a = document.createElement('a');
-                a.href = s.url; a.textContent = s.title || s.url;
-                li.appendChild(a); list.appendChild(li);
             });
             if (typeof Scalar !== 'undefined' && Scalar.createApiReference) {
                 Scalar.createApiReference('#app', { sources: sources });
