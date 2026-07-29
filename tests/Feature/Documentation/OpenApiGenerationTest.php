@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Tests\Fixtures\Versions\v1\TestApi;
 use Tests\Fixtures\OpenApi\TemplateApi;
 use Tests\Fixtures\OpenApi\ExtendedApi;
+use Tests\Fixtures\OpenApi\DeprecatedAliasApi;
 
 it('generates valid openapi 3.0 structure', function () {
     $config = TestApi::getOpenApiConfig('v1');
@@ -158,4 +159,13 @@ it('unwraps inline docblock tags in descriptions', function () {
         ->not->toContain('{@inheritDoc}')
         ->toContain('ItemController::list()')
         ->toContain('status page (https://example.test/health)');
+});
+
+it('marks an action deprecated from getMethods() config', function () {
+    $config = DeprecatedAliasApi::getOpenApiConfig('legacy');
+
+    // Тот же контроллер в TestApi не помечен — флаг версии не протекает.
+    expect($config['paths']['/legacy/open/ping']['get']['deprecated'])->toBeTrue();
+    expect(TestApi::getOpenApiConfig('v1')['paths']['/v1/open/ping']['get'])
+        ->not->toHaveKey('deprecated');
 });

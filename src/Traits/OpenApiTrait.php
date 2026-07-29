@@ -141,7 +141,14 @@ trait OpenApiTrait
                 }
 
                 $actionSecurity = is_array($value) ? Arr::get($value, 'security', []) : [];
-                $deprecated = static::isDeprecated($docBlock);
+
+                // `@deprecated` живёт в docblock'е метода, а один контроллер
+                // может обслуживать несколько версий API — тогда пометить
+                // устаревшей нужно только одну. Для этого — флаг в getMethods().
+                $deprecated = static::isDeprecated($docBlock)
+                    || (is_array($value) && (bool) Arr::get($value, 'deprecated', false))
+                    || (bool) Arr::get($options, 'deprecated', false)
+                    || (bool) Arr::get($methods, 'deprecated', false);
                 $operationId = static::getOperationId($controller, $action);
                 $security = !empty($actionSecurity) ? $actionSecurity : static::parseSecurityTags($securityTags);
                 $defaultsAndExamples = static::parseDefaultAndExampleTags($defaultTags, $exampleTags);

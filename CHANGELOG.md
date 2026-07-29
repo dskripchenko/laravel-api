@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.3.0
+
+### Added
+- `deprecated` flag in `getMethods()` — at version, controller or action
+  level. `@deprecated` lives in the method's docblock, but one controller
+  often serves several API versions, and only the legacy one should be
+  marked; the config flag makes that possible without touching the
+  controller.
+
 ## 5.2.0
 
 ### Changed
