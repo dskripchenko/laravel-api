@@ -127,3 +127,35 @@ it('keeps raw templates per API class across sequential generations', function (
     expect($extendedConfig['components']['schemas'])->toHaveKey('ValidationError');
     expect($extendedConfig['components']['schemas'])->toHaveKey('OrderCreateRequest');
 });
+
+it('does not leak the controller FQCN into descriptions', function () {
+    $config = TestApi::getOpenApiConfig('v1');
+
+    // Без пустой строки-разделителя phpDocumentor кладёт весь текст в summary,
+    // а description остаётся пустым — раньше в нём ехал один лишь FQCN.
+    expect($config['paths']['/v1/item/list']['get']['description'])->toBe('');
+    expect($config['paths']['/v1/item/list']['get']['summary'])
+        ->not->toContain('Tests\\Fixtures')
+        ->toContain('Returns paginated list');
+});
+
+it('exposes the controller FQCN when explicitly enabled', function () {
+    config()->set('laravel-api.expose_controller_class', true);
+
+    $config = TestApi::getOpenApiConfig('v1');
+
+    expect($config['paths']['/v1/item/list']['get']['description'])
+        ->toContain('Tests\\Fixtures\\Versions\\v1\\Controllers\\ItemController');
+});
+
+it('unwraps inline docblock tags in descriptions', function () {
+    $config = TestApi::getOpenApiConfig('v1');
+    $description = $config['paths']['/v1/open/ping']['get']['description'];
+
+    expect($description)
+        ->not->toContain('{@see')
+        ->not->toContain('{@link')
+        ->not->toContain('{@inheritDoc}')
+        ->toContain('ItemController::list()')
+        ->toContain('status page (https://example.test/health)');
+});

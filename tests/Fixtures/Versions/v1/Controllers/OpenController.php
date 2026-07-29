@@ -11,7 +11,10 @@ class OpenController extends ApiController
 {
     /**
      * Ping
-     * Health check endpoint
+     * Health check endpoint.
+     * Details: {@see \Tests\Fixtures\Versions\v1\Controllers\ItemController::list()}
+     * Docs: {@link https://example.test/health status page}
+     * {@inheritDoc}
      *
      * @output string $pong Pong response
      *

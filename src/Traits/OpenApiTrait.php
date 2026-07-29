@@ -40,8 +40,8 @@ trait OpenApiTrait
         $config = [
             'openapi' => '3.0.0',
             'info' => [
-                'title' => $docBlock->getSummary(),
-                'description' => $docBlock->getDescription()->render(),
+                'title' => static::sanitizeDocText($docBlock->getSummary()),
+                'description' => static::sanitizeDocText($docBlock->getDescription()->render()),
                 'version' => $version,
             ],
             'servers' => [
@@ -121,8 +121,15 @@ trait OpenApiTrait
 
                 $declaringClass = $reflectionMethod->getDeclaringClass()->name;
 
-                $summary     = $docBlock->getSummary();
-                $description = $declaringClass . PHP_EOL . $docBlock->getDescription()->render();
+                $summary     = static::sanitizeDocText($docBlock->getSummary());
+                $description = static::sanitizeDocText($docBlock->getDescription()->render());
+
+                // FQCN контроллера — отладочная деталь: в публичной спеке она
+                // светит внутреннюю структуру namespace'ов. По умолчанию не
+                // включаем; кому нужно — `laravel-api.expose_controller_class`.
+                if (config('laravel-api.expose_controller_class', false)) {
+                    $description = trim($declaringClass . PHP_EOL . $description);
+                }
                 $tags        = [$controller];
                 $httpMethods  = Arr::get($actions, "{$key}.method", ['post']);
                 if (!$httpMethods) {
@@ -164,6 +171,61 @@ trait OpenApiTrait
             }
         }
         return $result;
+    }
+
+    /**
+     * Приводит текст docblock'а к виду, пригодному для публичной спеки.
+     *
+     * phpDocumentor отдаёт inline-теги как есть, и в OpenAPI они уезжают
+     * сырыми: `{@see \App\Foo::bar()}` читается как мусор, `{@inheritDoc}`
+     * — как пустое обещание. Разворачиваем в текст, ссылки оставляем URL'ом.
+     *
+     * @param  string|null  $text
+     * @return string
+     */
+    private static function sanitizeDocText($text)
+    {
+        $text = (string) $text;
+
+        if ($text === '') {
+            return '';
+        }
+
+        // {@inheritDoc} / {@inheritdoc} — раскрывать нечего, убираем.
+        $text = preg_replace('/\{@inheritdoc}/i', '', $text);
+
+        // {@link https://… описание} → «описание (https://…)» либо просто URL.
+        $text = preg_replace_callback(
+            '/\{@link\s+(\S+)(?:\s+([^}]*))?}/i',
+            static function (array $m): string {
+                $url   = $m[1];
+                $label = isset($m[2]) ? trim($m[2]) : '';
+
+                return $label === '' ? $url : "{$label} ({$url})";
+            },
+            (string) $text
+        );
+
+        // {@see \Foo\Bar::baz()} → «Bar::baz()»: полный namespace в публичной
+        // документации не нужен, короткое имя оставляет смысл ссылки.
+        $text = preg_replace_callback(
+            '/\{@see\s+([^}\s]+)(?:\s+([^}]*))?}/i',
+            static function (array $m): string {
+                $label = isset($m[2]) ? trim($m[2]) : '';
+
+                if ($label !== '') {
+                    return $label;
+                }
+
+                $target = ltrim($m[1], '\\');
+                $pos    = strrpos($target, '\\');
+
+                return $pos === false ? $target : substr($target, $pos + 1);
+            },
+            (string) $text
+        );
+
+        return trim(preg_replace('/[ \t]+\n/', "\n", (string) $text));
     }
 
     /**

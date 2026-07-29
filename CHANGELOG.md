@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.2.0
+
+### Changed
+- **The controller's fully-qualified class name is no longer prepended to
+  every endpoint description.** It leaked the internal namespace layout into
+  a public document, and for docblocks without a blank-line-separated
+  description the field held nothing else — the class name *was* the whole
+  description. Set `laravel-api.expose_controller_class` (or
+  `LARAVEL_API_EXPOSE_CONTROLLER_CLASS=true`) to restore the old behaviour.
+
+### Fixed
+- Inline docblock tags reached the spec verbatim: `{@see \App\Foo::bar()}`,
+  `{@link …}` and `{@inheritDoc}` were rendered as-is in summaries and
+  descriptions. They are now unwrapped — `@see` keeps the short symbol name,
+  `@link` becomes `label (url)`, `@inheritDoc` is dropped.
+
 ## 5.1.4
 
 ### Fixed
