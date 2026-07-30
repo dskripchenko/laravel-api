@@ -43,6 +43,12 @@ class TemplateApi extends BaseApi
                 'name' => ['type' => 'string', 'required' => true],
                 'email' => ['type' => 'string'],
             ],
+            // Shorthand с описанием: тип, формат, обязательность и текст.
+            'DescribedResponse' => [
+                'id' => 'integer! Record identifier',
+                'email' => 'string(email) Contact email',
+                'plain' => 'string',
+            ],
         ];
     }
 }

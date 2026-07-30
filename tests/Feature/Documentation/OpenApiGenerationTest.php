@@ -169,3 +169,19 @@ it('marks an action deprecated from getMethods() config', function () {
     expect(TestApi::getOpenApiConfig('v1')['paths']['/v1/open/ping']['get'])
         ->not->toHaveKey('deprecated');
 });
+
+it('reads a description from the shorthand template syntax', function () {
+    $config = TemplateApi::getOpenApiConfig('v1');
+    $props = $config['components']['schemas']['DescribedResponse']['properties'];
+
+    expect($props['id'])->toMatchArray(['type' => 'integer', 'description' => 'Record identifier']);
+    expect($props['email'])->toMatchArray([
+        'type' => 'string',
+        'format' => 'email',
+        'description' => 'Contact email',
+    ]);
+    // Обязательность и описание уживаются в одной строке.
+    expect($config['components']['schemas']['DescribedResponse']['required'])->toContain('id');
+    // Тип без описания остаётся как был.
+    expect($props['plain'])->toBe(['type' => 'string']);
+});

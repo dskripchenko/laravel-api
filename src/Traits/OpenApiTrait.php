@@ -1209,8 +1209,10 @@ trait OpenApiTrait
     /**
      * Parses shorthand type string into a full attribute array.
      *
-     * Format: "type(format)!" where (format) and ! are optional.
-     * Examples: "integer!", "string(date-time)", "number", "string(email)!"
+     * Format: "type(format)! Description" — the format, the required mark and
+     * the description are all optional.
+     * Examples: "integer!", "string(date-time)", "string(email)! Contact email",
+     * "string Document identifier".
      * Ref syntax "@ModelName" and "@ModelName[]" are passed through as-is.
      *
      * @param string $shorthand
@@ -1219,6 +1221,16 @@ trait OpenApiTrait
     private static function parseShorthandType(string $shorthand): array
     {
         $shorthand = trim($shorthand);
+
+        // Everything past the first space is a human description: response
+        // schemas were type-only, so consumers of the spec (and anything
+        // reading it, from SDK generators to search) saw field names without
+        // a hint of what they mean.
+        $description = null;
+        if (!str_starts_with($shorthand, '@') && preg_match('/^(\S+)\s+(.+)$/u', $shorthand, $parts) === 1) {
+            $shorthand = $parts[1];
+            $description = trim($parts[2]);
+        }
 
         // @ref array syntax: @ModelName[]
         if (preg_match('/^@(.+)\[\]$/', $shorthand, $m)) {
@@ -1253,6 +1265,10 @@ trait OpenApiTrait
 
         if ($required) {
             $result['required'] = true;
+        }
+
+        if ($description !== null && $description !== '') {
+            $result['description'] = $description;
         }
 
         return $result;
