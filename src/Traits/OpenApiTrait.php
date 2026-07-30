@@ -1232,12 +1232,20 @@ trait OpenApiTrait
             $description = trim($parts[2]);
         }
 
-        // @ref array syntax: @ModelName[]
-        if (preg_match('/^@(.+)\[\]$/', $shorthand, $m)) {
-            return [
+        // @ref array syntax: @ModelName[] with an optional description.
+        // A description next to `$ref` is ignored by OpenAPI 3.0, but an
+        // array wrapping a ref is a plain object — so here it survives.
+        if (preg_match('/^@(\S+?)\[\](?:\s+(.+))?$/u', $shorthand, $m)) {
+            $result = [
                 'type' => 'array',
                 'items' => ['$ref' => '#/components/schemas/' . $m[1]],
             ];
+
+            if (isset($m[2]) && trim($m[2]) !== '') {
+                $result['description'] = trim($m[2]);
+            }
+
+            return $result;
         }
 
         // @ref syntax: @ModelName

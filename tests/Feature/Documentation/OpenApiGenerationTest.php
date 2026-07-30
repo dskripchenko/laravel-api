@@ -185,3 +185,12 @@ it('reads a description from the shorthand template syntax', function () {
     // Тип без описания остаётся как был.
     expect($props['plain'])->toBe(['type' => 'string']);
 });
+
+it('keeps a description on an array of refs', function () {
+    $config = TemplateApi::getOpenApiConfig('v1');
+    $users = $config['components']['schemas']['DescribedResponse']['properties']['users'];
+
+    expect($users['type'])->toBe('array');
+    expect($users['items'])->toBe(['$ref' => '#/components/schemas/UserResponse']);
+    expect($users['description'])->toBe('Everyone involved');
+});

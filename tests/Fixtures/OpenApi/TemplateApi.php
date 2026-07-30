@@ -48,6 +48,7 @@ class TemplateApi extends BaseApi
                 'id' => 'integer! Record identifier',
                 'email' => 'string(email) Contact email',
                 'plain' => 'string',
+                'users' => '@UserResponse[] Everyone involved',
             ],
         ];
     }

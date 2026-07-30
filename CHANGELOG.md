@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.5.1
+
+### Fixed
+- An array of refs (`'items' => '@BatchItem[]'`) could not carry a description.
+  A description next to a plain `$ref` is ignored by OpenAPI 3.0, but the array
+  wrapping it is an ordinary object, so there it survives — and that is exactly
+  the field a reader needs explained.
+
 ## 5.5.0
 
 ### Added
