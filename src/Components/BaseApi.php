@@ -299,6 +299,33 @@ RAW_STR;
     }
 
     /**
+     * Middleware, которые маршрут не должен получить, — включая пришедшие из
+     * общей группы.
+     *
+     * `exclude-middleware` раньше вычитался только из собственного списка
+     * версии, поэтому убрать им что-либо из группы (`web`, панельные
+     * middleware) было нельзя: имя обещало больше, чем механизм делал.
+     * Теперь список едет на маршрут и применяется через `withoutMiddleware`,
+     * то есть действует и на содержимое группы.
+     *
+     * Ключ читается на трёх уровнях: версии, контроллера и действия.
+     *
+     * @return array
+     */
+    public static function getExcludedMiddlewareByControllerAndActionKey(
+        $controllerKey,
+        $actionKey
+    ): array {
+        $methods = static::getPreparedMethods();
+
+        return array_values(array_unique(array_merge(
+            (array) Arr::get($methods, 'exclude-middleware', []),
+            (array) Arr::get($methods, "controllers.{$controllerKey}.exclude-middleware", []),
+            (array) Arr::get($methods, "controllers.{$controllerKey}.actions.{$actionKey}.exclude-middleware", []),
+        )));
+    }
+
+    /**
      * @return array
      */
     public static function getPreparedMethods(): array

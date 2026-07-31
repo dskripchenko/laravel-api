@@ -179,6 +179,10 @@ class BaseModule
                             $controllerKey,
                             $actionKey
                         ),
+                        'exclude-middleware' => $apiClass::getExcludedMiddlewareByControllerAndActionKey(
+                            $controllerKey,
+                            $actionKey
+                        ),
                     ];
                 }
             }

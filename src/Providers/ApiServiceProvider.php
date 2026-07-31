@@ -131,7 +131,10 @@ class ApiServiceProvider extends ServiceProvider
                 Route::match($definition['methods'], $definition['uri'], function () {
                     return ApiModule::makeApi();
                 })->name($definition['name'])
-                    ->middleware(array_merge([$middlewareGroupName], $perActionMiddleware));
+                    ->middleware(array_merge([$middlewareGroupName], $perActionMiddleware))
+                    // Через withoutMiddleware — он снимает и то, что пришло из
+                    // группы, а не только из собственного списка версии.
+                    ->withoutMiddleware((array) ($definition['exclude-middleware'] ?? []));
             }
 
             Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function () {

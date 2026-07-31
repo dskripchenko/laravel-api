@@ -1,5 +1,24 @@
 # Changelog
 
+## 5.6.0
+
+### Fixed
+- **`exclude-middleware` теперь снимает и то, что пришло из общей группы
+  маршрутов.** Раньше он вычитался только из собственного списка версии
+  (`array_diff` в `getMiddlewareByControllerAndActionKey`), поэтому убрать им
+  `web`, панельные или любые другие middleware из `api-middleware-group` было
+  нельзя — имя обещало больше, чем механизм делал.
+
+  Список исключений теперь едет на маршрут и применяется через
+  `withoutMiddleware()`, то есть действует и на содержимое группы.
+
+  Ключ читается на трёх уровнях: версии (новое), контроллера и действия.
+
+  Зачем: stateless-версии API (HMAC-подпись вместо cookie-сессии) вынуждены
+  были тащить сессии, куки и CSRF из общей группы. У потребителя это стоило
+  двух лишних обращений к Redis на каждый запрос — сессия читалась и
+  записывалась там, где её вообще не должно быть.
+
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
