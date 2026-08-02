@@ -51,7 +51,11 @@ class ApiServiceProvider extends ServiceProvider
             return $this->getApiRequest();
         });
 
-        $this->app->bind('api_error_handler', function () {
+        // Singleton, а не bind: обработчики исключений в него дописывают
+        // другие провайдеры (`ApiErrorHandler::addErrorHandler(...)` в их
+        // boot). С bind каждое разрешение возвращало новый объект — только с
+        // дефолтами из конструктора, а всё дописанное молча пропадало.
+        $this->app->singleton('api_error_handler', function () {
             return $this->getApiErrorHandler();
         });
 

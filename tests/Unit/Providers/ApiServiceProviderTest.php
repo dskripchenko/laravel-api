@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Dskripchenko\LaravelApi\Components\BaseModule;
 use Dskripchenko\LaravelApi\Exceptions\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Exceptions\Handler;
+use Dskripchenko\LaravelApi\Facades\ApiErrorHandler as ApiErrorHandlerFacade;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 
 it('binds api_module to container', function () {
@@ -40,4 +41,18 @@ it('registers api-doc route', function () {
     $routes = app('router')->getRoutes();
     $route = $routes->getByName('api-doc');
     expect($route)->not->toBeNull();
+});
+
+/**
+ * Обработчики в ApiErrorHandler дописывают другие провайдеры — реестр обязан
+ * пережить разрешение из контейнера. Пока биндинг был `bind`, каждое
+ * обращение отдавало новый объект с одними дефолтами, и всё дописанное
+ * молча пропадало: приложение продолжало отвечать дефолтной оболочкой, а
+ * автор регистрации не получал ни ошибки, ни предупреждения.
+ */
+it('api_error_handler переживает разрешение вместе с дописанными обработчиками', function () {
+    ApiErrorHandlerFacade::addErrorHandler(RuntimeException::class, static fn () => 'от стороннего провайдера');
+
+    expect(app('api_error_handler'))->toBe(app('api_error_handler'));
+    expect(ApiErrorHandlerFacade::handle(new RuntimeException('проверка')))->toBe('от стороннего провайдера');
 });
