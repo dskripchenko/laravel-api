@@ -1,47 +1,49 @@
 # Changelog
 
-## 5.6.1
-
-### Fixed
-- **`ApiErrorHandler` терял обработчики, дописанные другими провайдерами.**
-  Биндинг был `bind`, то есть каждое разрешение из контейнера отдавало новый
-  объект — с одними дефолтами из конструктора. Всё, что приложение или
-  пакет-сосед регистрировали через `ApiErrorHandler::addErrorHandler(...)` в
-  своём `boot()`, доставалось выброшенному экземпляру.
-
-  Провал был тихий: ошибки не возникало, приложение просто продолжало
-  отвечать дефолтной оболочкой вместо своей. Наглядный случай —
-  `ValidationException`: у пакета есть свой обработчик по умолчанию
-  (`errorKey: validation_error`, поле `errors`), и он перекрывал чужую
-  регистрацию с другой формой ответа. Фронт потребителя читал своё поле,
-  не находил его и не показывал пользователю ни одной ошибки поля.
-
-  Биндинг стал `singleton` — реестр обработчиков живёт столько же, сколько
-  приложение.
-
-## 5.6.0
-
-### Fixed
-- **`exclude-middleware` теперь снимает и то, что пришло из общей группы
-  маршрутов.** Раньше он вычитался только из собственного списка версии
-  (`array_diff` в `getMiddlewareByControllerAndActionKey`), поэтому убрать им
-  `web`, панельные или любые другие middleware из `api-middleware-group` было
-  нельзя — имя обещало больше, чем механизм делал.
-
-  Список исключений теперь едет на маршрут и применяется через
-  `withoutMiddleware()`, то есть действует и на содержимое группы.
-
-  Ключ читается на трёх уровнях: версии (новое), контроллера и действия.
-
-  Зачем: stateless-версии API (HMAC-подпись вместо cookie-сессии) вынуждены
-  были тащить сессии, куки и CSRF из общей группы. У потребителя это стоило
-  двух лишних обращений к Redis на каждый запрос — сессия читалась и
-  записывалась там, где её вообще не должно быть.
-
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [5.6.1] — 2026-08-04
+
+### Fixed
+- **`ApiErrorHandler` lost handlers registered by other providers.** The
+  binding was `bind`, so every resolution from the container produced a new
+  object carrying only the constructor defaults. Anything the application or a
+  neighbouring package registered through
+  `ApiErrorHandler::addErrorHandler(...)` in its `boot()` went to an instance
+  that was thrown away.
+
+  The failure was silent: no error was raised, the application simply kept
+  answering with the default envelope instead of its own. `ValidationException`
+  is the telling case — the package ships a default handler for it
+  (`errorKey: validation_error`, an `errors` field) which overrode a foreign
+  registration with a different response shape. The consumer's frontend read
+  its own field, did not find it and showed the user no field errors at all.
+
+  The binding is now a `singleton` — the handler registry lives as long as the
+  application.
+
+## [5.6.0] — 2026-08-04
+
+### Fixed
+- **`exclude-middleware` now also removes what came from the shared route
+  group.** Previously it was subtracted only from the version's own list
+  (`array_diff` in `getMiddlewareByControllerAndActionKey`), so it could not
+  drop `web`, panel or any other middleware coming from
+  `api-middleware-group` — the name promised more than the mechanism
+  delivered.
+
+  The exclusion list now travels to the route and is applied through
+  `withoutMiddleware()`, which reaches into the group as well.
+
+  The key is read at three levels: version (new), controller and action.
+
+  Why: stateless API versions (HMAC signature instead of a cookie session)
+  were forced to drag sessions, cookies and CSRF along from the shared group.
+  For a consumer that cost two extra Redis round-trips per request — a session
+  read and written where it has no business being.
 
 ## 5.5.1
 
