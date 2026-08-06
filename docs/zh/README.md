@@ -10,11 +10,11 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/dskripchenko/laravel-api/tests.yml?branch=master&label=tests&logo=github)](https://github.com/dskripchenko/laravel-api/actions/workflows/tests.yml)
 [![Latest Version](https://img.shields.io/packagist/v/dskripchenko/laravel-api?logo=packagist&logoColor=white)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![Total Downloads](https://img.shields.io/packagist/dt/dskripchenko/laravel-api)](https://packagist.org/packages/dskripchenko/laravel-api)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE.md)
 [![Laravel](https://img.shields.io/badge/Laravel-11.x--13.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://www.php.net)
 
-🌐 [English](../README.md) | [Русский](README.ru.md) | [Deutsch](README.de.md)
+🌐 [English](../../README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md)
 
 **用于版本化API路由、OpenAPI 3.0自动文档生成和CRUD脚手架的Laravel包。**
 
@@ -329,7 +329,7 @@ class Api extends BaseApi {
 
 **简写语法：** `type` — 可选，`type!` — 必填，`type(format)` — 带格式，`@Model` — 引用，`@Model[]` — 引用数组。数组格式（`['type' => '...', 'required' => true]`）同样支持。
 
-> 完整标签参考：[docblock-tags.zh.md](docblock-tags.zh.md) | 操作指南：[cookbook.zh.md](cookbook.zh.md)
+> 完整标签参考：[docblock-tags.zh.md](docblock-tags.md) | 操作指南：[cookbook.zh.md](cookbook.md)
 
 ## CRUD脚手架
 
@@ -423,7 +423,7 @@ export interface UserShowOutput {
 }
 ```
 
-组件 schema、操作输入和输出类型均会生成。详情参见 [cookbook.zh.md](cookbook.zh.md#示例-8生成-typescript-接口)。
+组件 schema、操作输入和输出类型均会生成。详情参见 [cookbook.zh.md](cookbook.md#示例-8生成-typescript-接口)。
 
 ## API 导出
 
@@ -627,4 +627,4 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 ## 许可证
 
-MIT许可证。详见[LICENSE.md](LICENSE.md)。
+MIT许可证。详见[LICENSE.md](../../LICENSE.md)。

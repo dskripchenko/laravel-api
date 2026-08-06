@@ -7,6 +7,8 @@
 
 # dskripchenko/laravel-api
 
+> 🌐 **English** · [Deutsch](docs/de/README.md) · [Русский](docs/ru/README.md) · [中文](docs/zh/README.md)
+
 [![Tests](https://img.shields.io/github/actions/workflow/status/dskripchenko/laravel-api/tests.yml?branch=master&label=tests&logo=github)](https://github.com/dskripchenko/laravel-api/actions/workflows/tests.yml)
 [![Latest Version](https://img.shields.io/packagist/v/dskripchenko/laravel-api?logo=packagist&logoColor=white)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![Total Downloads](https://img.shields.io/packagist/dt/dskripchenko/laravel-api)](https://packagist.org/packages/dskripchenko/laravel-api)
@@ -14,7 +16,7 @@
 [![Laravel](https://img.shields.io/badge/Laravel-11.x--13.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://www.php.net)
 
-🌐 [Русский](docs/README.ru.md) | [Deutsch](docs/README.de.md) | [中文](docs/README.zh.md)
+🌐 [Русский](docs/ru/README.md) | [Deutsch](docs/de/README.md) | [中文](docs/zh/README.md)
 
 **A Laravel package for versioned API routing, OpenAPI 3.0 auto-documentation, and CRUD scaffolding.**
 
@@ -352,7 +354,7 @@ class Api extends BaseApi {
 
 Array format (`['type' => 'string', 'required' => true]`) is also supported and can be mixed with shorthand in the same template.
 
-> Full tag reference: [docs/docblock-tags.md](docs/docblock-tags.md) | Cookbook: [docs/cookbook.md](docs/cookbook.md)
+> Full tag reference: [docs/docblock-tags.md](docs/en/docblock-tags.md) | Cookbook: [docs/cookbook.md](docs/en/cookbook.md)
 
 ## CRUD Scaffolding
 
@@ -451,7 +453,7 @@ export interface UserShowOutput {
 }
 ```
 
-Component schemas, operation inputs, and outputs are all generated. See [docs/cookbook.md](docs/cookbook.md#recipe-8-generate-typescript-interfaces) for details.
+Component schemas, operation inputs, and outputs are all generated. See [docs/cookbook.md](docs/en/cookbook.md#recipe-8-generate-typescript-interfaces) for details.
 
 ## API Export
 

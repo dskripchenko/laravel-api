@@ -10,11 +10,11 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/dskripchenko/laravel-api/tests.yml?branch=master&label=tests&logo=github)](https://github.com/dskripchenko/laravel-api/actions/workflows/tests.yml)
 [![Latest Version](https://img.shields.io/packagist/v/dskripchenko/laravel-api?logo=packagist&logoColor=white)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![Total Downloads](https://img.shields.io/packagist/dt/dskripchenko/laravel-api)](https://packagist.org/packages/dskripchenko/laravel-api)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE.md)
 [![Laravel](https://img.shields.io/badge/Laravel-11.x--13.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://www.php.net)
 
-🌐 [English](../README.md) | [Deutsch](README.de.md) | [中文](README.zh.md)
+🌐 [English](../../README.md) | [Deutsch](../de/README.md) | [中文](../zh/README.md)
 
 **Laravel-пакет для версионированного API-маршрутизирования, автоматической генерации OpenAPI 3.0 документации и CRUD-скаффолдинга.**
 
@@ -329,7 +329,7 @@ class Api extends BaseApi {
 
 **Shorthand-синтаксис:** `type` — необязательное, `type!` — обязательное, `type(format)` — с форматом, `@Model` — ссылка, `@Model[]` — массив ссылок. Также поддерживается формат массивов (`['type' => '...', 'required' => true]`).
 
-> Полный справочник тегов: [docblock-tags.ru.md](docblock-tags.ru.md) | Рецепты: [cookbook.ru.md](cookbook.ru.md)
+> Полный справочник тегов: [docblock-tags.ru.md](docblock-tags.md) | Рецепты: [cookbook.ru.md](cookbook.md)
 
 ## CRUD скаффолдинг
 
@@ -423,7 +423,7 @@ export interface UserShowOutput {
 }
 ```
 
-Генерируются схемы компонентов, входные и выходные типы операций. Подробности в [cookbook.ru.md](cookbook.ru.md#рецепт-8-генерация-typescript-интерфейсов).
+Генерируются схемы компонентов, входные и выходные типы операций. Подробности в [cookbook.ru.md](cookbook.md#рецепт-8-генерация-typescript-интерфейсов).
 
 ## Экспорт API
 
@@ -627,4 +627,4 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 ## Лицензия
 
-MIT License. Смотрите [LICENSE.md](LICENSE.md) для деталей.
+MIT License. Смотрите [LICENSE.md](../../LICENSE.md) для деталей.

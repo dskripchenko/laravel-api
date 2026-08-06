@@ -10,11 +10,11 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/dskripchenko/laravel-api/tests.yml?branch=master&label=tests&logo=github)](https://github.com/dskripchenko/laravel-api/actions/workflows/tests.yml)
 [![Latest Version](https://img.shields.io/packagist/v/dskripchenko/laravel-api?logo=packagist&logoColor=white)](https://packagist.org/packages/dskripchenko/laravel-api)
 [![Total Downloads](https://img.shields.io/packagist/dt/dskripchenko/laravel-api)](https://packagist.org/packages/dskripchenko/laravel-api)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE.md)
 [![Laravel](https://img.shields.io/badge/Laravel-11.x--13.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://www.php.net)
 
-🌐 [English](../README.md) | [Русский](README.ru.md) | [中文](README.zh.md)
+🌐 [English](../../README.md) | [Русский](../ru/README.md) | [中文](../zh/README.md)
 
 **Ein Laravel-Paket für versionierte API-Routing, automatische OpenAPI-3.0-Dokumentation und CRUD-Gerüstbau.**
 
@@ -329,7 +329,7 @@ class Api extends BaseApi {
 
 **Shorthand-Syntax:** `type` — optional, `type!` — Pflicht, `type(format)` — mit Format, `@Model` — Referenz, `@Model[]` — Array von Referenzen. Das Array-Format (`['type' => '...', 'required' => true]`) wird ebenfalls unterstützt.
 
-> Vollständige Tag-Referenz: [docblock-tags.de.md](docblock-tags.de.md) | Rezepte: [cookbook.de.md](cookbook.de.md)
+> Vollständige Tag-Referenz: [docblock-tags.de.md](docblock-tags.md) | Rezepte: [cookbook.de.md](cookbook.md)
 
 ## CRUD-Gerüstbau
 
@@ -423,7 +423,7 @@ export interface UserShowOutput {
 }
 ```
 
-Komponentenschemata, Eingabe- und Ausgabetypen werden generiert. Details in [cookbook.de.md](cookbook.de.md#rezept-8-typescript-interfaces-generieren).
+Komponentenschemata, Eingabe- und Ausgabetypen werden generiert. Details in [cookbook.de.md](cookbook.md#rezept-8-typescript-interfaces-generieren).
 
 ## API-Export
 
@@ -627,4 +627,4 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 ## Lizenz
 
-MIT-Lizenz. Siehe [LICENSE.md](LICENSE.md) für Details.
+MIT-Lizenz. Siehe [LICENSE.md](../../LICENSE.md) für Details.
