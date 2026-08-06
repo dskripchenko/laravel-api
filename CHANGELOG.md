@@ -168,5 +168,179 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - GitHub Actions test workflow.
 
+## [4.3.0] - 2026-05-18
+
+### Fixed
+- Middleware enforcement, an OpenAPI cache leak and the default error-handler configuration.
+
+## [4.2.1] - 2026-03-25
+
+### Fixed
+- `api:export` and `api:generate-types` honour the API version option.
+
+## [4.2.0] - 2026-03-20
+
+### Added
+- `api:export` command with Postman, HTTP Client, Markdown and cURL output.
+- Individual named routes registered for every API action.
+
+## [4.1.0] - 2026-03-20
+
+### Added
+- TypeScript interface generation from the OpenAPI specification.
+
+## [4.0.5] - 2026-03-20
+
+### Added
+- Optional `@output` fields are represented in the OpenAPI schema.
+
+## [4.0.3] - 2026-03-20
+
+### Changed
+- Bumped `league/commonmark` to 2.8.2.
+
+## [4.0.2] - 2026-03-08
+
+### Added
+- Shorthand template syntax.
+- Documentation in German, Russian and Chinese.
+
+### Changed
+- Renamed Swagger to OpenApi across the codebase and the documentation.
+
+## [4.0.1] - 2026-03-08
+
+### Changed
+- API documentation is rendered with Scalar instead of Swagger UI.
+
+## [4.0.0] - 2026-03-07
+
+### Changed
+- Migrated from Swagger 2.0 to OpenAPI 3.0.
+- `CrudService`: tightened security and added convenience methods; behaviour is
+  configurable through a published config file.
+
+### Added
+- OpenAPI generation covers formats, enums, headers, security, nested parameters
+  and model references.
+- Full documentation and a test coverage report.
+
+## [3.0.7] - 2026-03-03
+
+### Fixed
+- `ApiException` handling.
+
+## [3.0.6] - 2025-10-09
+
+### Fixed
+- Disabled the local action cache, which served stale definitions.
+
+## [3.0.5] - 2025-10-09
+
+### Fixed
+- The API request method is read through `getMethod()`.
+
+## [3.0.4] - 2025-10-09
+
+### Changed
+- The captured request supplies the API method by default.
+
+## [3.0.3] - 2025-10-08
+
+### Fixed
+- API request construction in the testing trait.
+
+## [3.0.2] - 2025-10-08
+
+### Fixed
+- Testing variables are carried into the request.
+
+## [3.0.1] - 2025-10-08
+
+### Fixed
+- API version check.
+
+## [3.0.0] - 2025-10-08
+
+### Added
+- `MakesHttpApiRequests` testing trait.
+
+## [2.5.3] - 2025-03-12
+
+### Added
+- Laravel 12 support.
+
+## [2.5.2] - 2024-07-09
+
+### Added
+- Laravel 11 support.
+
+## [2.5.1] - 2024-05-24
+
+### Fixed
+- Method resolution when several definitions matched.
+
+## [2.5] - 2023-10-26
+
+### Added
+- Several definitions may declare the available HTTP methods for one action.
+
+## [2.4] - 2023-06-08
+
+### Added
+- Laravel 10 support.
+
+## [2.3.1] - 2023-05-31
+
+### Fixed
+- Registration of the shared API middleware group.
+
+## [2.3.0] - 2023-04-25
+
+### Added
+- A shared API middleware group.
+
+## [2.2.0] - 2022-12-15
+
+### Changed
+- Reworked the response type returned by API actions.
+
+## [2.1.4] - 2022-12-06
+
+### Added
+- The response helper carries the HTTP status code.
+
+## [2.1.3] - 2022-12-05
+
+### Changed
+- `getMethods()` is a stub rather than an abstract method, so a controller need not declare it.
+
+## [2.1.2] - 2022-10-10
+
+### Fixed
+- Constraint on `php-array-helper`.
+
+## [2.1.1] - 2022-07-15
+
+### Added
+- Laravel 9 support.
+
+## [2.1.0] - 2022-01-12
+
+### Added
+- HTTP method support per action.
+- Laravel 7 and 8 support.
+
+## [2.0.0] - 2021-04-02
+
+### Changed
+- Second generation of the package.
+
+## [1.0.0] - 2021-04-02
+
+### Added
+- First release: versioned API controllers, `beforeCallAction()` and
+  `afterCallAction()` hooks, a default `ApiController` and default error handling.
+
 [5.1.0]: https://github.com/dskripchenko/laravel-api/compare/5.0.0...5.1.0
 [5.0.0]: https://github.com/dskripchenko/laravel-api/compare/4.3.0...5.0.0
