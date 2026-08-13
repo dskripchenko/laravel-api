@@ -44,11 +44,12 @@ it('registers api-doc route', function () {
 });
 
 /**
- * Обработчики в ApiErrorHandler дописывают другие провайдеры — реестр обязан
- * пережить разрешение из контейнера. Пока биндинг был `bind`, каждое
- * обращение отдавало новый объект с одними дефолтами, и всё дописанное
- * молча пропадало: приложение продолжало отвечать дефолтной оболочкой, а
- * автор регистрации не получал ни ошибки, ни предупреждения.
+ * Other providers append handlers to ApiErrorHandler — the registry must survive
+ * being resolved from the container. While the binding was a `bind`, every
+ * resolution handed back a new object with nothing but the defaults, and
+ * everything appended vanished silently: the application went on answering with
+ * the default envelope while whoever registered the handler got neither an error
+ * nor a warning.
  */
 it('api_error_handler переживает разрешение вместе с дописанными обработчиками', function () {
     ApiErrorHandlerFacade::addErrorHandler(RuntimeException::class, static fn () => 'от стороннего провайдера');

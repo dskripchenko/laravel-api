@@ -74,15 +74,16 @@ it('documentation view renders configured script and a fallback block', function
     expect($html)->toContain('src="/vendor/scalar/api-reference.js"');
     expect($html)->not->toContain('cdn.jsdelivr.net');
     expect($html)->toContain('api-doc-fallback');
-    // Список спек рендерится сервером — он не должен зависеть от JS.
+    // The list of specs is rendered by the server — it must not depend on JS.
     expect($html)->toContain('href="/openapi/v1.json"');
 });
 
 it('documentation view survives apostrophes and newlines in spec titles', function () {
     Storage::fake();
 
-    // Раньше JSON клался в JS-строку в одинарных кавычках: апостроф ронял
-    // скрипт синтаксической ошибкой, а перенос строки — сам JSON.parse.
+    // The JSON used to be put into a JS string in single quotes: an apostrophe
+    // brought the script down with a syntax error and a line break brought down
+    // JSON.parse itself.
     $html = view('api_module::api/documentation', [
         'filesData' => [[
             'url' => '/openapi/v1.json',
@@ -92,7 +93,7 @@ it('documentation view survives apostrophes and newlines in spec titles', functi
     ])->render();
 
     expect($html)->not->toContain("JSON.parse('");
-    // Апостроф внутри JS-литерала обязан быть экранирован (@json → \u0027).
+    // An apostrophe inside a JS literal must be escaped (@json → \u0027).
     expect($html)->toContain('\u0027');
     expect($html)->not->toMatch("/var sources = .*endpoint'ов/");
 });

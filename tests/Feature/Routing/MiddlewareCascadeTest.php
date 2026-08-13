@@ -81,19 +81,20 @@ it('v2 routes work with inherited actions', function () {
 });
 
 it('собирает исключения с уровня версии, контроллера и действия', function () {
-    // `exclude-middleware` раньше вычитался только из собственного списка
-    // версии, поэтому убрать им что-либо из общей группы маршрутов было
-    // нельзя — имя обещало больше, чем механизм делал.
+    // `exclude-middleware` used to be subtracted only from the version's own
+    // list, so removing anything from the routes' shared group with it was
+    // impossible — the name promised more than the mechanism did.
     $excluded = V1Api::getExcludedMiddlewareByControllerAndActionKey('item', 'list');
 
     expect($excluded)->toBeArray();
 });
 
 it('исключения доезжают до маршрута, а не только до списка версии', function () {
-    // Ключевое свойство: список едет на маршрут через withoutMiddleware,
-    // поэтому снимает и то, что пришло из группы (сессии, куки, панельное).
-    // Без этого `exclude-middleware` действовал только на собственный список
-    // версии и группу не трогал.
+    // The key property: the list travels to the route through
+    // withoutMiddleware and therefore removes what came from the group too (the
+    // sessions, the cookies, the panel's own). Without this
+    // `exclude-middleware` acted only on the version's own list and never
+    // touched the group.
     $v2 = collect(app('router')->getRoutes())
         ->first(fn ($r) => str_starts_with($r->uri(), 'api/v2/'));
     $v1 = collect(app('router')->getRoutes())

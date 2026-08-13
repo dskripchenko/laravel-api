@@ -14,7 +14,7 @@ interface ApiInterface
      *       'actions' => [
      *          'register' => [
      *              'method' => 'put',
-     *               //TODO исключить все middleware на уровне экшена
+     *               //TODO exclude every middleware at the action level
      *              'exclude-all-middleware' => true,
      *          ],
      *          'login' => [],
@@ -28,23 +28,23 @@ interface ApiInterface
      *          ],
      *          'get-sign' => 'getSign',
      *          'checkSign' => [
-     *               //TODO middleware на уровне экшена
+     *               //TODO middleware at the action level
      *              'middleware' => [
      *                  VerifyApiSign::class
      *              ],
-     *               //TODO исключить middleware для контроллера
+     *               //TODO exclude middleware for the controller
      *              'exclude-middleware' => [],
      *          ],
      *       ],
-     *        //TODO исключить все middleware для контроллера
+     *        //TODO exclude every middleware for the controller
      *       'exclude-all-middleware' => true,
-     *        //TODO сквозные middleware на уровне контроллера
+     *        //TODO shared middleware at the controller level
      *       'middleware' => [],
-     *        //TODO исключить middleware для контроллера
+     *        //TODO exclude middleware for the controller
      *       'exclude-middleware' => [],
      *   ]
      * ],
-     *  //TODO сквозные middleware на уровне всего апи
+     *  //TODO shared middleware across the whole API
      * 'middleware' => []
      */
     public static function getMethods(): array;

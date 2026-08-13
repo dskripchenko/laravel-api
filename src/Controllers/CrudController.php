@@ -36,7 +36,7 @@ class CrudController extends ApiController
     }
 
     /**
-     * Получить мета информацию
+     * Get the meta information
      * @return JsonResponse
      */
     public function meta(): JsonResponse
@@ -45,7 +45,7 @@ class CrudController extends ApiController
     }
 
     /**
-     * Получить список записей
+     * Get the list of rows
      *
      * @param CrudSearchRequest $request
      * @return JsonResponse
@@ -56,7 +56,7 @@ class CrudController extends ApiController
     }
 
     /**
-     * Создать запись
+     * Create a row
      * @input [getOpenApiMetaInputs]
      *
      * @param Request $request
@@ -68,9 +68,9 @@ class CrudController extends ApiController
     }
 
     /**
-     * Получить запись
+     * Get a row
      *
-     * @input integer $id Идентификатор записи
+     * @input integer $id The row's identifier
      *
      * @param Request $request
      * @param int $id
@@ -82,9 +82,9 @@ class CrudController extends ApiController
     }
 
     /**
-     * Обновить запись
+     * Update a row
      *
-     * @input integer $id Идентификатор записи
+     * @input integer $id The row's identifier
      * @input [getOpenApiMetaInputs]
      *
      * @param Request $request
@@ -97,9 +97,9 @@ class CrudController extends ApiController
     }
 
     /**
-     * Удалить запись
+     * Delete a row
      *
-     * @input integer $id Идентификатор записи
+     * @input integer $id The row's identifier
      *
      * @param int $id
      * @return JsonResponse

@@ -19,8 +19,8 @@ class TestApi extends V1Api
     public static function getMethods(): array
     {
         return [
-            // Проверка того, что исключения уровня версии доезжают до маршрута
-            // и снимают middleware, пришедшие из общей группы.
+            // A check that the version-level exclusions reach the route and
+            // remove the middleware that came from the shared group.
             'exclude-middleware' => [TestLogMiddleware::class],
             'controllers' => [
                 'item' => [

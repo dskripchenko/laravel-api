@@ -299,16 +299,17 @@ RAW_STR;
     }
 
     /**
-     * Middleware, которые маршрут не должен получить, — включая пришедшие из
-     * общей группы.
+     * The middleware a route must not receive — including what came from the
+     * shared group.
      *
-     * `exclude-middleware` раньше вычитался только из собственного списка
-     * версии, поэтому убрать им что-либо из группы (`web`, панельные
-     * middleware) было нельзя: имя обещало больше, чем механизм делал.
-     * Теперь список едет на маршрут и применяется через `withoutMiddleware`,
-     * то есть действует и на содержимое группы.
+     * `exclude-middleware` used to be subtracted only from the version's own
+     * list, so removing anything from the group (`web`, the panel middleware)
+     * with it was impossible: the name promised more than the mechanism did. Now
+     * the list travels to the route and is applied through `withoutMiddleware`,
+     * that is, it acts on the group's contents too.
      *
-     * Ключ читается на трёх уровнях: версии, контроллера и действия.
+     * The key is read at three levels: the version, the controller and the
+     * action.
      *
      * @return array
      */
@@ -352,8 +353,9 @@ RAW_STR;
      * @return array
      */
     /**
-     * Protected (5.1.1): наследники могут строить собственный prepared-кеш
-     * без родительского merge (напр. панельные Api-версии в laravel-admin).
+     * Protected (5.1.1): the descendants may build a prepared cache of their own
+     * without the parent's merge (the panel API versions in laravel-admin, for
+     * instance).
      *
      * @return array
      */

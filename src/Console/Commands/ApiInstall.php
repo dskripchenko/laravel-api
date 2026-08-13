@@ -97,10 +97,10 @@ class ApiInstall extends BaseCommand
 
     protected function reloadEnvironment(): void
     {
-        // Сбрасываем текущий экземпляр конфигурационной фабрики
+        // Reset the current instance of the configuration factory
         Env::enablePutenv();
 
-        // Полный релоад конфигурации текущего аппликейшена
+        // A full reload of the current application's configuration
         /**
          * @var LoadConfiguration $configurationLoader
          */

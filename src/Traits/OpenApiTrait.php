@@ -124,9 +124,10 @@ trait OpenApiTrait
                 $summary     = static::sanitizeDocText($docBlock->getSummary());
                 $description = static::sanitizeDocText($docBlock->getDescription()->render());
 
-                // FQCN контроллера — отладочная деталь: в публичной спеке она
-                // светит внутреннюю структуру namespace'ов. По умолчанию не
-                // включаем; кому нужно — `laravel-api.expose_controller_class`.
+                // A controller's FQCN is a debugging detail: in a public spec
+                // it exposes the internal structure of the namespaces. It is off
+                // by default; whoever needs it has
+                // `laravel-api.expose_controller_class`.
                 if (config('laravel-api.expose_controller_class', false)) {
                     $description = trim($declaringClass . PHP_EOL . $description);
                 }
@@ -142,9 +143,10 @@ trait OpenApiTrait
 
                 $actionSecurity = is_array($value) ? Arr::get($value, 'security', []) : [];
 
-                // `@deprecated` живёт в docblock'е метода, а один контроллер
-                // может обслуживать несколько версий API — тогда пометить
-                // устаревшей нужно только одну. Для этого — флаг в getMethods().
+                // `@deprecated` lives in a method's docblock, while one
+                // controller may serve several API versions — and then only one
+                // of them has to be marked deprecated. That is what the flag in
+                // getMethods() is for.
                 $deprecated = static::isDeprecated($docBlock)
                     || (is_array($value) && (bool) Arr::get($value, 'deprecated', false))
                     || (bool) Arr::get($options, 'deprecated', false)
@@ -181,11 +183,12 @@ trait OpenApiTrait
     }
 
     /**
-     * Приводит текст docblock'а к виду, пригодному для публичной спеки.
+     * Brings a docblock's text into a shape fit for a public spec.
      *
-     * phpDocumentor отдаёт inline-теги как есть, и в OpenAPI они уезжают
-     * сырыми: `{@see \App\Foo::bar()}` читается как мусор, `{@inheritDoc}`
-     * — как пустое обещание. Разворачиваем в текст, ссылки оставляем URL'ом.
+     * phpDocumentor returns the inline tags as they are, and they travel into
+     * the OpenAPI raw: `{@see \App\Foo::bar()}` reads as rubbish and
+     * `{@inheritDoc}` as an empty promise. We unfold them into text and leave
+     * the links as URLs.
      *
      * @param  string|null  $text
      * @return string
@@ -198,10 +201,10 @@ trait OpenApiTrait
             return '';
         }
 
-        // {@inheritDoc} / {@inheritdoc} — раскрывать нечего, убираем.
+        // {@inheritDoc} / {@inheritdoc} — there is nothing to unfold, they are removed.
         $text = preg_replace('/\{@inheritdoc}/i', '', $text);
 
-        // {@link https://… описание} → «описание (https://…)» либо просто URL.
+        // {@link https://... description} → "description (https://...)", or just the URL.
         $text = preg_replace_callback(
             '/\{@link\s+(\S+)(?:\s+([^}]*))?}/i',
             static function (array $m): string {
@@ -213,8 +216,9 @@ trait OpenApiTrait
             (string) $text
         );
 
-        // {@see \Foo\Bar::baz()} → «Bar::baz()»: полный namespace в публичной
-        // документации не нужен, короткое имя оставляет смысл ссылки.
+        // {@see \Foo\Bar::baz()} → "Bar::baz()": a full namespace is not needed
+        // in public documentation, and the short name keeps the reference's
+        // meaning.
         $text = preg_replace_callback(
             '/\{@see\s+([^}\s]+)(?:\s+([^}]*))?}/i',
             static function (array $m): string {

@@ -28,14 +28,14 @@
         <div id="app"></div>
         <script src="{{ $documentationScript ?? 'https://cdn.jsdelivr.net/npm/@scalar/api-reference' }}"></script>
         <script>
-            // Спеки встраиваются как JS-литерал (Blade-директива json,
-            // JSON_HEX_APOS|JSON_HEX_QUOT). Раньше JSON клался в строку в
-            // ОДИНАРНЫХ кавычках: любой апостроф в описании версии
-            // («endpoint'ов», «caller's») ронял скрипт синтаксической
-            // ошибкой, а экранированный перенос строки — сам JSON.parse.
-            // Страница оставалась пустой, и даже fallback-список не
-            // строился — его наполнял тот же сломанный скрипт (теперь
-            // список рендерится на сервере).
+            // The specs are embedded as a JS literal (the Blade json
+            // directive, JSON_HEX_APOS|JSON_HEX_QUOT). The JSON used to be put
+            // into a string in SINGLE quotes: any apostrophe in a version's
+            // description ("caller's") brought the script down with a syntax
+            // error, and an escaped line break brought down JSON.parse itself.
+            // The page stayed empty, and even the fallback list was not built —
+            // it was filled by that same broken script (the list is now rendered
+            // on the server).
             var sources = @json($filesData).map(function (item) {
                 return { url: item.url, title: item.name };
             });

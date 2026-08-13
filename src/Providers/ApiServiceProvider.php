@@ -51,10 +51,11 @@ class ApiServiceProvider extends ServiceProvider
             return $this->getApiRequest();
         });
 
-        // Singleton, а не bind: обработчики исключений в него дописывают
-        // другие провайдеры (`ApiErrorHandler::addErrorHandler(...)` в их
-        // boot). С bind каждое разрешение возвращало новый объект — только с
-        // дефолтами из конструктора, а всё дописанное молча пропадало.
+        // A singleton rather than a bind: other providers append exception
+        // handlers to it (`ApiErrorHandler::addErrorHandler(...)` in their
+        // boot). With a bind every resolution returned a new object — with only
+        // the constructor's defaults — and everything appended vanished
+        // silently.
         $this->app->singleton('api_error_handler', function () {
             return $this->getApiErrorHandler();
         });
@@ -136,8 +137,8 @@ class ApiServiceProvider extends ServiceProvider
                     return ApiModule::makeApi();
                 })->name($definition['name'])
                     ->middleware(array_merge([$middlewareGroupName], $perActionMiddleware))
-                    // Через withoutMiddleware — он снимает и то, что пришло из
-                    // группы, а не только из собственного списка версии.
+                    // Through withoutMiddleware — it removes what came from
+                    // the group too, not only the version's own list.
                     ->withoutMiddleware((array) ($definition['exclude-middleware'] ?? []));
             }
 

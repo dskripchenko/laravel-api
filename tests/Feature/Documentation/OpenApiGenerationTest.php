@@ -132,8 +132,9 @@ it('keeps raw templates per API class across sequential generations', function (
 it('does not leak the controller FQCN into descriptions', function () {
     $config = TestApi::getOpenApiConfig('v1');
 
-    // Без пустой строки-разделителя phpDocumentor кладёт весь текст в summary,
-    // а description остаётся пустым — раньше в нём ехал один лишь FQCN.
+    // Without an empty separating line phpDocumentor puts the whole text into
+    // the summary and the description stays empty — it used to carry nothing but
+    // the FQCN.
     expect($config['paths']['/v1/item/list']['get']['description'])->toBe('');
     expect($config['paths']['/v1/item/list']['get']['summary'])
         ->not->toContain('Tests\\Fixtures')
@@ -164,7 +165,7 @@ it('unwraps inline docblock tags in descriptions', function () {
 it('marks an action deprecated from getMethods() config', function () {
     $config = DeprecatedAliasApi::getOpenApiConfig('legacy');
 
-    // Тот же контроллер в TestApi не помечен — флаг версии не протекает.
+    // The same controller in TestApi is not marked — the version's flag does not leak.
     expect($config['paths']['/legacy/open/ping']['get']['deprecated'])->toBeTrue();
     expect(TestApi::getOpenApiConfig('v1')['paths']['/v1/open/ping']['get'])
         ->not->toHaveKey('deprecated');
@@ -180,9 +181,9 @@ it('reads a description from the shorthand template syntax', function () {
         'format' => 'email',
         'description' => 'Contact email',
     ]);
-    // Обязательность и описание уживаются в одной строке.
+    // The requiredness and the description coexist on one line.
     expect($config['components']['schemas']['DescribedResponse']['required'])->toContain('id');
-    // Тип без описания остаётся как был.
+    // A type without a description stays as it was.
     expect($props['plain'])->toBe(['type' => 'string']);
 });
 

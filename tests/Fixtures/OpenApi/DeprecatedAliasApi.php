@@ -9,7 +9,7 @@ use Tests\Fixtures\Versions\v1\Controllers\OpenController;
 
 /**
  * Legacy alias API
- * Устаревший алиас: те же контроллеры, помеченные deprecated на уровне версии.
+ * A deprecated alias: the same controllers, marked deprecated at the version level.
  */
 class DeprecatedAliasApi extends BaseApi
 {
