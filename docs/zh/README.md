@@ -115,6 +115,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **TypeScript生成** | `api:generate-types` —— 从OpenAPI规范生成TS接口 |
 | **命名路由** | 每个操作注册为命名的 Laravel 路由 — `route('api.v1.user.list')` |
 | **API导出** | `api:export` —— Postman Collection、HTTP Client (.http)、Markdown、cURL |
+| **标记检查** | `api:lint` —— 发现改名的动作、指向空处的模板、未知类型 |
 | **测试助手** | `assertApiSuccess()`、`assertApiError()`、`assertApiValidationError()` |
 | **可发布配置** | `config/laravel-api.php` —— 前缀、URI模式、HTTP方法 |
 
@@ -329,7 +330,7 @@ class Api extends BaseApi {
 
 **简写语法：** `type` — 可选，`type!` — 必填，`type(format)` — 带格式，`@Model` — 引用，`@Model[]` — 引用数组。数组格式（`['type' => '...', 'required' => true]`）同样支持。
 
-> 完整标签参考：[docblock-tags.zh.md](docblock-tags.md) | 操作指南：[cookbook.zh.md](cookbook.md)
+> 完整标签参考：[docblock-tags.zh.md](docblock-tags.md) | 标记检查：[linting.md](linting.md) | 操作指南：[cookbook.zh.md](cookbook.md)
 
 ## CRUD脚手架
 
@@ -424,6 +425,20 @@ export interface UserShowOutput {
 ```
 
 组件 schema、操作输入和输出类型均会生成。详情参见 [cookbook.zh.md](cookbook.md#示例-8生成-typescript-接口)。
+
+## 标记检查
+
+标记是静默失败的：方法被改名的动作会返回 404 —— 与地址写错时相同的 404；引用了
+不存在模板的 `@response` 会生成指向空处的 `$ref`，而规范本身依然有效。
+
+```bash
+php artisan api:lint            # 报告
+php artisan api:lint --strict   # 用于 CI：警告也算失败
+php artisan api:lint --unrouted # 另外检查没有动作指向的公有方法
+```
+
+它用与 OpenAPI 生成器相同的解析器读取路由表和 docblock。完整规则列表：
+[linting.md](linting.md)。
 
 ## API 导出
 

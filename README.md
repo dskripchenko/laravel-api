@@ -117,6 +117,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **TypeScript generation** | `api:generate-types` — generates TS interfaces from OpenAPI spec |
 | **Named routes** | Each action registered as a named Laravel route — `route('api.v1.user.list')` |
 | **API export** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
+| **Markup linting** | `api:lint` — catches renamed actions, dangling templates, unknown types |
 | **Test helpers** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Publishable config** | `config/laravel-api.php` — prefix, URI pattern, HTTP methods |
 
@@ -175,7 +176,7 @@ Every response is wrapped in a standard envelope:
 ```
 src/
 ├── Components/        BaseApi, BaseModule, Meta
-├── Console/Commands/  ApiInstall, ApiGenerateTypes, BaseCommand
+├── Console/Commands/  ApiInstall, ApiGenerateTypes, ApiExport, ApiDocClear, ApiLint
 ├── Controllers/       ApiController, CrudController, ApiDocumentationController
 ├── Exceptions/        ApiException, ApiErrorHandler, Handler
 ├── Facades/        ApiRequest, ApiModule, ApiErrorHandler
@@ -354,7 +355,7 @@ class Api extends BaseApi {
 
 Array format (`['type' => 'string', 'required' => true]`) is also supported and can be mixed with shorthand in the same template.
 
-> Full tag reference: [docs/docblock-tags.md](docs/en/docblock-tags.md) | Cookbook: [docs/cookbook.md](docs/en/cookbook.md)
+> Full tag reference: [docs/docblock-tags.md](docs/en/docblock-tags.md) | Linting: [docs/linting.md](docs/en/linting.md) | Cookbook: [docs/cookbook.md](docs/en/cookbook.md)
 
 ## CRUD Scaffolding
 
@@ -454,6 +455,21 @@ export interface UserShowOutput {
 ```
 
 Component schemas, operation inputs, and outputs are all generated. See [docs/cookbook.md](docs/en/cookbook.md#recipe-8-generate-typescript-interfaces) for details.
+
+## Linting
+
+The markup fails quietly: an action whose method was renamed answers 404 — the
+same 404 as a wrong URL — and a `@response` naming a template that does not
+exist becomes a `$ref` into nothing, in a spec that still validates.
+
+```bash
+php artisan api:lint            # report
+php artisan api:lint --strict   # fail on warnings too, for CI
+php artisan api:lint --unrouted # also: public methods no action points at
+```
+
+It reads the route map and the docblocks with the same parser the OpenAPI
+generator uses. Full list of rules: [docs/linting.md](docs/en/linting.md).
 
 ## API Export
 

@@ -115,6 +115,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Генерация TypeScript** | `api:generate-types` — генерирует TS-интерфейсы из OpenAPI-спецификации |
 | **Именованные маршруты** | Каждый action регистрируется как именованный Laravel-маршрут — `route('api.v1.user.list')` |
 | **Экспорт API** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
+| **Проверка разметки** | `api:lint` — ловит переименованные действия, ссылки на несуществующие шаблоны, неизвестные типы |
 | **Помощники тестирования** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Публикуемая конфигурация** | `config/laravel-api.php` — префикс, шаблон URI, HTTP методы |
 
@@ -329,7 +330,7 @@ class Api extends BaseApi {
 
 **Shorthand-синтаксис:** `type` — необязательное, `type!` — обязательное, `type(format)` — с форматом, `@Model` — ссылка, `@Model[]` — массив ссылок. Также поддерживается формат массивов (`['type' => '...', 'required' => true]`).
 
-> Полный справочник тегов: [docblock-tags.ru.md](docblock-tags.md) | Рецепты: [cookbook.ru.md](cookbook.md)
+> Полный справочник тегов: [docblock-tags.ru.md](docblock-tags.md) | Проверка разметки: [linting.md](linting.md) | Рецепты: [cookbook.ru.md](cookbook.md)
 
 ## CRUD скаффолдинг
 
@@ -424,6 +425,21 @@ export interface UserShowOutput {
 ```
 
 Генерируются схемы компонентов, входные и выходные типы операций. Подробности в [cookbook.ru.md](cookbook.md#рецепт-8-генерация-typescript-интерфейсов).
+
+## Проверка разметки
+
+Разметка ошибается молча: у действия с переименованным методом — 404, тот же
+самый, что и на опечатку в адресе, а `@response` со ссылкой на несуществующий
+шаблон даёт `$ref` в никуда, причём спецификация остаётся валидной.
+
+```bash
+php artisan api:lint            # отчёт
+php artisan api:lint --strict   # для CI: провал и на предупреждениях
+php artisan api:lint --unrouted # плюс публичные методы, на которые никто не ведёт
+```
+
+Читает карту маршрутов и докблоки тем же парсером, что и генератор OpenAPI.
+Полный список правил: [linting.md](linting.md).
 
 ## Экспорт API
 

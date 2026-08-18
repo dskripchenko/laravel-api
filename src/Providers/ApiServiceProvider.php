@@ -6,6 +6,7 @@ use Dskripchenko\LaravelApi\Console\Commands\ApiDocClear;
 use Dskripchenko\LaravelApi\Console\Commands\ApiExport;
 use Dskripchenko\LaravelApi\Console\Commands\ApiGenerateTypes;
 use Dskripchenko\LaravelApi\Console\Commands\ApiInstall;
+use Dskripchenko\LaravelApi\Console\Commands\ApiLint;
 use Dskripchenko\LaravelApi\Controllers\ApiDocumentationController;
 use Dskripchenko\LaravelApi\Exceptions\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Exceptions\Handler;
@@ -71,6 +72,7 @@ class ApiServiceProvider extends ServiceProvider
                 ApiGenerateTypes::class,
                 ApiExport::class,
                 ApiDocClear::class,
+                ApiLint::class,
             ]
         );
 

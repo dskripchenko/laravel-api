@@ -115,6 +115,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **TypeScript-Generierung** | `api:generate-types` — generiert TS-Interfaces aus der OpenAPI-Spezifikation |
 | **Benannte Routen** | Jede Action wird als benannte Laravel-Route registriert — `route('api.v1.user.list')` |
 | **API-Export** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
+| **Prüfung der Auszeichnung** | `api:lint` — findet umbenannte Aktionen, ins Leere zeigende Templates, unbekannte Typen |
 | **Test-Helfer** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Veröffentlichbare Konfiguration** | `config/laravel-api.php` — Präfix, URI-Muster, HTTP-Methoden |
 
@@ -329,7 +330,7 @@ class Api extends BaseApi {
 
 **Shorthand-Syntax:** `type` — optional, `type!` — Pflicht, `type(format)` — mit Format, `@Model` — Referenz, `@Model[]` — Array von Referenzen. Das Array-Format (`['type' => '...', 'required' => true]`) wird ebenfalls unterstützt.
 
-> Vollständige Tag-Referenz: [docblock-tags.de.md](docblock-tags.md) | Rezepte: [cookbook.de.md](cookbook.md)
+> Vollständige Tag-Referenz: [docblock-tags.de.md](docblock-tags.md) | Prüfung: [linting.md](linting.md) | Rezepte: [cookbook.de.md](cookbook.md)
 
 ## CRUD-Gerüstbau
 
@@ -424,6 +425,22 @@ export interface UserShowOutput {
 ```
 
 Komponentenschemata, Eingabe- und Ausgabetypen werden generiert. Details in [cookbook.de.md](cookbook.md#rezept-8-typescript-interfaces-generieren).
+
+## Prüfung der Auszeichnung
+
+Die Auszeichnung scheitert lautlos: eine Aktion mit umbenannter Methode
+antwortet mit 404 — demselben 404 wie eine falsche URL —, und ein `@response`
+mit einem nicht existierenden Template wird zu einem `$ref` ins Leere, während
+die Spezifikation valide bleibt.
+
+```bash
+php artisan api:lint            # Bericht
+php artisan api:lint --strict   # für CI: auch Warnungen sind ein Fehlschlag
+php artisan api:lint --unrouted # zusätzlich: öffentliche Methoden ohne Aktion
+```
+
+Liest Routen-Tabelle und Docblocks mit demselben Parser wie der
+OpenAPI-Generator. Vollständige Regelliste: [linting.md](linting.md).
 
 ## API-Export
 

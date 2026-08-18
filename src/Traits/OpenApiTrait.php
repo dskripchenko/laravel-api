@@ -3,6 +3,7 @@
 namespace Dskripchenko\LaravelApi\Traits;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Services\OpenApi\DocPatterns;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
@@ -468,7 +469,7 @@ trait OpenApiTrait
      */
     private static function getDocInputOutputPattern()
     {
-        return '/^(?<type>[\S]*?)(?:\((?<format>[a-zA-Z0-9\-]+)\))?[\s]*+(?<optional>\?)?\$(?<variable>[\S]*+)([\s]*?(?<description>\S[\S\s]*?))?$/';
+        return DocPatterns::inputOutput();
     }
 
     /**
@@ -476,7 +477,7 @@ trait OpenApiTrait
      */
     private static function getDocInputOutputTemplatePattern()
     {
-        return '/{(?<template>[\S]*?)}(?<description>[\s\S]*?)$/';
+        return DocPatterns::inputOutputTemplate();
     }
 
     /**
@@ -484,7 +485,7 @@ trait OpenApiTrait
      */
     private static function getDocInputsCallablePattern()
     {
-        return '/^\[(?<callable>[\S]*?)\]$/';
+        return DocPatterns::inputsCallable();
     }
 
     /**
@@ -492,7 +493,7 @@ trait OpenApiTrait
      */
     private static function getDocModelRefPattern()
     {
-        return '/^@(?<model>[\w]+)(?<isArray>\[\])?\s*(?:(?<optional>\?)?\$(?<variable>[\S]+)(?:\s+(?<description>.+))?)?$/';
+        return DocPatterns::modelRef();
     }
 
     /**
@@ -500,7 +501,7 @@ trait OpenApiTrait
      */
     private static function getDocResponsePattern()
     {
-        return '/^(?<code>\d{3})\s+(?:(?<template>\{[\S]*?\})|(?<description>.+))$/';
+        return DocPatterns::response();
     }
 
     /**
@@ -508,7 +509,7 @@ trait OpenApiTrait
      */
     private static function getDocDefaultExamplePattern()
     {
-        return '/^\$(?<variable>[\S]+)\s+(?<value>.+)$/';
+        return DocPatterns::defaultExample();
     }
 
     /**
@@ -516,7 +517,7 @@ trait OpenApiTrait
      */
     private static function getAvailableDataTypes()
     {
-        return ['string', 'file', 'number', 'integer', 'boolean', 'array', 'object'];
+        return DocPatterns::availableDataTypes();
     }
 
     /**

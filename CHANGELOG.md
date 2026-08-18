@@ -5,6 +5,44 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.7.0] — 2026-08-18
+
+### Added
+- **`api:lint` — a check for the mistakes this package makes silently.**
+
+  Every defect it looks for has the same shape: the application boots, the tests
+  pass, and the damage reaches whoever consumes the API. An action whose
+  controller method was renamed answers 404 — the same 404 as a mistyped URL, so
+  nothing distinguishes "this endpoint is gone" from "someone asked for
+  nonsense". A type outside the known set silently becomes `string`. A
+  `@response 200 {UserResponse}` naming a template that was never defined
+  becomes a `$ref` pointing at nothing, in a spec that still validates.
+
+  The command reads the route map and the docblock markup with the very same
+  parser the OpenAPI generator uses — a linter that agreed with itself but not
+  with the generator would be worse than none — and reports 28 rules across the
+  map (missing or unreachable methods, unknown verbs, absent controller and
+  middleware classes) and the markup (unparseable tags, dangling template and
+  security references, unknown types, orphaned dot-notation, duplicate variables
+  and status codes, stray `@default`/`@example`).
+
+  `--strict` fails on warnings too, which makes it a CI step; `--json` emits the
+  report for tooling; `--api-version` narrows it to one version. `--unrouted`
+  adds the check for public controller methods no action points at — off by
+  default, because a controller may hold helpers that were never meant to be
+  endpoints, and the command says out loud when it was skipped rather than
+  letting a clean report imply more coverage than it had.
+
+  Available in code as well: `OpenApiLinter::lint()`, or `lintVersionList()` for
+  an explicit map. Documented in `docs/{en,ru,de,zh}/linting.md`.
+
+### Changed
+- The docblock grammar moved to `Services\OpenApi\DocPatterns`, where the
+  generator and the linter share it. The expressions used to be private to
+  `OpenApiTrait`, so a second reader had no way to see them; two copies would
+  have drifted, and the drift would have been invisible — the linter passing
+  what the generator mangles. Behaviour is unchanged.
+
 ## [5.6.2] — 2026-08-17
 
 ### Changed
