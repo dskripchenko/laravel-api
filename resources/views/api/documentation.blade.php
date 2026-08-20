@@ -36,8 +36,11 @@
             // The page stayed empty, and even the fallback list was not built —
             // it was filled by that same broken script (the list is now rendered
             // on the server).
+            // `slug` is passed explicitly: left to itself Scalar slugifies the
+            // title, and the title is prose from a docblock. Every deep link
+            // into this page would then break on a reworded sentence.
             var sources = @json($filesData).map(function (item) {
-                return { url: item.url, title: item.name };
+                return { url: item.url, title: item.name, slug: item.slug };
             });
             if (typeof Scalar !== 'undefined' && Scalar.createApiReference) {
                 Scalar.createApiReference('#app', { sources: sources });

@@ -330,6 +330,25 @@ class Api extends BaseApi {
 
 **Shorthand-Syntax:** `type` — optional, `type!` — Pflicht, `type(format)` — mit Format, `@Model` — Referenz, `@Model[]` — Array von Referenzen. Das Array-Format (`['type' => '...', 'required' => true]`) wird ebenfalls unterstützt.
 
+### Link auf einen einzelnen Endpunkt
+
+Die Referenzseite adressiert jede Operation über einen Hash, und `DocLink` baut
+ihn, ohne einen Browser zu öffnen — für ein Ticket, eine README oder die IDE:
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
+
+DocLink::url('v1', 'order', 'create', 'post');
+// https://example.test/api/doc#v1/tag/order/POST/v1/order/create
+
+DocLink::anchor('v1', 'order', 'create', 'post');  // nur der Hash, ohne '#'
+```
+
+Das erste Segment ist die API-Version, und das ist Absicht: der Seite wird pro
+Version ein expliziter Slug übergeben, damit ein Link es überlebt, wenn die
+erste Zeile des Docblocks umformuliert wird. Eine Action mit mehreren
+HTTP-Methoden ergibt mehrere Operationen auf der Seite — je einen Anker.
+
 > Vollständige Tag-Referenz: [docblock-tags.de.md](docblock-tags.md) | Prüfung: [linting.md](linting.md) | Rezepte: [cookbook.de.md](cookbook.md)
 
 ## CRUD-Gerüstbau

@@ -330,6 +330,25 @@ class Api extends BaseApi {
 
 **Shorthand-синтаксис:** `type` — необязательное, `type!` — обязательное, `type(format)` — с форматом, `@Model` — ссылка, `@Model[]` — массив ссылок. Также поддерживается формат массивов (`['type' => '...', 'required' => true]`).
 
+### Ссылка на конкретный метод
+
+Страница документации адресует каждую операцию хешем, и `DocLink` собирает его,
+не открывая браузер — для задачи в трекере, README или IDE:
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
+
+DocLink::url('v1', 'order', 'create', 'post');
+// https://example.test/api/doc#v1/tag/order/POST/v1/order/create
+
+DocLink::anchor('v1', 'order', 'create', 'post');  // только хеш, без '#'
+```
+
+Первый сегмент — версия API, и это сделано намеренно: странице передаётся явный
+слаг на каждую версию, поэтому ссылка переживает переписывание первой строки
+докблока. Действие с несколькими HTTP-методами — это несколько операций на
+странице, по якорю на каждую.
+
 > Полный справочник тегов: [docblock-tags.ru.md](docblock-tags.md) | Проверка разметки: [linting.md](linting.md) | Рецепты: [cookbook.ru.md](cookbook.md)
 
 ## CRUD скаффолдинг

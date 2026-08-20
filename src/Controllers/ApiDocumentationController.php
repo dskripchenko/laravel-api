@@ -4,6 +4,7 @@ namespace Dskripchenko\LaravelApi\Controllers;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
@@ -43,6 +44,12 @@ class ApiDocumentationController extends Controller
             $filesData[] = [
                 'url'  => route('api-doc-source', ['version' => $version]) . '?r=' . $this->cacheStamp($version),
                 'name' => ($config['info']['title'] ?? '') ?: $version,
+                // Without this Scalar derives the slug from the title, and the
+                // title is the first line of a docblock: reword it and every
+                // link into the page — bookmarks, tickets, the IDE's — points
+                // at nothing, silently. The version's own name is what the URL
+                // already carries, so it costs a reader nothing to recognise.
+                'slug' => DocLink::documentSlug($version),
             ];
         }
 

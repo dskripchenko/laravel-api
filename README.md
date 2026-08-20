@@ -355,6 +355,25 @@ class Api extends BaseApi {
 
 Array format (`['type' => 'string', 'required' => true]`) is also supported and can be mixed with shorthand in the same template.
 
+### Linking to a single endpoint
+
+The reference page addresses every operation by a hash, and `DocLink` builds it
+without opening a browser — for a ticket, a README, or an IDE:
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
+
+DocLink::url('v1', 'order', 'create', 'post');
+// https://example.test/api/doc#v1/tag/order/POST/v1/order/create
+
+DocLink::anchor('v1', 'order', 'create', 'post');  // the hash alone, without '#'
+```
+
+The first segment is the API version, and it is deliberate: the page is handed
+an explicit slug per version, so a link survives the docblock summary being
+reworded. An action declaring several HTTP methods is several operations on the
+page — one anchor each.
+
 > Full tag reference: [docs/docblock-tags.md](docs/en/docblock-tags.md) | Linting: [docs/linting.md](docs/en/linting.md) | Cookbook: [docs/cookbook.md](docs/en/cookbook.md)
 
 ## CRUD Scaffolding

@@ -330,6 +330,24 @@ class Api extends BaseApi {
 
 **简写语法：** `type` — 可选，`type!` — 必填，`type(format)` — 带格式，`@Model` — 引用，`@Model[]` — 引用数组。数组格式（`['type' => '...', 'required' => true]`）同样支持。
 
+### 链接到单个接口
+
+文档页面通过哈希定位每个操作，`DocLink` 无需打开浏览器即可生成它——可用于工单、
+README 或 IDE：
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
+
+DocLink::url('v1', 'order', 'create', 'post');
+// https://example.test/api/doc#v1/tag/order/POST/v1/order/create
+
+DocLink::anchor('v1', 'order', 'create', 'post');  // 仅哈希，不含 '#'
+```
+
+第一段是 API 版本，这是有意为之：页面会为每个版本传入显式 slug，因此改写 docblock
+的首行不会让链接失效。声明了多个 HTTP 方法的 action 在页面上就是多个操作——每个
+方法对应一个锚点。
+
 > 完整标签参考：[docblock-tags.zh.md](docblock-tags.md) | 标记检查：[linting.md](linting.md) | 操作指南：[cookbook.zh.md](cookbook.md)
 
 ## CRUD脚手架

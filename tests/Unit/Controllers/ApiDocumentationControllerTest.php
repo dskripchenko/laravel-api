@@ -108,6 +108,31 @@ it('keeps hidden versions out of the reference index', function () {
     expect(implode(' ', $names))->toContain('v1')->not->toContain('v2');
 });
 
+it('hands the page a slug per version, so deep links do not hang off prose', function () {
+    Storage::fake();
+
+    $data = (new ApiDocumentationController())->index()->getData();
+    $slugs = array_column($data['filesData'], 'slug');
+
+    // Left to itself Scalar slugifies the title — the first line of a docblock.
+    // Rewording that sentence would break every link into the page silently.
+    expect($slugs)->toContain('v1')->toContain('v2');
+});
+
+it('renders the slug into the sources the page is built from', function () {
+    $html = view('api_module::api/documentation', [
+        'filesData' => [[
+            'url' => '/openapi/v1.json',
+            'name' => 'Some API — the title may say anything',
+            'slug' => 'v1',
+        ]],
+        'documentationScript' => '/vendor/scalar/api-reference.js',
+    ])->render();
+
+    expect($html)->toContain('slug: item.slug')
+        ->and($html)->toContain('"slug":"v1"');
+});
+
 it('still serves a hidden version by direct URL', function () {
     Storage::fake();
     config()->set('laravel-api.hidden_versions', ['v2']);

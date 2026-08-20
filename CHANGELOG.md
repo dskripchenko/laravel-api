@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.8.0] — 2026-08-20
+
+### Added
+
+- **`DocLink` — a link to one endpoint on the reference page.** The page has
+  always been able to address a single operation; nothing outside it could build
+  that address. `DocLink::url('v1', 'order', 'create', 'post')` now returns
+  `…/api/doc#v1/tag/order/POST/v1/order/create`, and `DocLink::anchor()` returns
+  the hash alone — for a ticket, a README, or an IDE that wants to open the
+  documentation of the method under the caret.
+
+### Changed
+
+- **The reference page is handed an explicit slug per version.** Left to itself
+  the renderer derives it from `info.title`, which is the first line of the API
+  class's docblock: rewording that sentence used to change every deep link into
+  the page, silently and with no way to notice. The slug is now the version's
+  own name — the thing the URL already carries.
+
+  This changes existing hash links once: `#printable-integration-api/tag/…`
+  becomes `#integration/tag/…`. Bookmarks pointing at the old form land on the
+  page rather than on the operation. It is the last time they move.
+
+  A dotted version reads as it is written — `v1.1` becomes `v1-1`, not `v11`.
+
 ## 5.7.1
 
 ### Fixed
