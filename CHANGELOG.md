@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.9.1] — 2026-08-20
+
+### Fixed
+
+- **The cURL export sent `Authorization` whatever the scheme said.** Right for
+  most APIs and silently wrong for the rest: the exported command carried a
+  header the application does not read, came back 401, and looked like a bad
+  credential rather than a bad export. The scheme names its header; nothing has
+  to be assumed. Found by exporting a real endpoint of an API whose credential
+  travels in `Token`.
+
+- **A Bruno value that is empty no longer leaves a trailing space** — invisible
+  in a diff, and the first thing a linter complains about in a collection that
+  is committed.
+
 ## [5.9.0] — 2026-08-20
 
 ### Added

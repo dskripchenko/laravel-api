@@ -162,3 +162,50 @@ it('handles urlencoded body', function () {
 
     expect($result)->toContain('-d "name="');
 });
+
+it('sends the header the security scheme actually declares', function () {
+    $config = [
+        'info' => ['title' => 'Test', 'description' => ''],
+        'servers' => [['url' => 'http://localhost/api']],
+        'components' => [
+            'securitySchemes' => [
+                'CredentialToken' => ['type' => 'apiKey', 'name' => 'Token', 'in' => 'header'],
+            ],
+        ],
+        'paths' => [
+            '/v1/order/create' => [
+                'post' => [
+                    'summary' => 'Create',
+                    'tags' => ['order'],
+                    'security' => [['CredentialToken' => []]],
+                    'responses' => [],
+                ],
+            ],
+        ],
+    ];
+
+    $script = (new \Dskripchenko\LaravelApi\Services\Export\CurlExporter())->export($config, 'v1');
+
+    // It used to be `Authorization`, always: the exported command sent a header
+    // the application does not read, came back 401, and looked like a bad
+    // credential.
+    expect($script)->toContain('-H "Token: ${TOKEN}"')
+        ->and($script)->not->toContain('-H "Authorization: ${TOKEN}"');
+});
+
+it('falls back to Authorization when the scheme is not a header key', function () {
+    $config = [
+        'info' => ['title' => 'Test', 'description' => ''],
+        'servers' => [['url' => 'http://localhost/api']],
+        'components' => ['securitySchemes' => ['Bearer' => ['type' => 'http', 'scheme' => 'bearer']]],
+        'paths' => [
+            '/v1/order/create' => [
+                'post' => ['summary' => 'Create', 'tags' => ['order'], 'security' => [['Bearer' => []]], 'responses' => []],
+            ],
+        ],
+    ];
+
+    $script = (new \Dskripchenko\LaravelApi\Services\Export\CurlExporter())->export($config, 'v1');
+
+    expect($script)->toContain('-H "Authorization: ${TOKEN}"');
+});

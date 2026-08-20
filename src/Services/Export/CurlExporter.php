@@ -31,11 +31,44 @@ class CurlExporter implements Exporter
 
         foreach ($paths as $path => $methods) {
             foreach ($methods as $httpMethod => $operation) {
-                $lines[] = $this->buildCurl($path, $httpMethod, $operation);
+                $lines[] = $this->buildCurl($path, $httpMethod, $operation, $openApiConfig);
             }
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * The headers the operation's declared security schemes are carried in.
+     *
+     * It used to be `Authorization`, always — which is right for most APIs and
+     * silently wrong for the rest: an exported command sent a header the
+     * application does not read, came back 401, and looked like a bad
+     * credential. The scheme says which header it is; nothing has to be assumed.
+     *
+     * @param array $operation
+     * @param array $openApiConfig
+     * @return list<string>
+     */
+    private function securityHeaders(array $operation, array $openApiConfig): array
+    {
+        $headers = [];
+
+        foreach (Arr::get($operation, 'security', []) as $requirement) {
+            foreach (array_keys((array) $requirement) as $scheme) {
+                $definition = Arr::get($openApiConfig, "components.securitySchemes.{$scheme}", []);
+
+                $name = Arr::get($definition, 'type') === 'apiKey' && Arr::get($definition, 'in') === 'header'
+                    ? (string) Arr::get($definition, 'name', 'Authorization')
+                    : 'Authorization';
+
+                if (!in_array($name, $headers, true)) {
+                    $headers[] = $name;
+                }
+            }
+        }
+
+        return $headers;
     }
 
     /**
@@ -44,7 +77,7 @@ class CurlExporter implements Exporter
      * @param array $operation
      * @return string
      */
-    private function buildCurl(string $path, string $httpMethod, array $operation): string
+    private function buildCurl(string $path, string $httpMethod, array $operation, array $openApiConfig = []): string
     {
         $summary = Arr::get($operation, 'summary', $path);
         $method = strtoupper($httpMethod);
@@ -72,9 +105,8 @@ class CurlExporter implements Exporter
             $url .= '?' . implode('&', $queryParams);
         }
 
-        $hasSecurity = !empty(Arr::get($operation, 'security', []));
-        if ($hasSecurity) {
-            $parts[] = '  -H "Authorization: ${TOKEN}"';
+        foreach ($this->securityHeaders($operation, $openApiConfig) as $header) {
+            $parts[] = '  -H "' . $header . ': ${TOKEN}"';
         }
 
         $requestBody = Arr::get($operation, 'requestBody.content', []);

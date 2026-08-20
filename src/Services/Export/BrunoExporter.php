@@ -321,7 +321,12 @@ class BrunoExporter implements MultiFileExporter
         $lines = ["{$name} {"];
 
         foreach ($pairs as $key => $value) {
-            $lines[] = "  {$key}: " . $this->oneLine((string) $value);
+            $written = $this->oneLine((string) $value);
+
+            // No trailing space on an empty value: it is invisible in a diff
+            // and the first thing a linter complains about in a committed
+            // collection.
+            $lines[] = $written === '' ? "  {$key}:" : "  {$key}: {$written}";
         }
 
         $lines[] = "}\n";
