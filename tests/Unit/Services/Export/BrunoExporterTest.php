@@ -149,3 +149,44 @@ it('exports a real generated spec without falling over', function () {
     expect($files)->toHaveKey('bruno.json')
         ->and(count($files))->toBeGreaterThan(2);
 });
+
+it('writes a field whose example is an object or an array', function () {
+    // `object` and `array` are ordinary documented types, and casting their
+    // example to a string is a fatal error. Found by exporting a real
+    // application's whole spec — every fixture example here had been a scalar.
+    $spec = brunoSpec();
+    $spec['paths']['/v1/user/save']['post']['requestBody']['content'] = [
+        'application/x-www-form-urlencoded' => [
+            'schema' => [
+                'properties' => [
+                    'tags' => ['type' => 'array'],
+                    'meta' => ['type' => 'object'],
+                    'name' => ['type' => 'string', 'example' => 'Ada'],
+                    'active' => ['type' => 'boolean', 'example' => true],
+                ],
+            ],
+        ],
+    ];
+
+    $request = (new BrunoExporter())->files($spec, 'v1')['user/save-post.bru'];
+
+    expect($request)->toContain('body: form-urlencoded')
+        ->and($request)->toContain('tags: []')
+        ->and($request)->toContain('meta: {}')
+        ->and($request)->toContain('name: Ada')
+        ->and($request)->toContain('active: true');
+});
+
+it('writes a query parameter whose example is not a scalar', function () {
+    $spec = brunoSpec();
+    $spec['paths']['/v1/user/list']['get']['parameters'][] = [
+        'name' => 'ids',
+        'in' => 'query',
+        'schema' => ['type' => 'array'],
+        'example' => [1, 2],
+    ];
+
+    $request = (new BrunoExporter())->files($spec, 'v1')['user/list.bru'];
+
+    expect($request)->toContain('ids: [1,2]');
+});

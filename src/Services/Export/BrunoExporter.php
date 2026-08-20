@@ -174,7 +174,7 @@ class BrunoExporter implements MultiFileExporter
         $url = '{{baseUrl}}' . $operation['path'];
 
         if (!empty($query)) {
-            $url .= '?' . http_build_query(array_map(static fn ($value) => (string) $value, $query));
+            $url .= '?' . http_build_query(array_map(fn ($value) => $this->stringify($value), $query));
         }
 
         $blocks = [];
@@ -269,7 +269,7 @@ class BrunoExporter implements MultiFileExporter
             foreach ($properties as $name => $property) {
                 $lines[] = Arr::get($property, 'format') === 'binary'
                     ? "  {$name}: @file()"
-                    : "  {$name}: " . $this->oneLine((string) $this->exampleValue($property));
+                    : "  {$name}: " . $this->oneLine($this->stringify($this->exampleValue($property)));
             }
 
             return ['mode' => 'multipart-form', 'content' => implode("\n", $lines)];
@@ -280,7 +280,7 @@ class BrunoExporter implements MultiFileExporter
             $lines = [];
 
             foreach ($properties as $name => $property) {
-                $lines[] = "  {$name}: " . $this->oneLine((string) $this->exampleValue($property));
+                $lines[] = "  {$name}: " . $this->oneLine($this->stringify($this->exampleValue($property)));
             }
 
             return ['mode' => 'form-urlencoded', 'content' => implode("\n", $lines)];
@@ -321,7 +321,7 @@ class BrunoExporter implements MultiFileExporter
         $lines = ["{$name} {"];
 
         foreach ($pairs as $key => $value) {
-            $written = $this->oneLine((string) $value);
+            $written = $this->oneLine($this->stringify($value));
 
             // No trailing space on an empty value: it is invisible in a diff
             // and the first thing a linter complains about in a committed
@@ -342,6 +342,40 @@ class BrunoExporter implements MultiFileExporter
         ));
 
         return "{$name} {\n{$indented}\n}\n";
+    }
+
+    /**
+     * Anything a spec can carry, as text a `.bru` line can hold.
+     *
+     * `object` and `array` are ordinary types in a documented field, and their
+     * example values are an object and an array. Casting those to a string is
+     * a fatal error in PHP, which is exactly what happened the first time this
+     * ran over a real application's whole spec rather than over a fixture whose
+     * examples were all scalars.
+     *
+     * @param  mixed  $value
+     */
+    private function stringify($value): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if ($value === null) {
+            return '';
+        }
+
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+
+        // Compact rather than pretty: a `.bru` value is one line, and a
+        // multi-line JSON here would end the value at its first newline.
+        return (string) json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     /**

@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.9.2] — 2026-08-20
+
+### Fixed
+
+- **A Bruno export died on a field whose example is not a scalar.** `object` and
+  `array` are ordinary documented types, their example values are an object and
+  an array, and casting either to a string is a fatal error in PHP — so the
+  export of any version containing one produced nothing at all.
+
+  Found by exporting a real application's whole spec rather than a fixture: all
+  685 of its operations now export, and every example that is not a scalar is
+  written as compact JSON, on the one line a `.bru` value gets.
+
 ## [5.9.1] — 2026-08-20
 
 ### Fixed
