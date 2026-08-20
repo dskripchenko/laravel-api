@@ -1,0 +1,47 @@
+# Releases, from the changelog, on the tag.
+#
+# Made automatic because the manual version stopped happening: the tags ran six
+# versions ahead of the releases page, so anyone reading it saw a package that
+# looked untouched for two weeks while it was being worked on daily.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Take the notes out of the changelog
+        run: |
+          python3 - <<'PY' > notes.md
+          import os, re, pathlib
+
+          version = os.environ['GITHUB_REF_NAME'].lstrip('v')
+          lines = pathlib.Path('CHANGELOG.md').read_text(encoding='utf-8').split('\n')
+          heads = [(i, line) for i, line in enumerate(lines) if line.startswith('## ')]
+
+          for index, (start, line) in enumerate(heads):
+              # Both spellings are in the file: `## [5.9.1] — date` and `## 5.7.1`.
+              if re.match(r'^## \[?' + re.escape(version) + r'\]?( |$)', line):
+                  end = heads[index + 1][0] if index + 1 < len(heads) else len(lines)
+                  print('\n'.join(lines[start + 1:end]).strip())
+                  break
+          else:
+              # Deliberately fatal: a release with no notes is the thing this
+              # workflow exists to stop happening.
+              raise SystemExit(f'CHANGELOG.md says nothing about {version}')
+          PY
+
+      - name: Publish it
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
