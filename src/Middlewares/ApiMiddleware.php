@@ -30,6 +30,14 @@ abstract class ApiMiddleware
                 'message' => $e->getMessage(),
             ]);
         } catch (Exception $e) {
+            // An ApiException above is a refusal the application meant to give;
+            // this one is not. Until now it produced a 500 whose body says
+            // nothing and left no trace anywhere: not in the log, not in the
+            // exception handler, nowhere. Whoever met it had the response and
+            // nothing else. `report()` goes through the framework's handler, so
+            // `dontReport` and every logging channel keep working as declared.
+            report($e);
+
             $message = app()->hasDebugModeEnabled()
                 ? $e->getMessage()
                 : 'Internal server error';

@@ -93,6 +93,12 @@ class ApiErrorHandler
         $handle = $this->findHandler($e);
         if (!$handle) {
             $handle = static function (Throwable $e) {
+                // Nothing here knows what this exception is — which is exactly
+                // why it has to be reported before it becomes a bare 500. A
+                // registered handler means the application expected this and
+                // says so itself; the fallback means nobody did.
+                report($e);
+
                 $message = app()->hasDebugModeEnabled()
                     ? $e->getMessage()
                     : 'Internal server error';

@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.7.1
+
+### Fixed
+
+- **An exception nobody declared a handler for is now reported before it becomes
+  a 500.** It used to vanish: the caller got `{"message": "Internal server
+  error"}` and nothing was written anywhere — not to the log, not through the
+  framework's exception handler, which never saw it at all.
+
+  Found on a staging environment that answered 500 for three nights running.
+  The response was the only evidence there was, and it named nothing; the cause
+  turned out to be a domain rule refusing a deletion, a sentence long and
+  perfectly clear, thrown from a model and swallowed whole.
+
+  Reporting goes through `report()`, so `dontReport`, channels and every other
+  logging decision the application has already made keep applying. An exception
+  with a registered handler is left alone: a declared refusal is normal
+  operation, and logging it would bury the log in it.
+
 ## [5.7.0] — 2026-08-18
 
 ### Added

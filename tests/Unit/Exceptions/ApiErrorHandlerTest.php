@@ -116,3 +116,76 @@ it('handles exception with empty message', function () {
     expect($data['payload']['errorKey'])->toBe('empty');
     expect($data['payload']['message'])->toBe('');
 });
+
+it('reports an exception nobody declared a handler for', function () {
+    // The defect: a 500 whose body says "Internal server error" and whose cause
+    // is written down nowhere. A stand answered 500 for three nights running
+    // and the log had nothing to say about it — the exception never reached the
+    // framework's handler at all.
+    $reported = [];
+    app()->instance(
+        \Illuminate\Contracts\Debug\ExceptionHandler::class,
+        new class($reported) implements \Illuminate\Contracts\Debug\ExceptionHandler
+        {
+            public function __construct(public array &$seen) {}
+
+            public function report(\Throwable $e): void
+            {
+                $this->seen[] = $e;
+            }
+
+            public function shouldReport(\Throwable $e): bool
+            {
+                return true;
+            }
+
+            public function render($request, \Throwable $e)
+            {
+                return new \Illuminate\Http\Response();
+            }
+
+            public function renderForConsole($output, \Throwable $e): void {}
+        }
+    );
+
+    (new ApiErrorHandler())->handle(new \RuntimeException('the cause nobody could see'));
+
+    expect($reported)->toHaveCount(1);
+    expect($reported[0]->getMessage())->toBe('the cause nobody could see');
+});
+
+it('leaves a declared refusal alone', function () {
+    // A handler means the application expected this and answers for it. Sending
+    // it to the log too would fill the log with normal operation.
+    $reported = [];
+    app()->instance(
+        \Illuminate\Contracts\Debug\ExceptionHandler::class,
+        new class($reported) implements \Illuminate\Contracts\Debug\ExceptionHandler
+        {
+            public function __construct(public array &$seen) {}
+
+            public function report(\Throwable $e): void
+            {
+                $this->seen[] = $e;
+            }
+
+            public function shouldReport(\Throwable $e): bool
+            {
+                return true;
+            }
+
+            public function render($request, \Throwable $e)
+            {
+                return new \Illuminate\Http\Response();
+            }
+
+            public function renderForConsole($output, \Throwable $e): void {}
+        }
+    );
+
+    $handler = new ApiErrorHandler();
+    $handler->addErrorHandler(\InvalidArgumentException::class, static fn () => new JsonResponse(['ok' => true]));
+    $handler->handle(new \InvalidArgumentException('declared'));
+
+    expect($reported)->toBeEmpty();
+});
