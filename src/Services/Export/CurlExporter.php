@@ -6,7 +6,7 @@ namespace Dskripchenko\LaravelApi\Services\Export;
 
 use Illuminate\Support\Arr;
 
-class CurlExporter
+class CurlExporter implements Exporter
 {
     /**
      * @param array $openApiConfig

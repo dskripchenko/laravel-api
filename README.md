@@ -499,9 +499,33 @@ php artisan api:export --format=postman    # Postman Collection v2.1
 php artisan api:export --format=http       # JetBrains/VS Code .http files
 php artisan api:export --format=markdown   # Standalone documentation
 php artisan api:export --format=curl       # Bash script with curl commands
+php artisan api:export --format=bruno      # Bruno collection — a directory of .bru files
 ```
 
 Options: `--api-version=v1` (specific version), `--output=path` (custom file). By default, generates per-version files (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
+
+Bruno is a directory rather than a document — a manifest, an environment and one
+`.bru` per request — so `--output` names a directory and `--stdout` is refused.
+The point of it is that a collection can live in the repository next to the code
+that produces it, and a diff of it reads.
+
+### One endpoint
+
+A collection of two hundred requests is not what someone wants who is about to
+try one:
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=bruno --output=collection/order-create.bru
+```
+
+The endpoint is spelled the way the package names its routes —
+`version.controller.action` — so what is copied out of a log or a route list is
+what the command takes. `--method=get` picks one when the action answers
+several. Every format supports this, and none of them has a special case for it:
+the spec is narrowed to one path first, and each exporter then does exactly what
+it already did.
 
 ## Configuration
 

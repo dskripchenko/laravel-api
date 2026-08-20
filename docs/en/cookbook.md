@@ -645,6 +645,39 @@ php artisan api:export --format=curl
 
 Generates a bash script with ready-to-run curl commands. Includes `BASE_URL` and `TOKEN` variables, JSON/form/multipart bodies, and authorization headers for secured endpoints.
 
+### Bruno collections
+
+```bash
+php artisan api:export --format=bruno --output=collection
+```
+
+Generates a Bruno collection — `bruno.json`, `environments/default.bru` and one
+`.bru` per request, foldered by controller. It is a directory rather than a
+document, which is the reason to prefer it: the collection lives in the
+repository beside the code that produces it, and a reviewer can read its diff.
+A Postman collection is one JSON blob and tells a reviewer nothing.
+
+Declared `apiKey` security schemes become a `{{token}}` header — a variable, not
+a secret, because an exported collection is a thing people commit.
+
+### A single endpoint
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=postman --output=order-create.json
+```
+
+Someone about to try one endpoint does not want a collection of two hundred.
+The endpoint is spelled the way the package names its routes —
+`version.controller.action`, the same string that appears in a route list minus
+the `api.` prefix — and `--method=get` picks one when the action answers
+several.
+
+No exporter has a special case for this: the spec is narrowed to a single path
+first, so a Postman export becomes a collection of one request and a Bruno
+export becomes a single `.bru`, both by doing what they already did.
+
 ### Common options
 
 ```bash
@@ -653,4 +686,7 @@ php artisan api:export --format=postman --api-version=v1
 
 # Custom output file (all versions merged)
 php artisan api:export --format=markdown --output=docs/api.md
+
+# Straight to standard output, for piping
+php artisan api:export --format=curl --api-version=v1 --stdout
 ```

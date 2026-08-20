@@ -467,9 +467,29 @@ php artisan api:export --format=postman    # Postman Collection v2.1
 php artisan api:export --format=http       # PHPStorm/VS Code .http 文件
 php artisan api:export --format=markdown   # 独立 Markdown 文档
 php artisan api:export --format=curl       # 包含 curl 命令的 Bash 脚本
+php artisan api:export --format=bruno      # Bruno 集合——一个 .bru 文件目录
 ```
 
 选项：`--api-version=v1`（指定版本），`--output=path`（自定义路径）。默认按版本生成文件（`v1.json`、`v1.http`、`v1.md`、`v1.sh`）。
+
+Bruno 是目录而非单个文档：一个清单、一个环境，外加每个请求一个 `.bru`。因此
+`--output` 指向目录，而 `--stdout` 会被拒绝。这种形式的意义在于：集合可以放进
+仓库、紧挨着生成它的代码，而且它的 diff 是可读的。
+
+### 单个接口
+
+对只想试一个接口的人来说，两百个请求的集合毫无用处：
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=bruno --output=collection/order-create.bru
+```
+
+接口的写法与本包命名路由的方式一致——`version.controller.action`——所以从日志或
+路由列表里复制出来的东西可以直接使用。当一个 action 响应多个方法时，用
+`--method=get` 指定其一。任何格式都不需要为此特殊处理：规范先被收窄到单个路径，
+之后每个导出器做的仍是它原本做的事。
 
 ## 配置
 

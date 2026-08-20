@@ -6,7 +6,7 @@ namespace Dskripchenko\LaravelApi\Services\Export;
 
 use Illuminate\Support\Arr;
 
-class MarkdownExporter
+class MarkdownExporter implements Exporter
 {
     /**
      * @param array $openApiConfig

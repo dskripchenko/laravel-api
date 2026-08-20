@@ -470,9 +470,32 @@ php artisan api:export --format=postman    # Postman Collection v2.1
 php artisan api:export --format=http       # .http-Dateien fuer PHPStorm/VS Code
 php artisan api:export --format=markdown   # Eigenstaendige Dokumentation
 php artisan api:export --format=curl       # Bash-Skript mit curl-Befehlen
+php artisan api:export --format=bruno      # Bruno-Collection — ein Verzeichnis von .bru-Dateien
 ```
 
 Optionen: `--api-version=v1` (bestimmte Version), `--output=path` (benutzerdefinierter Pfad). Standardmaessig werden Dateien pro Version generiert (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
+
+Bruno ist ein Verzeichnis und kein Dokument — ein Manifest, eine Umgebung und
+eine `.bru` je Request. Deshalb benennt `--output` ein Verzeichnis, und
+`--stdout` wird abgelehnt. Der Sinn: die Collection liegt im Repository neben
+dem Code, der sie erzeugt, und ihr Diff ist lesbar.
+
+### Ein einzelner Endpunkt
+
+Eine Collection mit zweihundert Requests hilft niemandem, der genau einen
+ausprobieren will:
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=bruno --output=collection/order-create.bru
+```
+
+Der Endpunkt wird so geschrieben, wie das Paket seine Routen benennt —
+`version.controller.action` —, also passt das aus einem Log Kopierte
+unveraendert. `--method=get` waehlt eine aus, wenn die Action mehrere
+beantwortet. Kein Format hat dafuer einen Sonderfall: die Spec wird zuerst auf
+einen Pfad verengt, danach macht jeder Exporter genau das, was er ohnehin tat.
 
 ## Konfiguration
 

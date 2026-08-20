@@ -645,6 +645,35 @@ php artisan api:export --format=curl
 
 生成包含即用 curl 命令的 Bash 脚本。包含 `BASE_URL` 和 `TOKEN` 变量、JSON/表单/multipart 请求体和授权头。
 
+### Bruno 集合
+
+```bash
+php artisan api:export --format=bruno --output=collection
+```
+
+生成一个 Bruno 集合——`bruno.json`、`environments/default.bru`，以及每个请求一个
+`.bru`，按控制器分目录存放。它是目录而不是单个文档，这正是它的价值所在：集合可以
+放进仓库、紧挨着生成它的代码，评审者能读懂它的 diff。Postman 集合是一整块 JSON，
+对评审者什么也说明不了。
+
+声明的 `apiKey` 安全方案会变成带 `{{token}}` 的请求头——是变量而非密钥，因为导出的
+集合是会被提交的。
+
+### 单个接口
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=postman --output=order-create.json
+```
+
+只想试一个接口的人，不需要两百个请求的集合。接口的写法与本包命名路由的方式一致——
+`version.controller.action`，与路由列表中的字符串相同，只是去掉 `api.` 前缀。当一个
+action 响应多个方法时，用 `--method=get` 指定其一。
+
+任何导出器都不需要为此特殊处理：规范先被收窄到单个路径，于是 Postman 导出成为只含
+一个请求的集合，Bruno 导出成为单个 `.bru`——两者做的仍是它们原本做的事。
+
 ### 通用选项
 
 ```bash
@@ -653,4 +682,7 @@ php artisan api:export --format=postman --api-version=v1
 
 # 自定义输出路径
 php artisan api:export --format=markdown --output=docs/api.md
+
+# 直接输出到标准输出，便于管道处理
+php artisan api:export --format=curl --api-version=v1 --stdout
 ```

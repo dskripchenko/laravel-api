@@ -5,6 +5,39 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.9.0] — 2026-08-20
+
+### Added
+
+- **`api:export --endpoint=v1.order.create` — one endpoint instead of a
+  collection of two hundred.** Which is what somebody about to try a single call
+  actually wants, and the reason the export was mostly unused: producing the
+  whole API to look at one method is work nobody does twice.
+
+  The endpoint is spelled the way the package names its routes, so the string
+  from a route list works unchanged, and `--method=` picks one when the action
+  answers several. No exporter has a special case for it: the spec is narrowed
+  to a single path first, and each format then does exactly what it already did
+  — a Postman collection of one request, one cURL line, a single `.bru`.
+
+- **`--stdout`**, so an export can be piped instead of leaving a file behind.
+
+- **Bruno, as an export format.** A Bruno collection is a directory of plain
+  files — a manifest, an environment, one `.bru` per request — and that is the
+  point: it lives in the repository next to the code that produces it, and a
+  reviewer can read its diff. A Postman collection is one JSON blob and tells a
+  reviewer nothing.
+
+  Declared `apiKey` schemes become a `{{token}}` header. A variable, never a
+  value: an exported collection is a thing people commit.
+
+### Changed
+
+- **Exporters are an interface now** — `Exporter`, plus `MultiFileExporter` for
+  a format that is a directory rather than a document. Nothing that used the
+  four existing formats changes; a custom exporter written against the old
+  informal shape still satisfies the interface.
+
 ## [5.8.0] — 2026-08-20
 
 ### Added

@@ -645,6 +645,38 @@ php artisan api:export --format=curl
 
 Генерирует bash-скрипт с готовыми curl-командами. Включает переменные `BASE_URL` и `TOKEN`, JSON/form/multipart тела и заголовки авторизации.
 
+### Коллекции Bruno
+
+```bash
+php artisan api:export --format=bruno --output=collection
+```
+
+Генерирует коллекцию Bruno — `bruno.json`, `environments/default.bru` и по
+`.bru` на запрос, разложенные по папкам-контроллерам. Это каталог, а не
+документ, и в этом весь смысл: коллекция лежит в репозитории рядом с кодом,
+который её порождает, и ревьюер читает её диф. Коллекция Postman — один JSON,
+и ревьюеру она не говорит ничего.
+
+Объявленные схемы безопасности типа `apiKey` превращаются в заголовок с
+`{{token}}` — переменной, а не секретом: выгруженную коллекцию коммитят.
+
+### Один метод
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=postman --output=order-create.json
+```
+
+Тому, кто собирается попробовать один метод, коллекция из двухсот не нужна.
+Метод пишется так же, как пакет именует роуты — `version.controller.action`,
+та же строка, что в списке роутов, без префикса `api.`. `--method=get` выбирает
+один, когда действие отвечает на несколько.
+
+Частных случаев нет ни у одного экспортёра: спека сначала сужается до одного
+пути, поэтому выгрузка в Postman становится коллекцией из одного запроса, а в
+Bruno — одним `.bru`, и оба делают ровно то же, что делали.
+
 ### Общие опции
 
 ```bash
@@ -653,4 +685,7 @@ php artisan api:export --format=postman --api-version=v1
 
 # Свой путь (все версии в один файл)
 php artisan api:export --format=markdown --output=docs/api.md
+
+# Прямо в стандартный вывод, чтобы передать по конвейеру
+php artisan api:export --format=curl --api-version=v1 --stdout
 ```

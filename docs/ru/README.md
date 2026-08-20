@@ -469,9 +469,32 @@ php artisan api:export --format=postman    # Postman Collection v2.1
 php artisan api:export --format=http       # .http файлы для PHPStorm/VS Code
 php artisan api:export --format=markdown   # Автономная документация
 php artisan api:export --format=curl       # Bash-скрипт с curl командами
+php artisan api:export --format=bruno      # Коллекция Bruno — каталог .bru-файлов
 ```
 
 Опции: `--api-version=v1` (конкретная версия), `--output=path` (свой путь). По умолчанию генерирует файлы по версиям (`v1.json`, `v1.http`, `v1.md`, `v1.sh`).
+
+Bruno — это каталог, а не документ: манифест, окружение и по `.bru` на запрос.
+Поэтому `--output` указывает на каталог, а `--stdout` для него отклоняется.
+Смысл формата в том, что коллекция лежит в репозитории рядом с кодом, который
+её порождает, и её диф читается.
+
+### Один метод
+
+Коллекция из двухсот запросов — не то, что нужно тому, кто собирается
+попробовать один:
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=bruno --output=collection/order-create.bru
+```
+
+Метод пишется так же, как пакет именует свои роуты — `version.controller.action`,
+— то есть скопированное из лога или списка роутов подходит без переделки.
+`--method=get` выбирает один, когда действие отвечает на несколько. Формат
+значения не имеет и частных случаев ни у кого нет: спека сначала сужается до
+одного пути, а дальше каждый экспортёр делает ровно то же, что делал.
 
 ## Конфигурация
 

@@ -6,7 +6,7 @@ namespace Dskripchenko\LaravelApi\Services\Export;
 
 use Illuminate\Support\Arr;
 
-class HttpClientExporter
+class HttpClientExporter implements Exporter
 {
     /**
      * @param array $openApiConfig

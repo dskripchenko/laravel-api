@@ -6,7 +6,7 @@ namespace Dskripchenko\LaravelApi\Services\Export;
 
 use Illuminate\Support\Arr;
 
-class PostmanCollectionExporter
+class PostmanCollectionExporter implements Exporter
 {
     /**
      * @param array $openApiConfig

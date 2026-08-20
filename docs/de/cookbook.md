@@ -645,6 +645,41 @@ php artisan api:export --format=curl
 
 Generiert ein Bash-Skript mit fertigen curl-Befehlen. Enthaelt `BASE_URL`- und `TOKEN`-Variablen, JSON/Form/Multipart-Bodies und Autorisierungsheader.
 
+### Bruno-Collections
+
+```bash
+php artisan api:export --format=bruno --output=collection
+```
+
+Erzeugt eine Bruno-Collection — `bruno.json`, `environments/default.bru` und je
+eine `.bru` pro Request, nach Controllern in Ordner sortiert. Es ist ein
+Verzeichnis und kein Dokument, und genau darin liegt der Nutzen: die Collection
+liegt im Repository neben dem Code, der sie erzeugt, und ihr Diff ist lesbar.
+Eine Postman-Collection ist ein einziger JSON-Klumpen und sagt einem Reviewer
+nichts.
+
+Deklarierte `apiKey`-Security-Schemes werden zu einem Header mit `{{token}}` —
+einer Variablen, keinem Secret: eine exportierte Collection wird committet.
+
+### Ein einzelner Endpunkt
+
+```bash
+php artisan api:export --endpoint=v1.order.create --format=bruno --stdout
+php artisan api:export --endpoint=v1.order.create --format=curl --stdout
+php artisan api:export --endpoint=v1.order.create --format=postman --output=order-create.json
+```
+
+Wer einen Endpunkt ausprobieren will, braucht keine Collection mit zweihundert.
+Der Endpunkt wird so geschrieben, wie das Paket seine Routen benennt —
+`version.controller.action`, dieselbe Zeichenkette wie in der Routenliste, ohne
+das `api.`-Praefix. `--method=get` waehlt eine aus, wenn die Action mehrere
+beantwortet.
+
+Kein Exporter hat dafuer einen Sonderfall: die Spec wird zuerst auf einen Pfad
+verengt, daher wird der Postman-Export zu einer Collection mit einem Request und
+der Bruno-Export zu einer einzelnen `.bru` — beide, indem sie tun, was sie
+ohnehin taten.
+
 ### Allgemeine Optionen
 
 ```bash
@@ -653,4 +688,7 @@ php artisan api:export --format=postman --api-version=v1
 
 # Benutzerdefinierter Ausgabepfad
 php artisan api:export --format=markdown --output=docs/api.md
+
+# Direkt auf die Standardausgabe, zum Weiterleiten
+php artisan api:export --format=curl --api-version=v1 --stdout
 ```
