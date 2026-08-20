@@ -13,8 +13,8 @@ use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
  * nowhere.
  */
 it('builds the anchor of an endpoint the way the page addresses it', function () {
-    // Verbatim from a live reference page:
-    // https://.../api/doc#printable-integration-api/tag/template/GET/integration/template/contract
+    // The shape of a hash read off a live reference page:
+    // https://…/api/doc#{document}/tag/{tag}/{METHOD}{path}
     // — with the document slug now passed explicitly, so it is the version.
     expect(DocLink::anchor('integration', 'template', 'contract', 'get'))
         ->toBe('integration/tag/template/GET/integration/template/contract');
@@ -33,7 +33,7 @@ it('follows the URI pattern rather than assuming one', function () {
 
 it('slugifies the way Scalar does', function () {
     // Lowercased, punctuation dropped, separators collapsed.
-    expect(DocLink::slug('Printable integration API.'))->toBe('printable-integration-api');
+    expect(DocLink::slug('The integration API.'))->toBe('the-integration-api');
     expect(DocLink::slug('  Order  items '))->toBe('order-items');
     expect(DocLink::slug('print_form'))->toBe('print-form');
     expect(DocLink::slug('--edge--'))->toBe('edge');
@@ -46,7 +46,7 @@ it('keeps unicode letters instead of collapsing a name into nothing', function (
 it('is idempotent — the property the whole scheme rests on', function () {
     // Scalar slugifies whatever it is handed. A slug that changed on the second
     // pass would address a page that does not exist.
-    foreach (['Printable integration API.', 'v1.1', 'print_form', 'Печать'] as $text) {
+    foreach (['The integration API.', 'v1.1', 'print_form', 'Печать'] as $text) {
         $once = DocLink::slug($text);
 
         expect(DocLink::slug($once))->toBe($once);

@@ -24,9 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the page, silently and with no way to notice. The slug is now the version's
   own name — the thing the URL already carries.
 
-  This changes existing hash links once: `#printable-integration-api/tag/…`
-  becomes `#integration/tag/…`. Bookmarks pointing at the old form land on the
-  page rather than on the operation. It is the last time they move.
+  This changes existing hash links once: `#the-integration-api/tag/…` — the
+  title, slugified — becomes `#integration/tag/…`. Bookmarks pointing at the old
+  form land on the page rather than on the operation. It is the last time they
+  move.
 
   A dotted version reads as it is written — `v1.1` becomes `v1-1`, not `v11`.
 
