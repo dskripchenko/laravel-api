@@ -33,6 +33,7 @@
 - [测试](#测试)
 - [配置](#配置)
 - [错误处理](#错误处理)
+- [IDE 支持](#ide-支持)
 - [与其他方案的对比](#与其他方案的对比)
 - [API参考](#api参考)
 - [许可证](#许可证)
@@ -116,6 +117,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **命名路由** | 每个操作注册为命名的 Laravel 路由 — `route('api.v1.user.list')` |
 | **API导出** | `api:export` —— Postman Collection、HTTP Client (.http)、Markdown、cURL |
 | **标记检查** | `api:lint` —— 发现改名的动作、指向空处的模板、未知类型 |
+| **IDE 支持** | [PhpStorm 插件](https://github.com/dskripchenko/laravel-api-idea)——高亮、检查、快速修复、接口列表 |
 | **测试助手** | `assertApiSuccess()`、`assertApiError()`、`assertApiValidationError()` |
 | **可发布配置** | `config/laravel-api.php` —— 前缀、URI模式、HTTP方法 |
 
@@ -543,6 +545,59 @@ ApiErrorHandler::addErrorHandler(
 Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 ```
 
+## IDE 支持
+
+本包读取的标记不属于 PhpStorm 认识的任何语法，因此它只是一团灰色的散文——而本包
+静默失败的一切，在那里同样静默失败。为此有一个插件：
+**[dskripchenko/laravel-api-idea](https://github.com/dskripchenko/laravel-api-idea)**。
+
+**安装。** 它从自己的仓库分发，而不是 JetBrains Marketplace。只需添加一次插件仓库
+——Settings | Plugins | ⚙ | *Manage Plugin Repositories…* | **+**——
+
+```
+https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugins.xml
+```
+
+之后照常从 Marketplace 标签页安装 *Laravel API*；更新也走同一条路。或者从任意
+[release](https://github.com/dskripchenko/laravel-api-idea/releases) 取
+`laravel-api-idea-<version>.zip`，用 *Install Plugin from Disk…* 安装。
+
+需要 PhpStorm，或装有 PHP 插件的 IntelliJ IDEA Ultimate。IDEA Community 无法运行
+——插件完全建立在 PHP 插件的 PSI 之上，而 JetBrains 不为 Community 发布它。
+
+**输入时**
+
+- 高亮 `@input`、`@output`、`@header`、`@response`、`@security`、`@default`、
+  `@example`——类型、格式、变量、模板引用和状态码，让生成器已经读不懂的那一行不再
+  看起来和它仍读得懂的那些一样。
+- 在写下的位置报告无法解析的标记，而不是让它悄悄从规范里消失。
+- 标记未知类型，并说明后果：生成器会把该字段当作 `string`。
+- 将标记与 `$request->validate([...])` 比对。被校验却未被文档提及的字段会在规则本身
+  上报出，并提供从规则写出标签的快速修复：`email` → `string(email)`，没有
+  `required` 的规则 → 可选字段，`in:a,b` → 枚举。
+- 标出无人声明的 `@response` 模板或 `@security` 方案，并提议声明该模板——类中没有
+  `getOpenApiTemplates()` 时一并创建。
+- 让静默的 404 变红：指向缺失、非公开或静态方法的 action 在输入时即为错误，快速修复
+  会按邻近方法的样子写出该方法。
+- 补全类型、格式、模板名、安全方案和状态码。
+
+**导航**
+
+- 从 `{TemplateName}`、`@Model`、`@security Scheme` 和 `@input [method]`
+  Ctrl+点击跳转到声明处。
+- 对响应模板执行 Find Usages——列出所有提到它的 docblock。只被生成器读取的模板，在
+  IDE 看来本来像是没人用。
+- 路由映射与控制器之间双向的 gutter 箭头。没有箭头的 action 指向并不存在的方法。
+- 控制器方法上方的一行，直接打开该接口在 `/api/doc` 上的页面——该地址如何构成，见
+  [链接到单个接口](#链接到单个接口)。
+- 一个可搜索的工具窗口，列出路由映射声明的全部接口，以及各自应答的版本。
+
+**按需**
+
+- 运行 `api:lint`，并让结果可点击。
+- 把光标所在的接口导出为请求——Bruno、cURL、HTTP Client、Postman 或 Markdown——
+  经由 `api:export --endpoint`。
+
 ## 与其他方案的对比
 
 ### vs. 经典Laravel方式（手动路由 + FormRequest）
@@ -583,7 +638,7 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 | **CRUD生成** | 无 | 内置`CrudService` + `CrudController` |
 | **响应格式** | 任意 —— 由你定义模式 | 固定`{success, payload}`信封 |
 | **OpenAPI覆盖** | 完整OpenAPI 3.0规范支持 | 子集：覆盖90%常见用例 |
-| **IDE支持** | `@OA\*`注解的插件支持 | 无IDE插件 —— 但语法更简单 |
+| **IDE支持** | `@OA\*`注解的插件支持 | [插件](https://github.com/dskripchenko/laravel-api-idea)：高亮、检查、快速修复、导航、接口列表、`api:lint` 运行 |
 | **生态** | 大型社区，基于swagger-php | 较小，专注型包 |
 | **规范自定义** | 完全控制每个OpenAPI字段 | 仅限支持的标签 |
 | **何时选择** | API优先设计、需要完全OpenAPI合规、现有路由 | 快速开发、版本化API、集成路由+文档 |
@@ -597,7 +652,6 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 **相比L5-Swagger的劣势：**
 - OpenAPI覆盖范围较少（无回调、webhooks、links、discriminator）
-- 无自定义标签的IDE插件
 - 响应格式固定
 - 社区和生态较小
 - 不适合API优先（设计优先）工作流

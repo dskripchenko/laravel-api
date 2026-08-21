@@ -35,6 +35,7 @@ Build versioned APIs with automatic OpenAPI documentation generated from PHP doc
 - [Testing](#testing)
 - [Configuration](#configuration)
 - [Error Handling](#error-handling)
+- [IDE support](#ide-support)
 - [Comparison with Alternatives](#comparison-with-alternatives)
 - [API Reference](#api-reference)
 - [License](#license)
@@ -118,6 +119,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Named routes** | Each action registered as a named Laravel route — `route('api.v1.user.list')` |
 | **API export** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
 | **Markup linting** | `api:lint` — catches renamed actions, dangling templates, unknown types |
+| **IDE support** | [PhpStorm plugin](https://github.com/dskripchenko/laravel-api-idea) — highlighting, inspections, quick fixes, endpoint list |
 | **Test helpers** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Publishable config** | `config/laravel-api.php` — prefix, URI pattern, HTTP methods |
 
@@ -475,6 +477,72 @@ export interface UserShowOutput {
 
 Component schemas, operation inputs, and outputs are all generated. See [docs/cookbook.md](docs/en/cookbook.md#recipe-8-generate-typescript-interfaces) for details.
 
+## IDE support
+
+The markup this package reads is not part of any grammar PhpStorm knows, so it
+shows as one grey blob of prose — and everything the package fails quietly at
+fails quietly there too. There is a plugin for that:
+**[dskripchenko/laravel-api-idea](https://github.com/dskripchenko/laravel-api-idea)**.
+
+**Installing.** It is distributed from its own repository rather than from
+JetBrains Marketplace. Add the plugin repository once — Settings | Plugins | ⚙ |
+*Manage Plugin Repositories…* | **+** —
+
+```
+https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugins.xml
+```
+
+then install *Laravel API* from the Marketplace tab as usual; updates arrive the
+same way. Or take `laravel-api-idea-<version>.zip` from any
+[release](https://github.com/dskripchenko/laravel-api-idea/releases) and use
+*Install Plugin from Disk…*.
+
+PhpStorm, or IntelliJ IDEA Ultimate with the PHP plugin. IDEA Community cannot
+run it — the plugin hangs off the PHP plugin's PSI, and JetBrains does not
+publish that for Community.
+
+**While you type**
+
+- Highlights `@input`, `@output`, `@header`, `@response`, `@security`,
+  `@default`, `@example` — types, formats, variables, template references and
+  status codes, so a line the generator has stopped understanding stops looking
+  like the ones it still does.
+- Reports markup that does not parse, where it is written, instead of letting it
+  vanish from the spec.
+- Flags unknown types with the consequence named: the generator will call the
+  field `string`.
+- Compares the markup against `$request->validate([...])`. A validated field the
+  docblock never mentions is reported on the rule itself, with a quick fix that
+  writes the tag from it — `email` becomes `string(email)`, a rule that is not
+  `required` becomes optional, `in:a,b` becomes an enumeration.
+- Marks a `@response` template or a `@security` scheme nothing declares, and
+  offers to declare the template — creating `getOpenApiTemplates()` when the
+  class has none.
+- Turns the silent 404 red: an action pointing at a missing, non-public or
+  static method is an error while typing, with a quick fix that writes the
+  method, shaped like the ones already in the class.
+- Completes types, formats, template names, security schemes and status codes.
+
+**Getting around**
+
+- Ctrl+Click from `{TemplateName}`, `@Model`, `@security Scheme` and
+  `@input [method]` to their declarations.
+- Find Usages on a response template — every docblock naming it. A template read
+  only by the generator otherwise looks unused to the IDE.
+- Gutter arrows both ways between the route map and the controllers. An action
+  with no arrow points at a method that is not there.
+- A line above the controller method opening this endpoint's own page in
+  `/api/doc` — see [Linking to a single endpoint](#linking-to-a-single-endpoint)
+  for how that address is built.
+- Every endpoint the route map declares, in one searchable tool window, with the
+  version it answers under.
+
+**On demand**
+
+- Runs `api:lint` and makes its findings clickable.
+- Exports the endpoint under the caret as a request — Bruno, cURL, HTTP Client,
+  Postman or Markdown — through `api:export --endpoint`.
+
 ## Linting
 
 The markup fails quietly: an action whose method was renamed answers 404 — the
@@ -621,7 +689,7 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 | **CRUD generation** | None | Built-in `CrudService` + `CrudController` |
 | **Response format** | Any — you define schemas | Fixed `{success, payload}` envelope |
 | **OpenAPI coverage** | Full OpenAPI 3.0 spec support | Subset: covers 90% of common use cases |
-| **IDE support** | Plugin support for `@OA\*` annotations | No IDE plugin — but simpler syntax |
+| **IDE support** | Plugin support for `@OA\*` annotations | [Plugin](https://github.com/dskripchenko/laravel-api-idea): highlighting, inspections, quick fixes, navigation, endpoint list, `api:lint` runner |
 | **Ecosystem** | Large community, swagger-php underneath | Smaller, focused package |
 | **Spec customization** | Full control over every OpenAPI field | Limited to supported tags |
 | **When to choose** | API-first design, full OpenAPI compliance needed, existing routes | Rapid development, versioned APIs, integrated routing + docs |
@@ -635,7 +703,6 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 **Disadvantages compared to L5-Swagger:**
 - Less OpenAPI coverage (no callbacks, webhooks, links, discriminator)
-- No IDE plugin for custom tags
 - Fixed response format
 - Smaller community and ecosystem
 - Not suitable for API-first (design-first) workflow

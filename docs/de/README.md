@@ -33,6 +33,7 @@ Erstellen Sie versionierte APIs mit automatisch generierter OpenAPI-Dokumentatio
 - [Tests](#tests)
 - [Konfiguration](#konfiguration)
 - [Fehlerbehandlung](#fehlerbehandlung)
+- [IDE-Unterstützung](#ide-unterstützung)
 - [Vergleich mit Alternativen](#vergleich-mit-alternativen)
 - [API-Referenz](#api-referenz)
 - [Lizenz](#lizenz)
@@ -116,6 +117,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 | **Benannte Routen** | Jede Action wird als benannte Laravel-Route registriert — `route('api.v1.user.list')` |
 | **API-Export** | `api:export` — Postman Collection, HTTP Client (.http), Markdown, cURL |
 | **Prüfung der Auszeichnung** | `api:lint` — findet umbenannte Aktionen, ins Leere zeigende Templates, unbekannte Typen |
+| **IDE-Unterstützung** | [PhpStorm-Plugin](https://github.com/dskripchenko/laravel-api-idea) — Hervorhebung, Inspektionen, Quick-Fixes, Endpunktliste |
 | **Test-Helfer** | `assertApiSuccess()`, `assertApiError()`, `assertApiValidationError()` |
 | **Veröffentlichbare Konfiguration** | `config/laravel-api.php` — Präfix, URI-Muster, HTTP-Methoden |
 
@@ -549,6 +551,74 @@ Fügen Sie zu Ihrem Middleware-Stack für Request Tracing hinzu:
 Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 ```
 
+## IDE-Unterstützung
+
+Die Markierungen, die dieses Paket liest, kennt PhpStorm in keiner Grammatik —
+sie erscheinen als grauer Fließtext, und alles, woran das Paket still scheitert,
+scheitert dort ebenso still. Dafür gibt es ein Plugin:
+**[dskripchenko/laravel-api-idea](https://github.com/dskripchenko/laravel-api-idea)**.
+
+**Installation.** Es wird aus dem eigenen Repository verteilt, nicht über den
+JetBrains Marketplace. Fügen Sie das Plugin-Repository einmalig hinzu —
+Settings | Plugins | ⚙ | *Manage Plugin Repositories…* | **+** —
+
+```
+https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugins.xml
+```
+
+danach installieren Sie *Laravel API* wie gewohnt aus dem Marketplace-Tab;
+Updates kommen auf demselben Weg. Oder nehmen Sie
+`laravel-api-idea-<version>.zip` aus einem beliebigen
+[Release](https://github.com/dskripchenko/laravel-api-idea/releases) und
+verwenden *Install Plugin from Disk…*.
+
+PhpStorm oder IntelliJ IDEA Ultimate mit dem PHP-Plugin. IDEA Community kann es
+nicht ausführen — das Plugin steht vollständig auf dem PSI des PHP-Plugins, und
+das veröffentlicht JetBrains für Community nicht.
+
+**Während des Tippens**
+
+- Hebt `@input`, `@output`, `@header`, `@response`, `@security`, `@default`,
+  `@example` hervor — Typen, Formate, Variablen, Template-Referenzen und
+  Statuscodes, damit eine Zeile, die der Generator nicht mehr versteht, aufhört
+  wie die zu aussehen, die er noch versteht.
+- Meldet nicht parsebare Markierungen dort, wo sie stehen, statt sie stillschweigend
+  aus der Spezifikation verschwinden zu lassen.
+- Kennzeichnet unbekannte Typen mit der genannten Folge: der Generator macht das
+  Feld zu `string`.
+- Vergleicht die Markierungen mit `$request->validate([...])`. Ein validiertes,
+  aber undokumentiertes Feld wird an der Regel selbst gemeldet, mit einem
+  Quick-Fix, der das Tag daraus schreibt: `email` → `string(email)`, eine Regel
+  ohne `required` → optionales Feld, `in:a,b` → Aufzählung.
+- Markiert ein `@response`-Template oder ein `@security`-Schema, das niemand
+  deklariert hat, und bietet an, das Template zu deklarieren — inklusive
+  `getOpenApiTemplates()`, wenn die Klasse keines hat.
+- Macht den stillen 404 rot: eine Action, die auf eine fehlende, nicht
+  öffentliche oder statische Methode zeigt, ist ein Fehler beim Tippen, mit einem
+  Quick-Fix, der die Methode nach dem Vorbild der Nachbarn schreibt.
+- Vervollständigt Typen, Formate, Template-Namen, Security-Schemata und
+  Statuscodes.
+
+**Navigation**
+
+- Ctrl+Klick von `{TemplateName}`, `@Model`, `@security Scheme` und
+  `@input [method]` zu ihren Deklarationen.
+- Find Usages auf einem Response-Template — jeder Docblock, der es nennt. Ein
+  Template, das nur der Generator liest, wirkt für die IDE sonst ungenutzt.
+- Gutter-Pfeile in beide Richtungen zwischen Routen-Map und Controllern. Eine
+  Action ohne Pfeil zeigt auf eine Methode, die es nicht gibt.
+- Eine Zeile über der Controller-Methode, die die Seite genau dieses Endpunkts in
+  `/api/doc` öffnet — wie diese Adresse entsteht, steht unter
+  [Link auf einen einzelnen Endpunkt](#link-auf-einen-einzelnen-endpunkt).
+- Alle Endpunkte der Routen-Map in einem durchsuchbaren Toolfenster, mit der
+  Version, unter der jeder antwortet.
+
+**Auf Abruf**
+
+- Führt `api:lint` aus und macht die Fundstellen anklickbar.
+- Exportiert den Endpunkt unter dem Cursor als Request — Bruno, cURL, HTTP
+  Client, Postman oder Markdown — über `api:export --endpoint`.
+
 ## Vergleich mit Alternativen
 
 ### vs. Klassisches Laravel-Vorgehen (manuelle Routes + FormRequest)
@@ -589,7 +659,7 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 | **CRUD-Generierung** | Keine | Integriert `CrudService` + `CrudController` |
 | **Antwortformat** | Beliebig — Sie definieren Schemas | Fest `{success, payload}` Umhüllung |
 | **OpenAPI-Abdeckung** | Vollständige OpenAPI 3.0 Spec-Unterstützung | Teilmenge: deckt 90% gängiger Anwendungsfälle ab |
-| **IDE-Unterstützung** | Plugin-Unterstützung für `@OA\*` Annotations | Keine IDE-Plugin — aber einfachere Syntax |
+| **IDE-Unterstützung** | Plugin-Unterstützung für `@OA\*` Annotations | [Plugin](https://github.com/dskripchenko/laravel-api-idea): Hervorhebung, Inspektionen, Quick-Fixes, Navigation, Endpunktliste, `api:lint`-Runner |
 | **Ökosystem** | Große Community, swagger-php darunter | Kleiner, fokussiertes Paket |
 | **Spec-Anpassung** | Vollständige Kontrolle über jedes OpenAPI-Feld | Beschränkt auf unterstützte Tags |
 | **Wann verwenden** | API-first Design, vollständige OpenAPI-Konformität benötigt, existierende Routes | Schnelle Entwicklung, versionierte APIs, integriertes Routing + Docs |
@@ -603,7 +673,6 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 **Nachteile gegenüber L5-Swagger:**
 - Weniger OpenAPI-Abdeckung (keine Callbacks, Webhooks, Links, Discriminator)
-- Keine IDE-Plugin für Custom-Tags
 - Festes Antwortformat
 - Kleinere Community und Ökosystem
 - Nicht geeignet für API-first (Design-first) Workflow
