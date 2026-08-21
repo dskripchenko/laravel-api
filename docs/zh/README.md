@@ -558,7 +558,9 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugins.xml
 ```
 
-之后照常从 Marketplace 标签页安装 *Laravel API*；更新也走同一条路。或者从任意
+之后照常从 Marketplace 标签页安装 *Laravel API*；更新也走同一条路。粘贴地址时不要带
+末尾空格——IDE 会把它编码进 URL，由此产生的 404 会被显示为 *Connection failed*。
+或者从任意
 [release](https://github.com/dskripchenko/laravel-api-idea/releases) 取
 `laravel-api-idea-<version>.zip`，用 *Install Plugin from Disk…* 安装。
 

@@ -567,7 +567,9 @@ https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugi
 ```
 
 danach installieren Sie *Laravel API* wie gewohnt aus dem Marketplace-Tab;
-Updates kommen auf demselben Weg. Oder nehmen Sie
+Updates kommen auf demselben Weg. Fügen Sie die Adresse ohne abschließendes
+Leerzeichen ein — die IDE kodiert es in die URL, und der daraus folgende 404
+wird als *Connection failed* gemeldet. Oder nehmen Sie
 `laravel-api-idea-<version>.zip` aus einem beliebigen
 [Release](https://github.com/dskripchenko/laravel-api-idea/releases) und
 verwenden *Install Plugin from Disk…*.
