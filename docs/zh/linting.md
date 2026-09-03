@@ -82,6 +82,7 @@ php artisan api:lint
 | `response.duplicate-code` | 警告 | 同一状态码有两个响应，以最后一个为准 |
 | `security.unknown-scheme` | 错误 | `@security Name` 或动作的 `security` 键引用了未定义的方案 |
 | `template.unknown-ref` | 错误 | 模板字段通过 `@Other` 引用了不存在的模板 |
+| `template.envelope-duplicated` | 警告 | 开启 `$responseEnvelope` 时模板自己声明了信封字段，规范里出现信封套信封 |
 | `default.unknown-variable`、`example.unknown-variable` | 警告 | 为没有 `@input` 的变量设置默认值或示例，该值会被忽略 |
 | `default.malformed`、`example.malformed` | 错误 | 标签内容无法解析 |
 

@@ -306,7 +306,7 @@ V2 автоматически наследует `list`, `show`, `create`, `upda
 
 ```php
 class Api extends BaseApi {
-    public static bool $useResponseTemplates = true;
+    public static $useResponseTemplates = true;
 
     public static function getOpenApiTemplates(): array {
         return [
@@ -331,6 +331,8 @@ class Api extends BaseApi {
 ```
 
 **Shorthand-синтаксис:** `type` — необязательное, `type!` — обязательное, `type(format)` — с форматом, `@Model` — ссылка, `@Model[]` — массив ссылок. Также поддерживается формат массивов (`['type' => '...', 'required' => true]`).
+
+**Конверт ответа.** Каждый ответ реально уходит как `{success, payload}`. `public static $responseEnvelope = true;` на классе Api заставляет спецификацию говорить то же: шаблоны описывают payload, а каждый ответ — поля `@output`, ссылки `{Template}`, коды ошибок — оборачивается. Шаблоны могут быть вложенными (`'client!' => ['email' => 'string(email)']`, `['string']`, `[['id' => 'integer!']]`), а собственный конверт — это массив полей с `'{payload}'` на месте тела. Подробнее: [docblock-tags.md](docblock-tags.md#конверт-ответа).
 
 ### Ссылка на конкретный метод
 

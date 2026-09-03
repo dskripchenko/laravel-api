@@ -59,6 +59,33 @@ class ShorthandApi extends BaseApi
                 'quantity' => 'integer',
                 'price' => 'number',
             ],
+            // Nested shorthand: a map is an object, a one-element list is an
+            // array, a key ending in `!` is required whatever its definition.
+            'NestedResult' => [
+                'success' => 'boolean!',
+                'payload!' => [
+                    'url' => 'string Where to go next',
+                    'uuid' => 'string(uuid)!',
+                    'client' => [
+                        'email' => 'string(email)',
+                        'phone' => 'string',
+                    ],
+                ],
+                'phones' => ['string'],
+                'lines!' => [['sku' => 'string!', 'qty' => 'integer']],
+                'error' => '@OrderError!',
+                'items' => '@OrderItem[]!',
+                'explicit' => [
+                    'type' => 'object',
+                    'required' => true,
+                    'properties' => [
+                        'code' => 'integer!',
+                        'tags' => ['type' => 'array', 'items' => 'string'],
+                        'ref' => ['$ref' => '@OrderError'],
+                    ],
+                ],
+                'note' => 'string Contact @support if unsure',
+            ],
         ];
     }
 }

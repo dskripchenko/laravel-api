@@ -311,7 +311,7 @@ Enable reusable schemas via `components/schemas`:
 
 ```php
 class Api extends BaseApi {
-    public static bool $useResponseTemplates = true;
+    public static $useResponseTemplates = true;
 
     public static function getOpenApiTemplates(): array {
         return [
@@ -356,6 +356,8 @@ class Api extends BaseApi {
 | `@Model[]` | Array of `$ref` | `'@OrderItem[]'` |
 
 Array format (`['type' => 'string', 'required' => true]`) is also supported and can be mixed with shorthand in the same template.
+
+**Response envelope.** Every response really leaves as `{success, payload}` (see [Response format](#response-format)). `public static $responseEnvelope = true;` on the Api class makes the spec say so: templates then describe payloads, and every response — `@output` fields, `{Template}` refs, error codes — is wrapped. Templates may nest (`'client!' => ['email' => 'string(email)']`, `['string']`, `[['id' => 'integer!']]`), and a custom envelope is a field map with `'{payload}'` where the body goes. Details: [docblock-tags.md](docs/en/docblock-tags.md#response-envelope).
 
 ### Linking to a single endpoint
 

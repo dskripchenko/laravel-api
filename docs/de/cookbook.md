@@ -372,7 +372,7 @@ Das `@header`-Tag im Middleware-Docblock wird in die OpenAPI-Dokumentation aggre
 ```php
 class Api extends BaseApi
 {
-    public static bool $useResponseTemplates = true;
+    public static $useResponseTemplates = true;
 
     public static function getOpenApiTemplates(): array
     {

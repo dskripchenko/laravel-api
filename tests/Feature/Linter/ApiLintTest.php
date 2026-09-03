@@ -220,3 +220,27 @@ it('command with --strict fails on warnings alone', function () {
     $this->artisan('api:lint')->assertExitCode(0);
     $this->artisan('api:lint --strict')->assertExitCode(1);
 });
+
+it('warns about a template that carries the envelope itself', function () {
+    $issues = (new OpenApiLinter())->lintVersionList(['v1' => \Tests\Fixtures\OpenApi\EnvelopeApi::class]);
+
+    $found = issuesOfRule($issues, 'template.envelope-duplicated');
+
+    expect($found)->toHaveCount(1);
+    expect($found[0]->where)->toBe('v1 · template LegacyResult');
+    expect($found[0]->isError())->toBeFalse();
+
+    // Everything else in the fixture is sound — the payload templates, the
+    // @output {Template} and the @response lines.
+    expect(issuesOfRule($issues, 'template.unknown-ref'))->toBe([]);
+    expect(issuesOfRule($issues, 'tag.unknown-template'))->toBe([]);
+});
+
+it('keeps quiet about a payload template when the envelope is off', function () {
+    // The same shape — success + payload — is exactly right without the option.
+    $issues = (new OpenApiLinter())->lintVersionList(['v1' => \Tests\Fixtures\OpenApi\ShorthandApi::class]);
+
+    expect(issuesOfRule($issues, 'template.envelope-duplicated'))->toBe([]);
+    // `@OrderError!` — the required mark on a reference is not part of the name.
+    expect(issuesOfRule($issues, 'template.unknown-ref'))->toBe([]);
+});

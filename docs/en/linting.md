@@ -87,6 +87,7 @@ heard of is not possible without booting the whole application.
 | `response.duplicate-code` | warning | Two answers for one code; the last one wins |
 | `security.unknown-scheme` | error | `@security Name`, or an action-level `security` key, naming a scheme that is not defined |
 | `template.unknown-ref` | error | A template field refers through `@Other` to a template that is not defined |
+| `template.envelope-duplicated` | warning | With `$responseEnvelope` on, a template declares the envelope's own fields, so the spec shows an envelope inside an envelope |
 | `default.unknown-variable`, `example.unknown-variable` | warning | A default or example for a variable that has no `@input`, so the value is ignored |
 | `default.malformed`, `example.malformed` | error | The tag body does not parse |
 

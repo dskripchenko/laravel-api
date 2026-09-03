@@ -90,6 +90,7 @@ Gruppe zu unterscheiden, geht nicht ohne die ganze Anwendung hochzufahren.
 | `response.duplicate-code` | Warnung | Zwei Antworten für einen Code; die letzte gewinnt |
 | `security.unknown-scheme` | Fehler | `@security Name` oder ein `security`-Schlüssel der Aktion nennt ein nicht definiertes Schema |
 | `template.unknown-ref` | Fehler | Ein Template-Feld verweist über `@Other` auf ein Template, das es nicht gibt |
+| `template.envelope-duplicated` | Warnung | Bei eingeschaltetem `$responseEnvelope` deklariert ein Template die Felder des Envelopes selbst — die Spezifikation zeigt einen Envelope im Envelope |
 | `default.unknown-variable`, `example.unknown-variable` | Warnung | Vorgabe oder Beispiel für eine Variable ohne `@input` — der Wert wird ignoriert |
 | `default.malformed`, `example.malformed` | Fehler | Der Tag-Inhalt lässt sich nicht parsen |
 

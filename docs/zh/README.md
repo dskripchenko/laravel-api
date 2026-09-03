@@ -306,7 +306,7 @@ V2自动继承V1中的`list`、`show`、`create`、`update`，同时覆盖控制
 
 ```php
 class Api extends BaseApi {
-    public static bool $useResponseTemplates = true;
+    public static $useResponseTemplates = true;
 
     public static function getOpenApiTemplates(): array {
         return [
@@ -331,6 +331,8 @@ class Api extends BaseApi {
 ```
 
 **简写语法：** `type` — 可选，`type!` — 必填，`type(format)` — 带格式，`@Model` — 引用，`@Model[]` — 引用数组。数组格式（`['type' => '...', 'required' => true]`）同样支持。
+
+**响应信封。** 每个响应实际上都以 `{success, payload}` 的形式返回。在 Api 类上加 `public static $responseEnvelope = true;` 后规范也如此描述：模板描述的是 payload，每个响应——`@output` 字段、`{Template}` 引用、错误码——都会被包装。模板可以嵌套（`'client!' => ['email' => 'string(email)']`、`['string']`、`[['id' => 'integer!']]`），自定义信封是一个字段映射，用 `'{payload}'` 标记响应体位置。详见 [docblock-tags.md](docblock-tags.md#响应信封)。
 
 ### 链接到单个接口
 

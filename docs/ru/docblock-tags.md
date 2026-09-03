@@ -297,6 +297,11 @@ public static function getOpenApiSecurityDefinitions(): array {
 | `'string(date-time)!'` | Формат + обязательное | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
 | `'@Customer'` | `$ref` на схему | `['$ref' => '#/components/schemas/Customer']` |
 | `'@OrderItem[]'` | Массив `$ref` | `['type' => 'array', 'items' => ['$ref' => '...']]` |
+| `'@Customer!'` | Обязательный `$ref` | `['$ref' => '...']`, поле попадает в `required` |
+| `'client!' => [...]` | Обязательное поле с любым определением | `!` на ключе добавляет поле в `required` |
+| `['url' => 'string', ...]` | Вложенный объект | `['type' => 'object', 'properties' => [...]]` |
+| `['string']` | Массив элементов | `['type' => 'array', 'items' => ['type' => 'string']]` |
+| `[['id' => 'integer!']]` | Массив объектов | `['type' => 'array', 'items' => ['type' => 'object', ...]]` |
 
 ### Пример
 
@@ -317,6 +322,58 @@ public static function getOpenApiTemplates(): array {
 ```
 
 Оба формата можно комбинировать в одном шаблоне. Формат массива (`['type' => '...', 'required' => true]`) по-прежнему полностью поддерживается.
+
+### Вложенные структуры
+
+Массив полей — вложенный объект, список из одного элемента — массив таких элементов, и сокращённая запись работает на любой глубине. Ключ с `!` на конце делает поле обязательным при любом определении — так помечают вложенный объект или массив, у которых нет строки для маркера.
+
+```php
+'ProlongationResult' => [
+    'uuid'    => 'string(uuid)!',
+    'client!' => [                                         // вложенный объект, обязательный
+        'email' => 'string(email)',
+        'phone' => 'string',
+    ],
+    'phones'  => ['string'],                               // массив строк
+    'lines'   => [['sku' => 'string!', 'qty' => 'integer']], // массив объектов
+    'owner'   => '@Customer!',                             // обязательный $ref
+],
+```
+
+Массив, у которого все ключи — ключевые слова схемы OpenAPI, а `type` называет настоящий тип (`['type' => 'string', 'required' => true]`), считается написанной вручную схемой и проходит как раньше; его `properties` и `items` разворачиваются так же.
+
+---
+
+## Конверт ответа
+
+`ApiResponseHelper::say()` оборачивает каждое JSON-тело — и успех, и ошибку — в `{success, payload}`. По умолчанию спецификация описывает только payload, и клиент видит поля, которые в рантайме лежат на уровень глубже. `$responseEnvelope` на классе Api описывает конверт:
+
+```php
+class Api extends BaseApi {
+    public static $useResponseTemplates = true;
+    public static $responseEnvelope = true;
+}
+```
+
+Когда он включён:
+
+- каждый ответ со схемой — поля `@output`, `@output {Template}`, `@response 201 {Template}`, `@response 422 {Error}` — становится `{success: boolean, payload: <схема>}`, оба поля обязательные;
+- каждый шаблон описывает payload: `'ProlongationAvailable' => ['uuid' => 'string!', ...]`, а не `['success' => ..., 'payload' => [...]]`. Линтер предупреждает о шаблоне, который сам несёт конверт (`template.envelope-duplicated`);
+- дефолтные компоненты `Error` и `Success` оборачиваются так же, а собственный шаблон `Error` или `Success` — это payload соответствующего ответа.
+
+Собственный конверт — массив полей в сокращённой записи, где строка `'{payload}'` отмечает место схемы тела:
+
+```php
+public static $responseEnvelope = [
+    'ok!'   => 'boolean',
+    'data!' => '{payload}',
+    'meta'  => '@Meta',
+];
+```
+
+`{payload}` может лежать на любой глубине (`'result' => ['data!' => '{payload}']`). Генератор TypeScript типизирует конверт как обычный объект, и `payload` получает интерфейс шаблона.
+
+Оба свойства в трейте нетипизированы, поэтому переопределение пишется как `public static $responseEnvelope`, без типа: PHP не позволяет типизированно переобъявить нетипизированное статическое свойство.
 
 ---
 

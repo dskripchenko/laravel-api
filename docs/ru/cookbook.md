@@ -372,7 +372,7 @@ class ApiAuthMiddleware extends ApiMiddleware
 ```php
 class Api extends BaseApi
 {
-    public static bool $useResponseTemplates = true;
+    public static $useResponseTemplates = true;
 
     public static function getOpenApiTemplates(): array
     {

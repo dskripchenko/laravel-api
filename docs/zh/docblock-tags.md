@@ -297,6 +297,11 @@ public static function getOpenApiSecurityDefinitions(): array {
 | `'string(date-time)!'` | 格式 + 必填 | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
 | `'@Customer'` | `$ref` 到 schema | `['$ref' => '#/components/schemas/Customer']` |
 | `'@OrderItem[]'` | `$ref` 数组 | `['type' => 'array', 'items' => ['$ref' => '...']]` |
+| `'@Customer!'` | 必填 `$ref` | `['$ref' => '...']`，并列入 `required` |
+| `'client!' => [...]` | 任意定义的必填字段 | 键上的 `!` 把字段加入 `required` |
+| `['url' => 'string', ...]` | 嵌套对象 | `['type' => 'object', 'properties' => [...]]` |
+| `['string']` | 元素数组 | `['type' => 'array', 'items' => ['type' => 'string']]` |
+| `[['id' => 'integer!']]` | 对象数组 | `['type' => 'array', 'items' => ['type' => 'object', ...]]` |
 
 ### 示例
 
@@ -317,6 +322,58 @@ public static function getOpenApiTemplates(): array {
 ```
 
 两种格式可以在同一个模板中混合使用。数组格式（`['type' => '...', 'required' => true]`）仍然完全支持。
+
+### 嵌套结构
+
+字段映射是嵌套对象，单元素列表是该元素的数组，简写在任意深度都有效。以 `!` 结尾的键使字段成为必填，无论其定义如何——嵌套对象和数组没有字符串来携带标记，就用这种方式。
+
+```php
+'ProlongationResult' => [
+    'uuid'    => 'string(uuid)!',
+    'client!' => [                                         // 嵌套对象，必填
+        'email' => 'string(email)',
+        'phone' => 'string',
+    ],
+    'phones'  => ['string'],                               // 字符串数组
+    'lines'   => [['sku' => 'string!', 'qty' => 'integer']], // 对象数组
+    'owner'   => '@Customer!',                             // 必填 $ref
+],
+```
+
+如果一个映射的所有键都是 OpenAPI schema 关键字，且 `type` 是真实类型（`['type' => 'string', 'required' => true]`），它被视为手写 schema 并照旧原样传递，其 `properties` 和 `items` 以同样方式展开。
+
+---
+
+## 响应信封
+
+`ApiResponseHelper::say()` 把每个 JSON 响应体——成功与错误一样——包在 `{success, payload}` 里。默认情况下规范只描述 payload，客户端看到的字段在运行时其实深一层。Api 类上的 `$responseEnvelope` 用于描述信封：
+
+```php
+class Api extends BaseApi {
+    public static $useResponseTemplates = true;
+    public static $responseEnvelope = true;
+}
+```
+
+开启后：
+
+- 每个带 schema 的响应——`@output` 字段、`@output {Template}`、`@response 201 {Template}`、`@response 422 {Error}`——都变为 `{success: boolean, payload: <schema>}`，两个字段均为必填；
+- 每个模板描述的是 payload：`'ProlongationAvailable' => ['uuid' => 'string!', ...]`，而不是 `['success' => ..., 'payload' => [...]]`。对于自带信封的模板，linter 会发出警告（`template.envelope-duplicated`）；
+- 默认的 `Error` 和 `Success` 组件以同样方式包装，自定义的 `Error` 或 `Success` 模板即为该响应的 payload。
+
+自定义信封是简写形式的字段映射，字符串 `'{payload}'` 标记响应体 schema 的位置：
+
+```php
+public static $responseEnvelope = [
+    'ok!'   => 'boolean',
+    'data!' => '{payload}',
+    'meta'  => '@Meta',
+];
+```
+
+`{payload}` 可以位于任意深度（`'result' => ['data!' => '{payload}']`）。TypeScript 生成器把信封当作普通对象处理，`payload` 得到模板的接口类型。
+
+这两个属性在 trait 中都未声明类型，因此覆盖时写 `public static $responseEnvelope`，不带类型：PHP 不允许对未类型化的静态属性进行带类型的重新声明。
 
 ---
 

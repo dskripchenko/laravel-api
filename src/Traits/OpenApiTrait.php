@@ -19,6 +19,49 @@ trait OpenApiTrait
 {
     public static $useResponseTemplates = false;
 
+    /**
+     * The envelope every JSON body travels in — what ApiResponseHelper::say()
+     * really returns, so the spec can stop describing the payload as if it
+     * were the whole response.
+     *
+     * `false` documents the payload alone (the historical behaviour). `true`
+     * documents `{success: boolean, payload: <schema>}`, the package's own
+     * envelope. An array is a custom envelope in the template shorthand, with
+     * the string `'{payload}'` marking where the response schema goes:
+     *
+     *   ['success!' => 'boolean', 'data!' => '{payload}', 'meta' => '@Meta']
+     *
+     * With the envelope on, every template — the default `Error` and
+     * `Success` included — describes a payload, and every response that has a
+     * schema is wrapped: the 2xx ones and the error ones alike, because the
+     * runtime wraps them all.
+     *
+     * @var bool|array<string, mixed>
+     */
+    public static $responseEnvelope = false;
+
+    /** The placeholder in a custom envelope that the response schema replaces. */
+    private const ENVELOPE_PAYLOAD = '{payload}';
+
+    /**
+     * The keys a hand-written schema may carry. A nested array whose keys are
+     * all of these (and which names a type, a $ref, properties, items or a
+     * composition) is taken as a schema and passed through; any other array
+     * is a map of fields — a nested object in the shorthand.
+     */
+    private const SCHEMA_KEYWORDS = [
+        'type', 'format', 'required', 'description', 'properties', 'items', '$ref',
+        'enum', 'nullable', 'example', 'examples', 'default', 'minimum', 'maximum',
+        'exclusiveMinimum', 'exclusiveMaximum', 'minLength', 'maxLength', 'pattern',
+        'minItems', 'maxItems', 'uniqueItems', 'minProperties', 'maxProperties',
+        'additionalProperties', 'allOf', 'oneOf', 'anyOf', 'not', 'discriminator',
+        'readOnly', 'writeOnly', 'deprecated', 'title', 'multipleOf', 'xml', 'externalDocs',
+    ];
+
+    private const SCHEMA_MARKERS = ['type', '$ref', 'properties', 'items', 'allOf', 'oneOf', 'anyOf', 'enum'];
+
+    private const SCHEMA_TYPES = ['object', 'array', 'string', 'integer', 'number', 'boolean', 'null'];
+
     protected static ?DocBlockFactory $docBlockFactory = null;
 
     /** @var array<class-string, array<string, mixed>> */
@@ -745,9 +788,9 @@ trait OpenApiTrait
                         'description' => $templateName,
                         'content' => [
                             'application/json' => [
-                                'schema' => [
+                                'schema' => static::wrapInResponseEnvelope([
                                     '$ref' => "#/components/schemas/{$templateName}",
-                                ],
+                                ]),
                             ],
                         ],
                     ];
@@ -1052,7 +1095,7 @@ trait OpenApiTrait
             '200' => [
                 'description' => $description,
                 'content' => [
-                    'application/json' => ['schema' => $schema],
+                    'application/json' => ['schema' => static::wrapInResponseEnvelope($schema)],
                 ],
             ],
         ];
@@ -1127,29 +1170,14 @@ trait OpenApiTrait
      */
     private static function getSchemas()
     {
-        $result = [];
-        foreach (static::getRawTemplates() as $schemaName => &$properties) {
-            $requiredProperties = [];
-            foreach ($properties as $property => &$attributes) {
-                if (isset($attributes['required'])) {
-                    if ($attributes['required']) {
-                        $requiredProperties[] = $property;
-                    }
-                    unset($attributes['required']);
-                }
-            }
-
-            $result[$schemaName] = [
-                'type' => 'object',
-                'properties' => $properties,
-                'required' => $requiredProperties
-            ];
-        }
-        return $result;
+        return static::getRawTemplates();
     }
 
     /**
-     * @return array
+     * Every template as a full object schema, the shorthand unfolded and the
+     * two the package always provides merged in.
+     *
+     * @return array<string, array>
      */
     private static function getRawTemplates()
     {
@@ -1157,48 +1185,52 @@ trait OpenApiTrait
             return static::$cachedRawTemplatesByClass[static::class];
         }
 
-        $defaultTemplates = [
-            'Error' => [
-                'success' => [
-                    'type' => 'boolean',
-                ],
-                'errorKey' => [
-                    'type' => 'string',
-                ],
-                'message' => [
-                    'type' => 'string',
-                ],
-            ],
-            'Success' => [
-                'success' => [
-                    'type' => 'boolean',
-                ],
-                'payload' => [
-                    'type' => 'object',
-                    'description' => 'Response payload',
-                ],
-            ]
+        $templates = [];
+        foreach ((array) static::getOpenApiTemplates() as $name => $fields) {
+            $templates[(string) $name] = static::normalizeTemplateFields(is_array($fields) ? $fields : [], true);
+        }
+
+        $errorFields = [
+            'errorKey' => ['type' => 'string'],
+            'message' => ['type' => 'string'],
         ];
 
-        $templates = static::getOpenApiTemplates();
+        if (static::hasResponseEnvelope()) {
+            // Every template describes a payload here, the two defaults too:
+            // an own `Error` or `Success` is the payload of that answer, and
+            // the envelope comes from $responseEnvelope like everywhere else.
+            $errorPayload = $templates['Error']
+                ?? static::normalizeTemplateFields($errorFields, true);
+            $successPayload = $templates['Success']
+                ?? ['type' => 'object', 'description' => 'Response payload'];
 
-        foreach ($templates as &$properties) {
-            foreach ($properties as $field => &$definition) {
-                if (is_string($definition)) {
-                    $definition = static::parseShorthandType($definition);
+            $templates['Error'] = static::wrapInResponseEnvelope($errorPayload);
+            $templates['Success'] = static::wrapInResponseEnvelope($successPayload);
+        } else {
+            $defaults = [
+                'Error' => static::normalizeTemplateFields(['success' => ['type' => 'boolean']] + $errorFields, true),
+                'Success' => static::normalizeTemplateFields([
+                    'success' => ['type' => 'boolean'],
+                    'payload' => ['type' => 'object', 'description' => 'Response payload'],
+                ], true),
+            ];
+
+            // An own `Error` or `Success` adds to the default rather than
+            // replacing it — the historical merge, kept as it was.
+            foreach ($defaults as $name => $default) {
+                if (!isset($templates[$name])) {
+                    $templates[$name] = $default;
+                    continue;
                 }
+                $templates[$name]['properties'] = array_merge($default['properties'], $templates[$name]['properties']);
+                $templates[$name]['required'] = array_values(array_unique(array_merge(
+                    $default['required'],
+                    $templates[$name]['required']
+                )));
             }
-            unset($definition);
         }
-        unset($properties);
 
-        array_walk_recursive($templates, function (&$item, $key) {
-            if (is_string($item) && strpos($item, '@') !== false) {
-                $item = ['$ref' => str_replace('@', '#/components/schemas/', $item)];
-            }
-        });
-
-        static::$cachedRawTemplatesByClass[static::class] = array_merge_deep($defaultTemplates, $templates);
+        static::$cachedRawTemplatesByClass[static::class] = $templates;
         return static::$cachedRawTemplatesByClass[static::class];
     }
 
@@ -1208,7 +1240,247 @@ trait OpenApiTrait
      */
     private static function isHasTemplate($name)
     {
-        return Arr::has(static::getRawTemplates(), $name);
+        return array_key_exists((string) $name, static::getRawTemplates());
+    }
+
+    /**
+     * @return bool
+     */
+    private static function hasResponseEnvelope(): bool
+    {
+        return static::getResponseEnvelopeFields() !== null;
+    }
+
+    /**
+     * The envelope as a map of fields in the template shorthand, or null when
+     * there is none.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function getResponseEnvelopeFields(): ?array
+    {
+        $envelope = static::$responseEnvelope;
+
+        if ($envelope === true) {
+            return ['success!' => 'boolean', 'payload!' => self::ENVELOPE_PAYLOAD];
+        }
+
+        if (is_array($envelope) && $envelope !== []) {
+            return $envelope;
+        }
+
+        return null;
+    }
+
+    /**
+     * Wraps a body schema in the response envelope; the schema itself when
+     * there is no envelope.
+     *
+     * @param array $schema
+     * @return array
+     */
+    private static function wrapInResponseEnvelope(array $schema): array
+    {
+        $fields = static::getResponseEnvelopeFields();
+
+        if ($fields === null) {
+            return $schema;
+        }
+
+        $envelope = static::normalizeTemplateFields($fields, true);
+        $envelope['properties'] = static::replaceEnvelopePayload($envelope['properties'], $schema);
+
+        return $envelope;
+    }
+
+    /**
+     * Puts the body schema where the envelope says `{payload}` — at any depth,
+     * so a payload under `data.result` is as good as one at the top.
+     *
+     * @param array $properties
+     * @param array $schema
+     * @return array
+     */
+    private static function replaceEnvelopePayload(array $properties, array $schema): array
+    {
+        foreach ($properties as $name => $definition) {
+            if (!is_array($definition)) {
+                continue;
+            }
+
+            if (($definition['type'] ?? null) === self::ENVELOPE_PAYLOAD) {
+                $properties[$name] = $schema;
+                continue;
+            }
+
+            if (isset($definition['properties']) && is_array($definition['properties'])) {
+                $properties[$name]['properties'] = static::replaceEnvelopePayload($definition['properties'], $schema);
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
+     * Unfolds a map of fields into an object schema: the shorthand strings,
+     * the nested maps, the one-element lists and the hand-written schemas
+     * alike, at any depth.
+     *
+     * A key ending in `!` marks the field required whatever its definition —
+     * the way to require a nested object or an array, which have no string
+     * to carry the mark.
+     *
+     * @param array $fields
+     * @param bool $keepEmptyRequired  emit `required: []` even when nothing is required
+     * @return array
+     */
+    private static function normalizeTemplateFields(array $fields, bool $keepEmptyRequired = false): array
+    {
+        $properties = [];
+        $required = [];
+
+        foreach ($fields as $name => $definition) {
+            $name = (string) $name;
+            $forced = false;
+
+            if (str_ends_with($name, '!')) {
+                $name = substr($name, 0, -1);
+                $forced = true;
+            }
+
+            [$schema, $isRequired] = static::normalizeTemplateDefinition($definition);
+            $properties[$name] = $schema;
+
+            if ($forced || $isRequired) {
+                $required[] = $name;
+            }
+        }
+
+        $result = ['type' => 'object', 'properties' => $properties];
+
+        if ($required !== [] || $keepEmptyRequired) {
+            $result['required'] = array_values(array_unique($required));
+        }
+
+        return $result;
+    }
+
+    /**
+     * One field's definition as a schema, plus whether the field is required.
+     *
+     *   'string!'                      → a shorthand string
+     *   ['url' => 'string']            → a nested object
+     *   ['string']                     → an array of strings
+     *   [['id' => 'integer!']]         → an array of objects
+     *   ['type' => 'string', ...]      → a hand-written schema, passed through
+     *
+     * @param mixed $definition
+     * @return array{0: array, 1: bool}
+     */
+    private static function normalizeTemplateDefinition($definition): array
+    {
+        if (is_string($definition)) {
+            $schema = static::parseShorthandType($definition);
+            $required = (bool) ($schema['required'] ?? false);
+            unset($schema['required']);
+
+            return [$schema, $required];
+        }
+
+        if (!is_array($definition)) {
+            return [['type' => 'string'], false];
+        }
+
+        if ($definition === []) {
+            return [['type' => 'object'], false];
+        }
+
+        // A one-element list is an array of that element.
+        if (array_is_list($definition) && count($definition) === 1) {
+            [$items] = static::normalizeTemplateDefinition($definition[0]);
+
+            return [['type' => 'array', 'items' => $items], false];
+        }
+
+        if (static::isExplicitSchema($definition)) {
+            $required = false;
+
+            if (isset($definition['required']) && is_bool($definition['required'])) {
+                $required = $definition['required'];
+                unset($definition['required']);
+            }
+
+            if (isset($definition['properties']) && is_array($definition['properties'])) {
+                $nested = static::normalizeTemplateFields($definition['properties']);
+                $definition['properties'] = $nested['properties'];
+
+                $requiredList = array_merge(
+                    is_array($definition['required'] ?? null) ? $definition['required'] : [],
+                    $nested['required'] ?? []
+                );
+                if ($requiredList !== []) {
+                    $definition['required'] = array_values(array_unique($requiredList));
+                }
+            }
+
+            if (isset($definition['items']) && (is_string($definition['items']) || is_array($definition['items']))) {
+                [$definition['items']] = static::normalizeTemplateDefinition($definition['items']);
+            }
+
+            if (isset($definition['$ref']) && is_string($definition['$ref']) && str_starts_with($definition['$ref'], '@')) {
+                $definition['$ref'] = '#/components/schemas/' . substr($definition['$ref'], 1);
+            }
+
+            return [$definition, $required];
+        }
+
+        return [static::normalizeTemplateFields($definition), false];
+    }
+
+    /**
+     * Whether an array is a hand-written schema rather than a map of fields.
+     *
+     * A map whose every key happens to be a schema keyword and whose `type`
+     * names a real type — `['type' => 'string', 'format' => 'string']`, two
+     * optional fields called type and format — reads as a schema; write such
+     * a map with `['type' => ['type' => 'string'], ...]` to disambiguate.
+     *
+     * @param array $definition
+     * @return bool
+     */
+    private static function isExplicitSchema(array $definition): bool
+    {
+        if (array_is_list($definition)) {
+            return false;
+        }
+
+        $hasMarker = false;
+
+        foreach ($definition as $key => $value) {
+            $key = (string) $key;
+
+            if (!in_array($key, self::SCHEMA_KEYWORDS, true) && !str_starts_with($key, 'x-')) {
+                return false;
+            }
+
+            if (in_array($key, self::SCHEMA_MARKERS, true)) {
+                $hasMarker = true;
+            }
+        }
+
+        if (!$hasMarker) {
+            return false;
+        }
+
+        if (array_key_exists('type', $definition)) {
+            $type = $definition['type'];
+
+            if (!is_string($type) || !in_array($type, self::SCHEMA_TYPES, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -1218,7 +1490,7 @@ trait OpenApiTrait
      * the description are all optional.
      * Examples: "integer!", "string(date-time)", "string(email)! Contact email",
      * "string Document identifier".
-     * Ref syntax "@ModelName" and "@ModelName[]" are passed through as-is.
+     * Ref syntax "@ModelName", "@ModelName!" and "@ModelName[]" resolve to $ref.
      *
      * @param string $shorthand
      * @return array
@@ -1232,22 +1504,32 @@ trait OpenApiTrait
         // reading it, from SDK generators to search) saw field names without
         // a hint of what they mean.
         $description = null;
-        if (!str_starts_with($shorthand, '@') && preg_match('/^(\S+)\s+(.+)$/u', $shorthand, $parts) === 1) {
+        if (preg_match('/^(\S+)\s+(.+)$/u', $shorthand, $parts) === 1) {
             $shorthand = $parts[1];
             $description = trim($parts[2]);
+        }
+
+        $required = false;
+        if (str_ends_with($shorthand, '!')) {
+            $required = true;
+            $shorthand = substr($shorthand, 0, -1);
         }
 
         // @ref array syntax: @ModelName[] with an optional description.
         // A description next to `$ref` is ignored by OpenAPI 3.0, but an
         // array wrapping a ref is a plain object — so here it survives.
-        if (preg_match('/^@(\S+?)\[\](?:\s+(.+))?$/u', $shorthand, $m)) {
+        if (preg_match('/^@(\S+?)\[\]$/u', $shorthand, $m)) {
             $result = [
                 'type' => 'array',
                 'items' => ['$ref' => '#/components/schemas/' . $m[1]],
             ];
 
-            if (isset($m[2]) && trim($m[2]) !== '') {
-                $result['description'] = trim($m[2]);
+            if ($description !== null && $description !== '') {
+                $result['description'] = $description;
+            }
+
+            if ($required) {
+                $result['required'] = true;
             }
 
             return $result;
@@ -1255,13 +1537,13 @@ trait OpenApiTrait
 
         // @ref syntax: @ModelName
         if (str_starts_with($shorthand, '@')) {
-            return ['$ref' => '#/components/schemas/' . substr($shorthand, 1)];
-        }
+            $result = ['$ref' => '#/components/schemas/' . substr($shorthand, 1)];
 
-        $required = false;
-        if (str_ends_with($shorthand, '!')) {
-            $required = true;
-            $shorthand = substr($shorthand, 0, -1);
+            if ($required) {
+                $result['required'] = true;
+            }
+
+            return $result;
         }
 
         $format = null;

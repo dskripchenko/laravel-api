@@ -5,6 +5,53 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.10.0] — 2026-09-03
+
+### Added
+
+- **`$responseEnvelope` — the spec documents the envelope the runtime sends.**
+  `ApiResponseHelper::say()` wraps every body in `{success, payload}`, and the
+  generated spec described the payload as if it were the whole response — so a
+  client written from the documentation reached for fields one level too high.
+  `public static $responseEnvelope = true;` on the Api class wraps every
+  response that has a schema — `@output` fields, `@output {Template}`,
+  `@response 201 {Template}` and the error codes alike — in
+  `{success: boolean, payload: <schema>}`, both required. Templates then
+  describe payloads; the default `Error` and `Success` components are wrapped
+  the same way, and an own `Error` or `Success` is the payload of that answer.
+  An array is a custom envelope in the shorthand, with `'{payload}'` marking
+  where the body goes, at any depth.
+
+- **Nested structures in the template shorthand.** A map of fields is a nested
+  object, a one-element list is an array of that element, and both unfold at
+  any depth — `'client!' => ['email' => 'string(email)']`, `['string']`,
+  `[['sku' => 'string!']]`. A key ending in `!` marks the field required
+  whatever its definition; `'@Model!'` and `'@Model[]!'` do the same for a
+  reference. A hand-written schema still passes through, its `properties` and
+  `items` unfolded the same way.
+
+- **Linter: `template.envelope-duplicated`.** With the envelope on, a template
+  that declares `success` and `payload` itself was written before the option
+  existed and would show up as an envelope inside an envelope.
+
+### Fixed
+
+- **A nested array in a template reached the spec untouched.** Anything below
+  the first level of `getOpenApiTemplates()` was copied as it was written, so
+  `'payload' => ['uuid' => 'string!']` produced an object with no `type` and no
+  `properties` — valid JSON, invalid OpenAPI, and the viewers showed the name
+  of the schema and nothing else.
+
+- **Any `@` in a template string became a `$ref`.** The reference syntax was
+  applied to every string at every depth, description included: a field
+  described as `'string Contact @support'` turned into a reference to a
+  schema called `support`. Only the first token is a reference now.
+
+- **The examples declared `public static bool $useResponseTemplates`.** The
+  property is untyped in the trait, and PHP rejects a typed redeclaration —
+  the snippet from the README was a fatal error on load. The examples now
+  match the trait.
+
 ## [5.9.2] — 2026-08-20
 
 ### Fixed

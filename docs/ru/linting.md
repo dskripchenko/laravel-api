@@ -87,6 +87,7 @@ php artisan api:lint
 | `response.duplicate-code` | предупреждение | Два ответа на один код, побеждает последний |
 | `security.unknown-scheme` | ошибка | `@security Name` или ключ `security` у действия ссылается на неопределённую схему |
 | `template.unknown-ref` | ошибка | Поле шаблона через `@Other` ссылается на шаблон, которого нет |
+| `template.envelope-duplicated` | предупреждение | При включённом `$responseEnvelope` шаблон сам объявляет поля конверта — в спецификации получается конверт внутри конверта |
 | `default.unknown-variable`, `example.unknown-variable` | предупреждение | Значение по умолчанию или пример для переменной без `@input` — значение игнорируется |
 | `default.malformed`, `example.malformed` | ошибка | Тело тега не разбирается |
 

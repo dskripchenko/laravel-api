@@ -306,7 +306,7 @@ Wiederverwendbare Schemas aktivieren über `components/schemas`:
 
 ```php
 class Api extends BaseApi {
-    public static bool $useResponseTemplates = true;
+    public static $useResponseTemplates = true;
 
     public static function getOpenApiTemplates(): array {
         return [
@@ -331,6 +331,8 @@ class Api extends BaseApi {
 ```
 
 **Shorthand-Syntax:** `type` — optional, `type!` — Pflicht, `type(format)` — mit Format, `@Model` — Referenz, `@Model[]` — Array von Referenzen. Das Array-Format (`['type' => '...', 'required' => true]`) wird ebenfalls unterstützt.
+
+**Antwort-Envelope.** Jede Antwort verlaesst die Anwendung als `{success, payload}`. `public static $responseEnvelope = true;` auf der Api-Klasse laesst die Spezifikation dasselbe sagen: Templates beschreiben dann Payloads, und jede Antwort — `@output`-Felder, `{Template}`-Referenzen, Fehlercodes — wird verpackt. Templates duerfen verschachtelt sein (`'client!' => ['email' => 'string(email)']`, `['string']`, `[['id' => 'integer!']]`), und ein eigener Envelope ist eine Feld-Map mit `'{payload}'` an der Stelle des Bodys. Details: [docblock-tags.md](docblock-tags.md#antwort-envelope).
 
 ### Link auf einen einzelnen Endpunkt
 

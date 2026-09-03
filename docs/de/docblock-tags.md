@@ -297,6 +297,11 @@ Bei der Definition von Templates in `getOpenApiTemplates()` kann eine Kurzschrei
 | `'string(date-time)!'` | Format + erforderlich | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
 | `'@Customer'` | `$ref` auf Schema | `['$ref' => '#/components/schemas/Customer']` |
 | `'@OrderItem[]'` | Array von `$ref` | `['type' => 'array', 'items' => ['$ref' => '...']]` |
+| `'@Customer!'` | Erforderlicher `$ref` | `['$ref' => '...']`, in `required` aufgefuehrt |
+| `'client!' => [...]` | Erforderliches Feld mit beliebiger Definition | das `!` am Schluessel setzt das Feld in `required` |
+| `['url' => 'string', ...]` | Verschachteltes Objekt | `['type' => 'object', 'properties' => [...]]` |
+| `['string']` | Array des Elements | `['type' => 'array', 'items' => ['type' => 'string']]` |
+| `[['id' => 'integer!']]` | Array von Objekten | `['type' => 'array', 'items' => ['type' => 'object', ...]]` |
 
 ### Beispiel
 
@@ -317,6 +322,58 @@ public static function getOpenApiTemplates(): array {
 ```
 
 Beide Formate koennen im selben Template gemischt werden. Das Array-Format (`['type' => '...', 'required' => true]`) wird weiterhin vollstaendig unterstuetzt.
+
+### Verschachtelte Strukturen
+
+Eine Feld-Map ist ein verschachteltes Objekt, eine Liste mit einem Element ist ein Array dieses Elements, und die Kurzschreibweise gilt in jeder Tiefe. Ein Schluessel mit `!` am Ende macht das Feld erforderlich, wie auch immer es definiert ist — so werden ein verschachteltes Objekt oder ein Array erforderlich, die keinen String fuer die Markierung haben.
+
+```php
+'ProlongationResult' => [
+    'uuid'    => 'string(uuid)!',
+    'client!' => [                                         // verschachteltes Objekt, erforderlich
+        'email' => 'string(email)',
+        'phone' => 'string',
+    ],
+    'phones'  => ['string'],                               // Array von Strings
+    'lines'   => [['sku' => 'string!', 'qty' => 'integer']], // Array von Objekten
+    'owner'   => '@Customer!',                             // erforderlicher $ref
+],
+```
+
+Eine Map, deren Schluessel alle OpenAPI-Schema-Schluesselwoerter sind und deren `type` einen echten Typ nennt (`['type' => 'string', 'required' => true]`), ist ein handgeschriebenes Schema und wird wie bisher durchgereicht — seine `properties` und `items` werden genauso aufgeloest.
+
+---
+
+## Antwort-Envelope
+
+`ApiResponseHelper::say()` verpackt jeden JSON-Body — Erfolg wie Fehler — in `{success, payload}`. Standardmaessig dokumentiert die Spezifikation nur die Payload, und ein Client sieht Felder, die zur Laufzeit eine Ebene tiefer liegen. `$responseEnvelope` auf der Api-Klasse dokumentiert den Envelope:
+
+```php
+class Api extends BaseApi {
+    public static $useResponseTemplates = true;
+    public static $responseEnvelope = true;
+}
+```
+
+Ist er eingeschaltet:
+
+- wird jede Antwort mit Schema — `@output`-Felder, `@output {Template}`, `@response 201 {Template}`, `@response 422 {Error}` — zu `{success: boolean, payload: <Schema>}`, beide Felder erforderlich;
+- beschreibt jedes Template eine Payload: `'ProlongationAvailable' => ['uuid' => 'string!', ...]`, nicht `['success' => ..., 'payload' => [...]]`. Der Linter warnt vor einem Template, das den Envelope selbst traegt (`template.envelope-duplicated`);
+- werden die Standard-Komponenten `Error` und `Success` genauso verpackt, und ein eigenes `Error`- oder `Success`-Template ist die Payload dieser Antwort.
+
+Ein eigener Envelope ist eine Feld-Map in der Kurzschreibweise, in der der String `'{payload}'` die Stelle des Body-Schemas markiert:
+
+```php
+public static $responseEnvelope = [
+    'ok!'   => 'boolean',
+    'data!' => '{payload}',
+    'meta'  => '@Meta',
+];
+```
+
+`{payload}` darf in jeder Tiefe stehen (`'result' => ['data!' => '{payload}']`). Der TypeScript-Generator typisiert den Envelope wie jedes Objekt, `payload` bekommt das Interface des Templates.
+
+Beide Eigenschaften sind im Trait untypisiert; die Ueberschreibung lautet daher `public static $responseEnvelope`, ohne Typ: PHP lehnt eine typisierte Neudeklaration einer untypisierten statischen Eigenschaft ab.
 
 ---
 

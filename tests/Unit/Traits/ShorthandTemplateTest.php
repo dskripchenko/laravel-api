@@ -89,3 +89,74 @@ it('existing array format templates still work', function () {
     expect($schema['required'])->toContain('id');
     expect($schema['required'])->toContain('name');
 });
+
+// === Nested shorthand ===
+
+it('unfolds a nested map into an object schema', function () {
+    $config = ShorthandApi::getOpenApiConfig('v1');
+    $payload = $config['components']['schemas']['NestedResult']['properties']['payload'];
+
+    expect($payload['type'])->toBe('object');
+    expect($payload['properties']['url'])->toBe(['type' => 'string', 'description' => 'Where to go next']);
+    expect($payload['properties']['uuid'])->toBe(['type' => 'string', 'format' => 'uuid']);
+    expect($payload['required'])->toBe(['uuid']);
+
+    $client = $payload['properties']['client'];
+    expect($client['type'])->toBe('object');
+    expect($client['properties']['email'])->toBe(['type' => 'string', 'format' => 'email']);
+    expect($client)->not->toHaveKey('required');
+});
+
+it('marks a field required through a key ending in !', function () {
+    $config = ShorthandApi::getOpenApiConfig('v1');
+    $schema = $config['components']['schemas']['NestedResult'];
+
+    expect($schema['required'])->toContain('payload');
+    expect($schema['required'])->toContain('lines');
+    expect($schema['required'])->not->toContain('phones');
+    expect($schema['properties'])->toHaveKey('payload');
+    expect($schema['properties'])->not->toHaveKey('payload!');
+});
+
+it('reads a one-element list as an array', function () {
+    $config = ShorthandApi::getOpenApiConfig('v1');
+    $props = $config['components']['schemas']['NestedResult']['properties'];
+
+    expect($props['phones'])->toBe(['type' => 'array', 'items' => ['type' => 'string']]);
+
+    expect($props['lines']['type'])->toBe('array');
+    expect($props['lines']['items']['type'])->toBe('object');
+    expect($props['lines']['items']['properties']['sku'])->toBe(['type' => 'string']);
+    expect($props['lines']['items']['required'])->toBe(['sku']);
+});
+
+it('accepts the required mark on a @ref', function () {
+    $config = ShorthandApi::getOpenApiConfig('v1');
+    $schema = $config['components']['schemas']['NestedResult'];
+
+    expect($schema['properties']['error'])->toBe(['$ref' => '#/components/schemas/OrderError']);
+    expect($schema['properties']['items']['items'])->toBe(['$ref' => '#/components/schemas/OrderItem']);
+    expect($schema['required'])->toContain('error');
+    expect($schema['required'])->toContain('items');
+});
+
+it('unfolds the shorthand inside a hand-written schema', function () {
+    $config = ShorthandApi::getOpenApiConfig('v1');
+    $schema = $config['components']['schemas']['NestedResult'];
+    $explicit = $schema['properties']['explicit'];
+
+    expect($schema['required'])->toContain('explicit');
+    expect($explicit['properties']['code'])->toBe(['type' => 'integer']);
+    expect($explicit['required'])->toBe(['code']);
+    expect($explicit['properties']['tags'])->toBe(['type' => 'array', 'items' => ['type' => 'string']]);
+    expect($explicit['properties']['ref'])->toBe(['$ref' => '#/components/schemas/OrderError']);
+});
+
+it('leaves an @ in a description alone', function () {
+    // The old recursive walk turned any string with an @ into a $ref — a
+    // description mentioning @support became a reference to nothing.
+    $config = ShorthandApi::getOpenApiConfig('v1');
+    $note = $config['components']['schemas']['NestedResult']['properties']['note'];
+
+    expect($note)->toBe(['type' => 'string', 'description' => 'Contact @support if unsure']);
+});

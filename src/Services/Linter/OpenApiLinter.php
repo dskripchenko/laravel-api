@@ -776,8 +776,29 @@ final class OpenApiLinter
      */
     private function lintTemplates(string $version, string $apiClass, array $templates): void
     {
+        $envelopeFields = $this->envelopeFieldNames($apiClass);
+
         foreach ((array) $apiClass::getOpenApiTemplates() as $name => $properties) {
             $where = "{$version} · template {$name}";
+
+            // With the envelope on, a template is a payload. One that carries
+            // the envelope's own fields was written before the option existed,
+            // and the spec now shows an envelope inside an envelope.
+            $fieldNames = array_map(
+                static fn ($field): string => rtrim((string) $field, '!'),
+                array_keys((array) $properties)
+            );
+
+            if ($envelopeFields !== [] && array_diff($envelopeFields, $fieldNames) === []) {
+                $list = implode(', ', array_map(static fn (string $f): string => "`{$f}`", $envelopeFields));
+
+                $this->issues[] = LintIssue::warning(
+                    'template.envelope-duplicated',
+                    $where,
+                    "The template declares the envelope's fields ({$list}) itself; with \$responseEnvelope on it is wrapped again.",
+                    'Describe the payload alone and let $responseEnvelope add the envelope.'
+                );
+            }
 
             foreach ((array) $properties as $field => $definition) {
                 $refs = [];
@@ -800,7 +821,7 @@ final class OpenApiLinter
                     // and the rest is prose. Taking the whole string reported
                     // the description as a missing template.
                     $ref = (string) preg_split('/\s+/', trim($ref))[0];
-                    $referenced = rtrim(ltrim($ref, '@'), '[]');
+                    $referenced = rtrim(ltrim($ref, '@'), '[]!');
 
                     if (! in_array($referenced, $templates, true)) {
                         $this->issues[] = LintIssue::error(
@@ -812,6 +833,32 @@ final class OpenApiLinter
                 }
             }
         }
+    }
+
+    /**
+     * The fields of the Api class's response envelope, without the required
+     * marks; empty when there is no envelope.
+     *
+     * @param  class-string  $apiClass
+     * @return string[]
+     */
+    private function envelopeFieldNames(string $apiClass): array
+    {
+        if (! property_exists($apiClass, 'responseEnvelope')) {
+            return [];
+        }
+
+        $envelope = $apiClass::$responseEnvelope;
+
+        if ($envelope === true) {
+            return ['success', 'payload'];
+        }
+
+        if (! is_array($envelope)) {
+            return [];
+        }
+
+        return array_map(static fn ($field): string => rtrim((string) $field, '!'), array_keys($envelope));
     }
 
     /**

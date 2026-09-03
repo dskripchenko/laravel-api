@@ -372,7 +372,7 @@ The `@header` tag in middleware docblock is aggregated into OpenAPI documentatio
 ```php
 class Api extends BaseApi
 {
-    public static bool $useResponseTemplates = true;
+    public static $useResponseTemplates = true;
 
     public static function getOpenApiTemplates(): array
     {

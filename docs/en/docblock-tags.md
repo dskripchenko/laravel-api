@@ -297,6 +297,11 @@ When defining templates in `getOpenApiTemplates()`, you can use a shorthand stri
 | `'string(date-time)!'` | Format + required | `['type' => 'string', 'format' => 'date-time', 'required' => true]` |
 | `'@Customer'` | `$ref` to schema | `['$ref' => '#/components/schemas/Customer']` |
 | `'@OrderItem[]'` | Array of `$ref` | `['type' => 'array', 'items' => ['$ref' => '...']]` |
+| `'@Customer!'` | Required `$ref` | `['$ref' => '...']`, listed in `required` |
+| `'client!' => [...]` | Required field of any definition | the `!` on the key puts the field in `required` |
+| `['url' => 'string', ...]` | Nested object | `['type' => 'object', 'properties' => [...]]` |
+| `['string']` | Array of the element | `['type' => 'array', 'items' => ['type' => 'string']]` |
+| `[['id' => 'integer!']]` | Array of objects | `['type' => 'array', 'items' => ['type' => 'object', ...]]` |
 
 ### Example
 
@@ -317,6 +322,58 @@ public static function getOpenApiTemplates(): array {
 ```
 
 Both formats can be mixed in the same template. The array format (`['type' => '...', 'required' => true]`) is still fully supported.
+
+### Nested structures
+
+A map of fields is a nested object, a one-element list is an array of that element, and the shorthand works at any depth. A key ending in `!` makes the field required whatever its definition — the way to require a nested object or an array, which have no string to carry the mark.
+
+```php
+'ProlongationResult' => [
+    'uuid'    => 'string(uuid)!',
+    'client!' => [                                         // nested object, required
+        'email' => 'string(email)',
+        'phone' => 'string',
+    ],
+    'phones'  => ['string'],                               // array of strings
+    'lines'   => [['sku' => 'string!', 'qty' => 'integer']], // array of objects
+    'owner'   => '@Customer!',                             // required $ref
+],
+```
+
+A map whose every key is an OpenAPI schema keyword and whose `type` names a real type (`['type' => 'string', 'required' => true]`) is a hand-written schema and passes through as before — its `properties` and `items` are unfolded the same way.
+
+---
+
+## Response envelope
+
+`ApiResponseHelper::say()` wraps every JSON body — success and error alike — in `{success, payload}`. By default the spec documents the payload alone, so a client reading it sees fields that at runtime live one level deeper. `$responseEnvelope` on the Api class documents the envelope:
+
+```php
+class Api extends BaseApi {
+    public static $useResponseTemplates = true;
+    public static $responseEnvelope = true;
+}
+```
+
+With it on:
+
+- every response that has a schema — `@output` fields, `@output {Template}`, `@response 201 {Template}`, `@response 422 {Error}` — becomes `{success: boolean, payload: <schema>}`, both fields required;
+- every template describes a payload: `'ProlongationAvailable' => ['uuid' => 'string!', ...]`, not `['success' => ..., 'payload' => [...]]`. The linter warns about a template that carries the envelope itself (`template.envelope-duplicated`);
+- the default `Error` and `Success` components are wrapped the same way, and an own `Error` or `Success` template is the payload of that answer.
+
+A custom envelope is a map of fields in the shorthand, with the string `'{payload}'` marking where the body schema goes:
+
+```php
+public static $responseEnvelope = [
+    'ok!'   => 'boolean',
+    'data!' => '{payload}',
+    'meta'  => '@Meta',
+];
+```
+
+`{payload}` may sit at any depth (`'result' => ['data!' => '{payload}']`). The TypeScript generator types the envelope like any object, so `payload` comes out as the template's interface.
+
+Both properties are untyped in the trait, so the override is `public static $responseEnvelope`, without a type: PHP rejects a typed redeclaration of an untyped static property.
 
 ---
 
