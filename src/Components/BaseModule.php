@@ -24,7 +24,7 @@ class BaseModule
      *
      * @return BaseApi|null
      */
-    public function getApi(string $version = null): ?string
+    public function getApi(?string $version = null): ?string
     {
         if (!$version) {
             $version = ApiRequest::getApiVersion();
