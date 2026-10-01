@@ -68,10 +68,10 @@ php artisan api:lint
 |---|---|---|
 | `tag.malformed` | 错误 | 标签内容无法解析，生成器会一声不响地丢弃它 |
 | `tag.empty` | 警告 | 标签后面什么都没有 |
-| `tag.callable-misplaced` | 警告 | 在 `@input` 之外的标签上使用了 `[method]` 形式 |
+| `tag.callable-misplaced` | 警告 | 在 `@input` 和 `@output` 之外的标签上使用了 `[method]` 形式 |
 | `tag.template-misplaced` | 警告 | 在 `@output` 之外的标签上使用了 `{Template}` 形式 |
 | `tag.unknown-template` | 错误 | `@input @Model` / `@output @Model[]` 引用了未定义的模板 |
-| `tag.callable-missing` | 错误 | `@input [method]` 引用了控制器没有的方法 |
+| `tag.callable-missing` | 错误 | `@input [method]` / `@output [method]` 引用了控制器没有的方法 |
 | `tag.unknown-type` | 警告 | 类型不在已知集合内 —— 会被悄悄当作 `string` |
 | `tag.duplicate-variable` | 警告 | 同一变量声明了两次，以最后一次为准 |
 | `tag.orphan-nesting` | 警告 | 有 `$address.city` 却没有声明 `$address` |
@@ -88,6 +88,23 @@ php artisan api:lint
 
 由中间件提供的输入会被计入：为其中声明的变量写 `@default` 是合法的，不会被
 报告。
+
+### 缺失的标记
+
+| 规则 | 级别 | 含义 |
+|---|---|---|
+| `input.undeclared` | 警告 | 方法校验了输入，但其 docblock 中没有任何 `@input` |
+
+上面的规则检查的都是已有的标记；这一条针对的是缺失的标记。单凭「没有 `@input`」
+会产生噪音——很多动作本来就不接收任何参数——因此该规则只在方法明显在做校验时
+触发：调用 `validate()` / `validateWithBag()`、`Validator::make()`、`validator()`
+辅助函数，或带有 `FormRequest` 参数。规则是字面量还是在运行时拼装都无关紧要：
+无论哪种情况，端点都有字段，而规范一个也没有描述。注释会被忽略，并且只计入方法
+自身的标签——由中间件提供的 `@input` 描述的是中间件的输入，而不是方法所校验的
+字段。
+
+如果字段只有在运行时才知道，请用
+[`@input [method]`](docblock-tags.md#从方法动态获取输入) 声明。
 
 ## 如何阅读报告
 

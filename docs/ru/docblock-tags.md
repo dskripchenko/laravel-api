@@ -112,13 +112,94 @@
 
 Генерирует `$ref: '#/components/schemas/OrderCreateRequest'` в requestBody. Модель должна быть определена в `getOpenApiTemplates()`.
 
+### Список скаляров
+
+```php
+@input array ?$abilities Abilities
+@input string $abilities[] One ability
+```
+
+`[]` без дочернего поля описывает сам элемент:
+`{"type": "array", "items": {"type": "string"}}`.
+
+### Обязательные поля во вложенных структурах
+
+Строка без `?` обязательна на своём уровне: `$widgets[].slug` попадает в
+`items.required`, `$address.city` — в `required` объекта `address`, а корневая
+строка (`$widgets`, `$address`) — в `required` тела. Корень, известный только
+через дочерние поля, ничего не говорит о себе сам и обязательным не помечается.
+
 ### Динамические входные данные из метода
 
 ```php
 @input [getOpenApiMetaInputs]
 ```
 
-Вызывает метод контроллера и объединяет возвращённые входные данные.
+Вызывает метод контроллера и объединяет то, что он вернул, с входными данными
+операции. Предназначено для полей, которые известны только во время выполнения —
+строятся по модели, по конфигу или по самому маршруту.
+
+**Контекст операции.** Один метод контроллера может обслуживать много маршрутов:
+обобщённый CRUD-контроллер регистрируется под своим ключом контроллера для каждой
+сущности, а поля зависят от сущности. Поэтому методу сообщается, какая операция
+описывается. Через контейнер он получает то из перечисленного, что объявит:
+
+| Параметр | Значение |
+|---|---|
+| `OperationContext $any` (по типу) | весь контекст, см. ниже |
+| `string $version` | версия API, `v1` |
+| `string $controllerKey` | ключ контроллера из `getMethods()` |
+| `string $actionKey` | ключ действия из `getMethods()` |
+| `string $httpMethod` | HTTP-метод в нижнем регистре |
+
+`Dskripchenko\LaravelApi\Services\OpenApi\OperationContext` содержит
+`version`, `apiClass` (наследник `BaseApi`), `controllerKey`, `actionKey`,
+`controllerClass`, `controllerMethod`, `httpMethod`, `tag` (`input` или
+`output`) и `actionOptions` (определение действия из `getMethods()` в том виде,
+в каком оно записано), а также `operationId()`.
+
+Метод, который ничего из этого не объявляет, вызывается ровно как раньше, так что
+существующие реализации `[method]` продолжают работать без изменений.
+
+**Что возвращает метод.** Одно из двух:
+
+- список строк докблока, историческая форма —
+  `['string $name Name', 'integer ?$age Age']`;
+- **объект** JSON Schema — массив с `properties` или `type: object`. Он попадает
+  в спецификацию как есть, поэтому доступно всё, что не выразить синтаксисом
+  строк: `minimum`, `maxLength`, `pattern`, `nullable`, `enum`, вложенные
+  `items` и так далее.
+
+Возвращённая схема объединяется с остальными строками `@input` операции — сначала
+их свойства, затем свойства схемы, списки `required` объединяются. Для POST
+результатом становится JSON-тело запроса; для GET каждое свойство верхнего уровня
+становится query-параметром со своей схемой.
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * Update an entity
+ *
+ * @input integer $id Identifier
+ * @input [entityFields]
+ */
+public function update(Request $request): JsonResponse { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    $entity = Entities::find($context->controllerKey);
+
+    return [
+        'type' => 'object',
+        'properties' => $entity->jsonSchemaProperties(),
+        'required' => $context->actionKey === 'create' ? $entity->requiredFields() : [],
+    ];
+}
+```
+
+Теперь спецификация показывает `/v1/users/update` с полями пользователя, а
+`/v1/posts/update` — с полями поста, и всё это из одного метода.
 
 ---
 
@@ -155,6 +236,20 @@
 @output integer $id Обязательное поле     // попадает в "required"
 @output string ?$email Необязательное поле // не попадает в "required"
 ```
+
+---
+
+### Динамические выходные данные из метода
+
+```php
+@output integer $id Identifier
+@output [entityOutput]
+```
+
+То же, что `@input [method]`, только в контексте `tag` равен `output`: метод
+возвращает строки или объектную схему, которая накладывается поверх остальных
+строк `@output`. Строка `@output {Template}` по-прежнему главнее, а теги
+`@response`, если они есть, полностью заменяют `@output`.
 
 ---
 

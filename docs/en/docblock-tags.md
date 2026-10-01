@@ -112,13 +112,94 @@ Generates:
 
 Generates `$ref: '#/components/schemas/OrderCreateRequest'` in requestBody. The model must be defined in `getOpenApiTemplates()`.
 
-### Dynamic inputs from method
+### List of scalars
+
+```php
+@input array ?$abilities Abilities
+@input string $abilities[] One ability
+```
+
+`[]` with no child describes the element itself:
+`{"type": "array", "items": {"type": "string"}}`.
+
+### Required fields in nested structures
+
+A line without `?` is required at its own level: `$widgets[].slug` lands in
+`items.required`, `$address.city` in the `required` of `address`, and the root
+line (`$widgets`, `$address`) in the `required` of the body. A root known only
+through its children says nothing about itself and is not marked required.
+
+### Dynamic inputs from a method
 
 ```php
 @input [getOpenApiMetaInputs]
 ```
 
-Calls the method on the controller and merges returned inputs.
+Calls the method on the controller and merges what it returns into the
+operation's inputs. It is meant for fields that are only known at runtime —
+built from a model, a config, or the route itself.
+
+**The operation context.** One controller method may serve many routes: a
+generic CRUD controller is registered under one controller key per entity, and
+the fields depend on the entity. So the method is told which operation is being
+described. It receives, through the container, whatever it declares of:
+
+| Parameter | Value |
+|---|---|
+| `OperationContext $any` (by type) | the whole context, see below |
+| `string $version` | the API version, `v1` |
+| `string $controllerKey` | the controller key from `getMethods()` |
+| `string $actionKey` | the action key from `getMethods()` |
+| `string $httpMethod` | the verb, lowercase |
+
+`Dskripchenko\LaravelApi\Services\OpenApi\OperationContext` carries
+`version`, `apiClass` (the `BaseApi` subclass), `controllerKey`, `actionKey`,
+`controllerClass`, `controllerMethod`, `httpMethod`, `tag` (`input` or
+`output`) and `actionOptions` (the action's definition from `getMethods()`, as
+written), plus `operationId()`.
+
+A method that declares none of these is called exactly as before, so existing
+`[method]` implementations keep working unchanged.
+
+**What the method returns.** Either of:
+
+- a list of docblock lines, the historical form —
+  `['string $name Name', 'integer ?$age Age']`;
+- a JSON Schema **object** — an array with `properties` or `type: object`. It
+  goes into the spec as it is, so everything the line syntax cannot say is
+  available: `minimum`, `maxLength`, `pattern`, `nullable`, `enum`, nested
+  `items`, and so on.
+
+A returned schema is merged with the other `@input` lines of the operation —
+their properties first, the schema's after, `required` lists united. For a POST
+the result is a JSON request body; for a GET every top-level property becomes a
+query parameter carrying its own schema.
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * Update an entity
+ *
+ * @input integer $id Identifier
+ * @input [entityFields]
+ */
+public function update(Request $request): JsonResponse { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    $entity = Entities::find($context->controllerKey);
+
+    return [
+        'type' => 'object',
+        'properties' => $entity->jsonSchemaProperties(),
+        'required' => $context->actionKey === 'create' ? $entity->requiredFields() : [],
+    ];
+}
+```
+
+The spec now shows `/v1/users/update` with the user's fields and
+`/v1/posts/update` with the post's, from one method.
 
 ---
 
@@ -155,6 +236,20 @@ Prefix variable name with `?` to mark a response field as optional. Required fie
 @output integer $id Required field        // in "required" array
 @output string ?$email Optional field     // not in "required" array
 ```
+
+---
+
+### Dynamic outputs from a method
+
+```php
+@output integer $id Identifier
+@output [entityOutput]
+```
+
+The same as `@input [method]`, with `tag` set to `output` in the context: the
+method returns lines or an object schema, merged over the other `@output`
+lines. An `@output {Template}` line still wins, and `@response` tags, when
+present, replace `@output` altogether.
 
 ---
 

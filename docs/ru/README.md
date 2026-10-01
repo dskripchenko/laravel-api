@@ -287,6 +287,38 @@ V2 автоматически наследует `list`, `show`, `create`, `upda
  *  @input integer $items[].quantity Количество */
 ```
 
+Список скаляров записывается через `[]` без дочернего поля: `@input string $tags[]`.
+
+### Поля, известные только во время выполнения
+
+Когда поля зависят от маршрута — один обобщённый контроллер зарегистрирован под
+своим ключом для каждой сущности, — `@input [method]` обращается к методу
+контроллера, и методу сообщается, какая операция описывается:
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * @input integer $id
+ * @input [entityFields]
+ */
+public function update(Request $request) { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    // $context->controllerKey is `users` on /v1/users/update, `posts` on /v1/posts/update
+    return [
+        'type' => 'object',
+        'properties' => ['email' => ['type' => 'string', 'format' => 'email', 'maxLength' => 255]],
+        'required' => ['email'],
+    ];
+}
+```
+
+Метод может вернуть строки докблока (`['string $email Email']`) или объект JSON
+Schema, который попадает в спецификацию как есть — вместе со всеми ограничениями.
+`@output [method]` работает так же. Подробнее: [docblock-tags.md](docblock-tags.md#динамические-входные-данные-из-метода).
+
 ### Заголовки, безопасность, ответы
 
 ```php
@@ -461,8 +493,9 @@ php artisan api:lint --strict   # для CI: провал и на предупр
 php artisan api:lint --unrouted # плюс публичные методы, на которые никто не ведёт
 ```
 
-Читает карту маршрутов и докблоки тем же парсером, что и генератор OpenAPI.
-Полный список правил: [linting.md](linting.md).
+Читает карту маршрутов и докблоки тем же парсером, что и генератор OpenAPI, а
+также сообщает о действии, которое валидирует вход, но ничего не объявляет
+(`input.undeclared`). Полный список правил: [linting.md](linting.md).
 
 ## Экспорт API
 

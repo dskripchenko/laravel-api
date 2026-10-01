@@ -112,13 +112,90 @@
 
 在 requestBody 中生成 `$ref: '#/components/schemas/OrderCreateRequest'`。该模型必须在 `getOpenApiTemplates()` 中定义。
 
+### 标量列表
+
+```php
+@input array ?$abilities Abilities
+@input string $abilities[] One ability
+```
+
+不带子字段的 `[]` 描述元素本身：
+`{"type": "array", "items": {"type": "string"}}`。
+
+### 嵌套结构中的必填字段
+
+不带 `?` 的行在其所在层级上是必填的：`$widgets[].slug` 进入 `items.required`，
+`$address.city` 进入 `address` 的 `required`，根行（`$widgets`、`$address`）进入
+请求体的 `required`。仅通过子字段得知的根没有对自身作出任何声明，因此不会被标记
+为必填。
+
 ### 从方法动态获取输入
 
 ```php
 @input [getOpenApiMetaInputs]
 ```
 
-调用控制器上的方法并合并返回的输入参数。
+调用控制器上的方法，并将其返回结果合并到操作的输入中。适用于只有在运行时才知道的
+字段——根据模型、配置或路由本身构建。
+
+**操作上下文。** 一个控制器方法可能服务于多个路由：通用 CRUD 控制器会按每个实体
+各注册一个控制器键，而字段取决于实体。因此会告诉该方法当前描述的是哪个操作。它通过
+容器获得自己声明的以下任意参数：
+
+| 参数 | 值 |
+|---|---|
+| `OperationContext $any`（按类型） | 完整上下文，见下文 |
+| `string $version` | API 版本，`v1` |
+| `string $controllerKey` | `getMethods()` 中的控制器键 |
+| `string $actionKey` | `getMethods()` 中的动作键 |
+| `string $httpMethod` | HTTP 方法，小写 |
+
+`Dskripchenko\LaravelApi\Services\OpenApi\OperationContext` 包含
+`version`、`apiClass`（`BaseApi` 子类）、`controllerKey`、`actionKey`、
+`controllerClass`、`controllerMethod`、`httpMethod`、`tag`（`input` 或
+`output`）以及 `actionOptions`（`getMethods()` 中按原样书写的动作定义），另有
+`operationId()`。
+
+不声明其中任何参数的方法会像以前一样被调用，因此现有的 `[method]` 实现无需修改
+即可继续工作。
+
+**方法返回什么。** 以下两者之一：
+
+- docblock 行的列表，即历史形式——
+  `['string $name Name', 'integer ?$age Age']`；
+- JSON Schema **对象**——带有 `properties` 或 `type: object` 的数组。它会原样
+  写入规范，因此行语法无法表达的一切都可以使用：`minimum`、`maxLength`、
+  `pattern`、`nullable`、`enum`、嵌套的 `items` 等等。
+
+返回的 schema 会与该操作的其他 `@input` 行合并——先是它们的属性，然后是 schema
+的属性，`required` 列表取并集。对于 POST，结果是 JSON 请求体；对于 GET，每个顶层
+属性都会成为带有自身 schema 的查询参数。
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * Update an entity
+ *
+ * @input integer $id Identifier
+ * @input [entityFields]
+ */
+public function update(Request $request): JsonResponse { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    $entity = Entities::find($context->controllerKey);
+
+    return [
+        'type' => 'object',
+        'properties' => $entity->jsonSchemaProperties(),
+        'required' => $context->actionKey === 'create' ? $entity->requiredFields() : [],
+    ];
+}
+```
+
+现在规范中 `/v1/users/update` 显示用户的字段，`/v1/posts/update` 显示帖子的字段，
+全部出自同一个方法。
 
 ---
 
@@ -155,6 +232,19 @@
 @output integer $id 必填字段        // 在 "required" 数组中
 @output string ?$email 可选字段     // 不在 "required" 数组中
 ```
+
+---
+
+### 从方法动态获取输出
+
+```php
+@output integer $id Identifier
+@output [entityOutput]
+```
+
+与 `@input [method]` 相同，只是上下文中的 `tag` 为 `output`：方法返回行或对象
+schema，合并到其他 `@output` 行之上。`@output {Template}` 行仍然优先，而存在
+`@response` 标签时，它们会完全取代 `@output`。
 
 ---
 

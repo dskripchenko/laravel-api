@@ -267,6 +267,105 @@ final class OpenApiLinter
         $docBlock = $this->docBlock($method->getDocComment());
 
         $this->lintTags($where, $docBlock, $reflection, $templates, $securitySchemes, $middlewareList, $apiClass);
+        $this->lintUndeclaredInput($where, $docBlock, $method);
+    }
+
+    /**
+     * An action that validates its input and declares none of it.
+     *
+     * The rest of the linter checks the markup that is there; this is the one
+     * check for markup that is missing. "No @input at all" on its own would be
+     * noise — plenty of actions take nothing — so it is narrowed to the
+     * methods that visibly validate something: a `validate()` call, a
+     * validator built in the body, or a FormRequest parameter. Whatever the
+     * rules are, literal or assembled at runtime, they mean the endpoint has
+     * fields, and the spec describes none of them.
+     *
+     * Only the method's own @input tags count: the ones middleware contribute
+     * describe the middleware's input, not the fields this method checks.
+     */
+    private function lintUndeclaredInput(string $where, DocBlock $docBlock, \ReflectionMethod $method): void
+    {
+        if ($docBlock->getTagsByName('input') !== []) {
+            return;
+        }
+
+        $evidence = $this->validationEvidence($method);
+        if ($evidence === null) {
+            return;
+        }
+
+        $this->issues[] = LintIssue::warning(
+            'input.undeclared',
+            $where,
+            "{$method->getDeclaringClass()->getName()}::{$method->getName()}() validates its input ({$evidence}) and declares no @input.",
+            'Describe the fields with @input tags — or with @input [method] when they are only known at runtime.'
+        );
+    }
+
+    /**
+     * What gives away that a method validates its input, or null.
+     */
+    private function validationEvidence(\ReflectionMethod $method): ?string
+    {
+        foreach ($method->getParameters() as $parameter) {
+            $type = $parameter->getType();
+            if ($type instanceof \ReflectionNamedType
+                && ! $type->isBuiltin()
+                && is_subclass_of($type->getName(), 'Illuminate\\Foundation\\Http\\FormRequest')
+            ) {
+                return 'a FormRequest parameter';
+            }
+        }
+
+        $source = $this->methodBodyWithoutComments($method);
+        if ($source === null) {
+            return null;
+        }
+
+        $patterns = [
+            '/\bValidator\s*::\s*make\s*\(/' => 'Validator::make()',
+            '/(?<![\w$>:])validator\s*\(/' => 'validator()',
+            '/->\s*validate(?:WithBag)?\s*\(/i' => 'validate()',
+        ];
+        foreach ($patterns as $pattern => $label) {
+            if (preg_match($pattern, $source) === 1) {
+                return $label;
+            }
+        }
+
+        return null;
+    }
+
+    private function methodBodyWithoutComments(\ReflectionMethod $method): ?string
+    {
+        $file = $method->getFileName();
+        $start = $method->getStartLine();
+        $end = $method->getEndLine();
+        if ($file === false || $start === false || $end === false || ! is_readable($file)) {
+            return null;
+        }
+
+        $lines = file($file);
+        if ($lines === false) {
+            return null;
+        }
+
+        $code = implode('', array_slice($lines, $start - 1, $end - $start + 1));
+        $tokens = token_get_all('<?php ' . $code);
+        $result = '';
+        foreach ($tokens as $token) {
+            if (is_array($token)) {
+                if ($token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+                    continue;
+                }
+                $result .= $token[1];
+            } else {
+                $result .= $token;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -410,13 +509,13 @@ final class OpenApiLinter
                 continue;
             }
 
-            // `[methodName]` — inputs assembled at runtime.
+            // `[methodName]` — inputs or outputs assembled at runtime.
             if (preg_match(DocPatterns::inputsCallable(), $body, $callable)) {
-                if ($tagName !== 'input') {
+                if ($tagName !== 'input' && $tagName !== 'output') {
                     $this->issues[] = LintIssue::warning(
                         'tag.callable-misplaced',
                         $where,
-                        "@{$tagName} does not support the [method] form; only @input does.",
+                        "@{$tagName} does not support the [method] form; only @input and @output do.",
                     );
 
                     continue;
@@ -426,7 +525,7 @@ final class OpenApiLinter
                     $this->issues[] = LintIssue::error(
                         'tag.callable-missing',
                         $where,
-                        "@input [{$callable['callable']}] refers to a method the controller does not have.",
+                        "@{$tagName} [{$callable['callable']}] refers to a method the controller does not have.",
                     );
                 }
 

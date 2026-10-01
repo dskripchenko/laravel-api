@@ -244,3 +244,50 @@ it('keeps quiet about a payload template when the envelope is off', function () 
     // `@OrderError!` — the required mark on a reference is not part of the name.
     expect(issuesOfRule($issues, 'template.unknown-ref'))->toBe([]);
 });
+
+/**
+ * @return LintIssue[]
+ */
+function lintUndeclared(): array
+{
+    return issuesOfRule(
+        (new OpenApiLinter())->lintVersionList(['v1' => \Tests\Fixtures\Linter\UndeclaredInputApi::class]),
+        'input.undeclared'
+    );
+}
+
+it('reports an action that validates input and declares none', function () {
+    $where = array_map(static fn (LintIssue $i): string => $i->where, lintUndeclared());
+
+    expect($where)->toBe([
+        'v1 · things.validatesLiteral',
+        'v1 · things.validatesRuntime',
+        'v1 · things.validatorFacade',
+        'v1 · things.validatorHelper',
+        'v1 · things.formRequest',
+    ]);
+});
+
+it('reports undeclared input as a warning that names the evidence', function () {
+    $issues = lintUndeclared();
+
+    expect($issues[0]->isError())->toBeFalse();
+    expect($issues[0]->message)->toContain('validate()');
+    expect($issues[2]->message)->toContain('Validator::make()');
+    expect($issues[4]->message)->toContain('FormRequest');
+});
+
+it('leaves alone actions that declare input, take none, or only mention validation in a comment', function () {
+    $where = array_map(static fn (LintIssue $i): string => $i->where, lintUndeclared());
+
+    expect($where)->not->toContain('v1 · things.declared');
+    expect($where)->not->toContain('v1 · things.declaredDynamically');
+    expect($where)->not->toContain('v1 · things.takesNothing');
+    expect($where)->not->toContain('v1 · things.onlyMentionsInComment');
+});
+
+it('accepts the [method] form on @output', function () {
+    $issues = (new OpenApiLinter())->lintVersionList(['v1' => \Tests\Fixtures\OpenApi\ContextApi::class]);
+
+    expect($issues)->toBe([]);
+});

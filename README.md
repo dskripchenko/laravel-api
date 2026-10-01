@@ -292,6 +292,38 @@ Documentation is generated automatically from PHP docblocks. No YAML or JSON fil
  *  @input integer $items[].quantity Quantity */
 ```
 
+A list of scalars takes `[]` with no child: `@input string $tags[]`.
+
+### Fields known only at runtime
+
+When the fields depend on the route — one generic controller registered under a
+key per entity — `@input [method]` asks a controller method, and the method is
+told which operation is being described:
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * @input integer $id
+ * @input [entityFields]
+ */
+public function update(Request $request) { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    // $context->controllerKey is `users` on /v1/users/update, `posts` on /v1/posts/update
+    return [
+        'type' => 'object',
+        'properties' => ['email' => ['type' => 'string', 'format' => 'email', 'maxLength' => 255]],
+        'required' => ['email'],
+    ];
+}
+```
+
+The method may return docblock lines (`['string $email Email']`) or a JSON
+Schema object, which goes into the spec as it is — constraints and all. `@output
+[method]` works the same way. See [docs/docblock-tags.md](docs/en/docblock-tags.md#dynamic-inputs-from-a-method).
+
 ### Headers, security, responses
 
 ```php
@@ -560,7 +592,9 @@ php artisan api:lint --unrouted # also: public methods no action points at
 ```
 
 It reads the route map and the docblocks with the same parser the OpenAPI
-generator uses. Full list of rules: [docs/linting.md](docs/en/linting.md).
+generator uses, and also reports an action that validates its input without
+declaring any (`input.undeclared`). Full list of rules:
+[docs/linting.md](docs/en/linting.md).
 
 ## API Export
 
