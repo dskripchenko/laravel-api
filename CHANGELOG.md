@@ -5,6 +5,46 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.11.0] — 2026-10-02
+
+### Added
+
+- **`@input [method]` is told which operation it describes.** One controller
+  method may serve many routes — a generic CRUD controller registered under a
+  controller key per entity — and the fields depend on the route. The method
+  was called with nothing, so it could only answer for all routes at once,
+  which in practice meant describing no fields at all. It now receives an
+  `OperationContext` (version, Api class, controller key, action key,
+  controller class and method, HTTP verb, `input`/`output`, the action's
+  options) through the container: declare a parameter typed `OperationContext`,
+  or any of `$version`, `$controllerKey`, `$actionKey`, `$httpMethod`. A method
+  declaring none of them is called exactly as before.
+- **A `[method]` may return a JSON Schema object** instead of docblock lines.
+  It goes into the spec as it is — `minimum`, `maxLength`, `pattern`,
+  `nullable`, `enum`, nested `items` — merged with the operation's other
+  `@input` lines (`required` lists united). For POST it is a JSON request body;
+  for GET each top-level property becomes a query parameter with its schema.
+- **`@output [method]`**, with the same context and the same two return forms.
+- **`$tags[]` describes a list of scalars**: `@input string $abilities[]`
+  becomes `{type: array, items: {type: string}}`.
+- **Linter: `input.undeclared`** (warning). An action whose method visibly
+  validates its input — `validate()`, `Validator::make()`, `validator()`, a
+  `FormRequest` parameter — while its docblock declares no `@input` at all.
+  Narrowed to validating methods so that actions which take nothing are not
+  reported.
+
+### Fixed
+
+- Nested notation keeps `required`: `$widgets[].slug` lands in `items.required`,
+  `$address.city` in the object's `required`, and a required root line in the
+  body's `required`. They were all dropped.
+- A root declared after its children (`$widgets[].slug` before `$widgets`) no
+  longer wipes them.
+- `@output` with nested fields no longer drops the flat siblings: `@output
+  integer $id` next to `@output string $owner.name` used to leave `id` out of
+  the schema.
+- The linter accepts the `[method]` form on `@output`.
+
 ## [5.10.1] — 2026-09-14
 
 ### Fixed

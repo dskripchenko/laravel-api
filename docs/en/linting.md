@@ -73,10 +73,10 @@ heard of is not possible without booting the whole application.
 |---|---|---|
 | `tag.malformed` | error | The tag body does not parse, and the generator drops it without a word |
 | `tag.empty` | warning | A tag with nothing after it |
-| `tag.callable-misplaced` | warning | The `[method]` form on a tag other than `@input` |
+| `tag.callable-misplaced` | warning | The `[method]` form on a tag other than `@input` and `@output` |
 | `tag.template-misplaced` | warning | The `{Template}` form on a tag other than `@output` |
 | `tag.unknown-template` | error | `@input @Model` / `@output @Model[]` names a template that is not defined |
-| `tag.callable-missing` | error | `@input [method]` names a method the controller lacks |
+| `tag.callable-missing` | error | `@input [method]` / `@output [method]` names a method the controller lacks |
 | `tag.unknown-type` | warning | A type outside the known set — it silently becomes `string` |
 | `tag.duplicate-variable` | warning | The same variable declared twice; the last one wins |
 | `tag.orphan-nesting` | warning | `$address.city` without a declared `$address` |
@@ -93,6 +93,25 @@ heard of is not possible without booting the whole application.
 
 Inputs contributed by middleware are taken into account: a `@default` for a
 variable one of them declares is legitimate and is not reported.
+
+### Missing markup
+
+| Rule | Severity | What it means |
+|---|---|---|
+| `input.undeclared` | warning | The method validates its input and its docblock has no `@input` at all |
+
+Everything above checks the markup that is there; this one is about markup that
+is missing. "No `@input`" on its own would be noise — plenty of actions take
+nothing — so the rule only fires where the method visibly validates something:
+a `validate()` / `validateWithBag()` call, `Validator::make()`, the
+`validator()` helper, or a `FormRequest` parameter. It does not matter whether
+the rules are a literal or assembled at runtime: either way the endpoint has
+fields and the spec describes none of them. Comments are ignored, and only the
+method's own tags count — `@input` contributed by middleware describes the
+middleware's input, not the fields the method checks.
+
+When the fields are only known at runtime, declare them with
+[`@input [method]`](docblock-tags.md#dynamic-inputs-from-a-method).
 
 ## Reading the report
 

@@ -112,13 +112,96 @@ Erzeugt:
 
 Erzeugt `$ref: '#/components/schemas/OrderCreateRequest'` im requestBody. Das Modell muss in `getOpenApiTemplates()` definiert sein.
 
-### Dynamische Eingaben aus Methode
+### Liste von Skalaren
+
+```php
+@input array ?$abilities Abilities
+@input string $abilities[] One ability
+```
+
+`[]` ohne Kindfeld beschreibt das Element selbst:
+`{"type": "array", "items": {"type": "string"}}`.
+
+### Pflichtfelder in verschachtelten Strukturen
+
+Eine Zeile ohne `?` ist auf ihrer eigenen Ebene erforderlich: `$widgets[].slug`
+landet in `items.required`, `$address.city` im `required` von `address`, und die
+Wurzelzeile (`$widgets`, `$address`) im `required` des Bodys. Eine Wurzel, die nur
+ueber ihre Kinder bekannt ist, sagt nichts ueber sich selbst aus und wird nicht als
+erforderlich markiert.
+
+### Dynamische Eingaben aus einer Methode
 
 ```php
 @input [getOpenApiMetaInputs]
 ```
 
-Ruft die Methode auf dem Controller auf und fuegt die zurueckgegebenen Eingaben zusammen.
+Ruft die Methode auf dem Controller auf und fuegt das Ergebnis in die Eingaben der
+Operation ein. Gedacht fuer Felder, die erst zur Laufzeit bekannt sind — gebaut
+aus einem Modell, einer Konfiguration oder der Route selbst.
+
+**Der Operationskontext.** Eine Controller-Methode kann viele Routen bedienen: ein
+generischer CRUD-Controller wird pro Entitaet unter einem eigenen Controller-Schluessel
+registriert, und die Felder haengen von der Entitaet ab. Deshalb wird der Methode
+mitgeteilt, welche Operation beschrieben wird. Sie erhaelt ueber den Container das,
+was sie davon deklariert:
+
+| Parameter | Wert |
+|---|---|
+| `OperationContext $any` (nach Typ) | der gesamte Kontext, siehe unten |
+| `string $version` | die API-Version, `v1` |
+| `string $controllerKey` | der Controller-Schluessel aus `getMethods()` |
+| `string $actionKey` | der Aktions-Schluessel aus `getMethods()` |
+| `string $httpMethod` | das HTTP-Verb, kleingeschrieben |
+
+`Dskripchenko\LaravelApi\Services\OpenApi\OperationContext` enthaelt
+`version`, `apiClass` (die `BaseApi`-Unterklasse), `controllerKey`, `actionKey`,
+`controllerClass`, `controllerMethod`, `httpMethod`, `tag` (`input` oder
+`output`) und `actionOptions` (die Definition der Aktion aus `getMethods()`, so
+wie sie geschrieben ist), dazu `operationId()`.
+
+Eine Methode, die nichts davon deklariert, wird genau wie bisher aufgerufen;
+bestehende `[method]`-Implementierungen funktionieren also unveraendert weiter.
+
+**Was die Methode zurueckgibt.** Entweder:
+
+- eine Liste von Docblock-Zeilen, die historische Form —
+  `['string $name Name', 'integer ?$age Age']`;
+- ein JSON-Schema-**Objekt** — ein Array mit `properties` oder `type: object`. Es
+  wird unveraendert in die Spezifikation uebernommen, daher steht alles zur
+  Verfuegung, was die Zeilensyntax nicht ausdruecken kann: `minimum`, `maxLength`,
+  `pattern`, `nullable`, `enum`, verschachtelte `items` und so weiter.
+
+Ein zurueckgegebenes Schema wird mit den uebrigen `@input`-Zeilen der Operation
+zusammengefuehrt — zuerst deren Properties, danach die des Schemas, `required`-Listen
+werden vereinigt. Bei POST entsteht ein JSON-Request-Body; bei GET wird jede
+Property der obersten Ebene zu einem Query-Parameter mit eigenem Schema.
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * Update an entity
+ *
+ * @input integer $id Identifier
+ * @input [entityFields]
+ */
+public function update(Request $request): JsonResponse { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    $entity = Entities::find($context->controllerKey);
+
+    return [
+        'type' => 'object',
+        'properties' => $entity->jsonSchemaProperties(),
+        'required' => $context->actionKey === 'create' ? $entity->requiredFields() : [],
+    ];
+}
+```
+
+Die Spezifikation zeigt nun `/v1/users/update` mit den Feldern des Users und
+`/v1/posts/update` mit denen des Posts — aus einer einzigen Methode.
 
 ---
 
@@ -155,6 +238,20 @@ Variablennamen werden mit `?` vorangestellt, um ein Antwortfeld als optional zu 
 @output integer $id Erforderliches Feld    // im "required"-Array
 @output string ?$email Optionales Feld     // nicht im "required"-Array
 ```
+
+---
+
+### Dynamische Ausgaben aus einer Methode
+
+```php
+@output integer $id Identifier
+@output [entityOutput]
+```
+
+Dasselbe wie `@input [method]`, nur ist `tag` im Kontext `output`: die Methode
+liefert Zeilen oder ein Objektschema, das ueber die uebrigen `@output`-Zeilen gelegt
+wird. Eine `@output {Template}`-Zeile hat weiterhin Vorrang, und `@response`-Tags
+ersetzen `@output`, sofern vorhanden, vollstaendig.
 
 ---
 

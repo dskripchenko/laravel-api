@@ -4,6 +4,7 @@ namespace Dskripchenko\LaravelApi\Traits;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Services\OpenApi\DocPatterns;
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
@@ -200,14 +201,28 @@ trait OpenApiTrait
                 $defaultsAndExamples = static::parseDefaultAndExampleTags($defaultTags, $exampleTags);
 
                 foreach ($httpMethods as $httpMethod) {
-                    $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod, $defaultsAndExamples);
+                    // Who is being described: a dynamic `[method]` serving many
+                    // routes cannot answer for one of them without being told.
+                    $context = new OperationContext(
+                        (string) $version,
+                        static::class,
+                        (string) $controller,
+                        $action,
+                        $class,
+                        $methodKey,
+                        strtolower((string) $httpMethod),
+                        'input',
+                        is_array($value) ? $value : [],
+                    );
+
+                    $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod, $defaultsAndExamples, $context);
                     $headerParameters = static::getHeaderParametersByTags($headerTagList);
                     $parameters = array_merge($headerParameters, $parameters);
 
                     $hasExplicitResponses = !empty($responseTags);
                     $responses = $hasExplicitResponses
                         ? static::getResponsesByTags($responseTags, $outputTagList)
-                        : static::getResponseByTags($outputTagList);
+                        : static::getResponseByTags($outputTagList, $class, $context->forTag('output'));
 
                     $methodData = static::getMethodData($summary, $description, [
                         'tags' => $tags,
@@ -304,10 +319,17 @@ trait OpenApiTrait
      * @param $class
      * @param  string  $httpMethod
      * @param  array  $defaultsAndExamples
+     * @param  OperationContext|null  $context  The operation being described,
+     *                                          handed to `[method]` callables.
      * @return array
      */
-    private static function getParametersByTags(array $tags, $class, $httpMethod = 'post', array $defaultsAndExamples = [])
-    {
+    private static function getParametersByTags(
+        array $tags,
+        $class,
+        $httpMethod = 'post',
+        array $defaultsAndExamples = [],
+        ?OperationContext $context = null
+    ) {
         $parameters = [];
         $pattern    = static::getDocInputOutputPattern();
         $callableInputsPattern = static::getDocInputsCallablePattern();
@@ -317,6 +339,7 @@ trait OpenApiTrait
         $parameterType = $httpMethod === 'get' ? 'query' : 'formData';
 
         $parsedParams = [];
+        $explicitSchemas = [];
 
         /**
          * @var Tag $tag
@@ -326,11 +349,21 @@ trait OpenApiTrait
             $descriptions = [$description];
 
             if (preg_match($callableInputsPattern, $description, $matches)) {
-                $callable     = "{$class}@{$matches['callable']}";
-                $descriptions = app()->call($callable);
+                $result = static::callSchemaMethod($class, $matches['callable'], $context);
+
+                if (static::isObjectSchema($result)) {
+                    $explicitSchemas[] = $result;
+                    continue;
+                }
+
+                $descriptions = $result;
             }
 
             foreach ($descriptions as $description) {
+                if (!is_string($description)) {
+                    continue;
+                }
+
                 if (preg_match($modelRefPattern, $description, $matches)) {
                     $modelName = $matches['model'];
                     if (static::$useResponseTemplates && static::isHasTemplate($modelName)) {
@@ -353,39 +386,21 @@ trait OpenApiTrait
             }
         }
 
+        if (!empty($explicitSchemas)) {
+            $schema = static::mergeObjectSchemas(
+                static::objectSchemaFromParsedParams($parsedParams, $defaultsAndExamples),
+                ...$explicitSchemas
+            );
+
+            return array_merge($parameters, static::parametersFromObjectSchema($schema, $parameterType));
+        }
+
         if (static::hasNestedParameters($parsedParams)) {
             $nestedSchema = static::buildNestedSchema($parsedParams);
-            $parameters[] = static::getBodyParameterFromNested($nestedSchema);
+            $parameters[] = static::getBodyParameterFromNested($nestedSchema, static::requiredRootsOf($parsedParams));
         } else {
             foreach ($parsedParams as $matches) {
-                $descText = Arr::get($matches, 'description', '');
-                $enum = static::extractEnumFromDescription($descText);
-                $type = static::getSafeDataType(Arr::get($matches, 'type', 'string'));
-                $varName = Arr::get($matches, 'variable', '');
-
-                $param = [
-                    'in' => $parameterType,
-                    'name' => $varName,
-                    'description' => $descText,
-                    'required' => Arr::get($matches, 'optional', '') !== '?',
-                    'type' => $type,
-                ];
-
-                $format = Arr::get($matches, 'format');
-                if ($format) {
-                    $param['format'] = $format;
-                }
-                if ($enum !== null) {
-                    $param['enum'] = $enum;
-                }
-                if (isset($defaultsAndExamples[$varName]['default'])) {
-                    $param['default'] = $defaultsAndExamples[$varName]['default'];
-                }
-                if (isset($defaultsAndExamples[$varName]['example'])) {
-                    $param['example'] = $defaultsAndExamples[$varName]['example'];
-                }
-
-                $parameters[] = $param;
+                $parameters[] = static::flatParameterFromMatches($matches, $parameterType, $defaultsAndExamples);
             }
         }
 
@@ -393,20 +408,274 @@ trait OpenApiTrait
     }
 
     /**
-     * @param array $tags
+     * One `type ?$name Description` line as a flat parameter.
+     *
+     * @param  array  $matches
+     * @param  string  $parameterType
+     * @param  array  $defaultsAndExamples
      * @return array
      */
-    private static function getResponseByTags(array $tags)
+    private static function flatParameterFromMatches(array $matches, string $parameterType, array $defaultsAndExamples): array
+    {
+        $descText = Arr::get($matches, 'description', '');
+        $enum = static::extractEnumFromDescription($descText);
+        $type = static::getSafeDataType(Arr::get($matches, 'type', 'string'));
+        $varName = Arr::get($matches, 'variable', '');
+
+        $param = [
+            'in' => $parameterType,
+            'name' => $varName,
+            'description' => $descText,
+            'required' => Arr::get($matches, 'optional', '') !== '?',
+            'type' => $type,
+        ];
+
+        $format = Arr::get($matches, 'format');
+        if ($format) {
+            $param['format'] = $format;
+        }
+        if ($enum !== null) {
+            $param['enum'] = $enum;
+        }
+        if (isset($defaultsAndExamples[$varName]['default'])) {
+            $param['default'] = $defaultsAndExamples[$varName]['default'];
+        }
+        if (isset($defaultsAndExamples[$varName]['example'])) {
+            $param['example'] = $defaultsAndExamples[$varName]['example'];
+        }
+
+        return $param;
+    }
+
+    /**
+     * Calls a `[method]` on the controller, telling it which operation is
+     * being described.
+     *
+     * The context goes through the container: a parameter typed
+     * OperationContext receives it whatever its name, and `$version`,
+     * `$controllerKey`, `$actionKey` and `$httpMethod` receive those scalars.
+     * A method declaring none of them is called exactly as it always was.
+     *
+     * @param  string  $class
+     * @param  string  $method
+     * @param  OperationContext|null  $context
+     * @return array A list of `type ?$name Description` lines, or an object schema.
+     */
+    private static function callSchemaMethod(string $class, string $method, ?OperationContext $context): array
+    {
+        $result = app()->call("{$class}@{$method}", $context ? $context->callParameters() : []);
+
+        return is_array($result) ? $result : [];
+    }
+
+    /**
+     * Whether a `[method]` returned a JSON Schema object rather than a list of
+     * docblock lines.
+     *
+     * @param  mixed  $value
+     * @return bool
+     */
+    private static function isObjectSchema($value): bool
+    {
+        if (!is_array($value) || $value === [] || array_is_list($value)) {
+            return false;
+        }
+
+        if (isset($value['properties']) && is_array($value['properties'])) {
+            return true;
+        }
+
+        return ($value['type'] ?? null) === 'object';
+    }
+
+    /**
+     * The docblock lines of an operation as one object schema, so they can be
+     * merged with a schema a `[method]` returned.
+     *
+     * @param  array  $parsedParams
+     * @param  array  $defaultsAndExamples
+     * @return array
+     */
+    private static function objectSchemaFromParsedParams(array $parsedParams, array $defaultsAndExamples = []): array
+    {
+        $schema = ['type' => 'object', 'properties' => []];
+
+        if (empty($parsedParams)) {
+            return $schema;
+        }
+
+        if (static::hasNestedParameters($parsedParams)) {
+            $schema['properties'] = static::buildNestedSchema($parsedParams);
+            $required = static::requiredRootsOf($parsedParams);
+        } else {
+            $required = [];
+            foreach ($parsedParams as $matches) {
+                $param = static::flatParameterFromMatches($matches, 'formData', $defaultsAndExamples);
+                $prop = ['type' => $param['type']];
+                foreach (['format', 'enum', 'default', 'example'] as $key) {
+                    if (array_key_exists($key, $param)) {
+                        $prop[$key] = $param[$key];
+                    }
+                }
+                $prop['description'] = $param['description'];
+                if ($prop['type'] === 'file') {
+                    $prop = ['type' => 'string', 'format' => 'binary', 'description' => $param['description']];
+                }
+                $schema['properties'][$param['name']] = $prop;
+                if ($param['required']) {
+                    $required[] = $param['name'];
+                }
+            }
+        }
+
+        if (!empty($required)) {
+            $schema['required'] = array_values(array_unique($required));
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Merges object schemas left to right: a property declared later replaces
+     * the earlier one of the same name, and the `required` lists are united.
+     *
+     * @param  array  ...$schemas
+     * @return array
+     */
+    private static function mergeObjectSchemas(array ...$schemas): array
+    {
+        $merged = ['type' => 'object', 'properties' => []];
+        $required = [];
+
+        foreach ($schemas as $schema) {
+            foreach ($schema as $key => $value) {
+                if ($key === 'properties') {
+                    foreach ((array) $value as $name => $property) {
+                        $merged['properties'][$name] = $property;
+                    }
+                } elseif ($key === 'required') {
+                    $required = array_merge($required, (array) $value);
+                } elseif ($key !== 'type') {
+                    $merged[$key] = $value;
+                }
+            }
+        }
+
+        $required = array_values(array_unique(array_filter(
+            $required,
+            static fn ($name): bool => is_string($name) && $name !== ''
+        )));
+        if (!empty($required)) {
+            $merged['required'] = $required;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * An object schema as parameters: the request body for anything but GET,
+     * and one query parameter per top-level property for GET.
+     *
+     * @param  array  $schema
+     * @param  string  $parameterType  `query` or `formData`
+     * @return array
+     */
+    private static function parametersFromObjectSchema(array $schema, string $parameterType): array
+    {
+        if (empty($schema['properties'])) {
+            return [];
+        }
+
+        if ($parameterType !== 'query') {
+            return [[
+                'in' => 'body',
+                'name' => 'body',
+                'description' => 'Request body',
+                'required' => true,
+                'schema' => $schema,
+            ]];
+        }
+
+        $required = (array) ($schema['required'] ?? []);
+        $parameters = [];
+        foreach ($schema['properties'] as $name => $property) {
+            $property = (array) $property;
+            $description = (string) ($property['description'] ?? '');
+            unset($property['description']);
+
+            $parameters[] = [
+                'in' => 'query',
+                'name' => (string) $name,
+                'description' => $description,
+                'required' => in_array($name, $required, true),
+                'schema' => $property,
+            ];
+        }
+
+        return $parameters;
+    }
+
+    /**
+     * @param array $tags
+     * @param string|null $class The controller, for `@output [method]`.
+     * @param OperationContext|null $context The operation, for `@output [method]`.
+     * @return array
+     */
+    private static function getResponseByTags(array $tags, ?string $class = null, ?OperationContext $context = null)
+    {
+
+        // `@output [method]` unfolds into the lines it returns, or into an
+        // object schema merged over whatever the other lines describe.
+        $lines = [];
+        $explicitSchemas = [];
+        /**
+         * @var Tag $tag
+         */
+        foreach ($tags as $tag) {
+            $line = $tag->getDescription()->render();
+
+            if ($class !== null && preg_match(static::getDocInputsCallablePattern(), $line, $matches)) {
+                $result = static::callSchemaMethod($class, $matches['callable'], $context);
+
+                if (static::isObjectSchema($result)) {
+                    $explicitSchemas[] = $result;
+                } else {
+                    $lines = array_merge($lines, array_filter($result, 'is_string'));
+                }
+
+                continue;
+            }
+
+            $lines[] = $line;
+        }
+
+        $base = static::getResponseByLines($lines);
+
+        // A `{Template}` line wins over everything, as it does among plain lines.
+        if (empty($explicitSchemas) || isset($base['schema'])) {
+            return $base;
+        }
+
+        $schema = static::mergeObjectSchemas(
+            array_intersect_key($base, array_flip(['properties', 'required'])),
+            ...$explicitSchemas
+        );
+
+        return ['description' => 'Response payload', 'schema' => $schema];
+    }
+
+    /**
+     * @param string[] $lines The bodies of @output tags.
+     * @return array
+     */
+    private static function getResponseByLines(array $lines)
     {
         $properties = [];
         $pattern    = static::getDocInputOutputPattern();
         $templatePattern = static::getDocInputOutputTemplatePattern();
         $modelRefPattern = static::getDocModelRefPattern();
-        /**
-         * @var Tag $tag
-         */
-        foreach ($tags as $tag) {
-            $desctiption = $tag->getDescription()->render();
+
+        foreach ($lines as $desctiption) {
 
             if (static::$useResponseTemplates && preg_match($templatePattern, $desctiption, $matches)) {
                 if (static::isHasTemplate($matches['template'])) {
@@ -465,25 +734,40 @@ trait OpenApiTrait
             }
         }
 
-        $parsedParams = [];
-        foreach ($properties as $variable => $prop) {
-            if (str_contains($variable, '.') || str_contains($variable, '[]')) {
+        if (static::hasNestedParameters(array_map(
+            static fn ($variable): array => ['variable' => (string) $variable],
+            array_keys($properties)
+        ))) {
+            // Every line takes part — the flat siblings and the roots' own
+            // declarations too, not only the dotted ones; references to
+            // templates are already schemas and are carried over as they are.
+            $parsedParams = [];
+            $references = [];
+            foreach ($properties as $variable => $prop) {
+                if (!isset($prop['type'])) {
+                    $references[$variable] = $prop;
+                    continue;
+                }
                 $parsedParams[] = [
-                    'variable' => $variable,
+                    'variable' => (string) $variable,
                     'type' => $prop['type'],
+                    'format' => $prop['format'] ?? null,
                     'description' => $prop['description'] ?? '',
                     'required' => $prop['required'] ?? true,
                 ];
             }
-        }
 
-        if (!empty($parsedParams) && static::hasNestedParameters($parsedParams)) {
-            $nestedSchema = static::buildNestedSchema($parsedParams);
-            return [
+            $nested = [
                 'description' => 'Response payload',
                 'type' => 'object',
-                'properties' => $nestedSchema,
+                'properties' => array_merge(static::buildNestedSchema($parsedParams), $references),
             ];
+            $required = static::requiredRootsOf($parsedParams);
+            if (!empty($required)) {
+                $nested['required'] = $required;
+            }
+
+            return $nested;
         }
 
         $requiredFields = [];
@@ -885,6 +1169,50 @@ trait OpenApiTrait
     }
 
     /**
+     * Whether a parsed line is required: input lines carry the `?` mark,
+     * output lines arrive with a `required` flag already worked out.
+     *
+     * @param array $param
+     * @return bool
+     */
+    private static function isRequiredParam(array $param): bool
+    {
+        if (array_key_exists('required', $param) && is_bool($param['required'])) {
+            return $param['required'];
+        }
+
+        return ($param['optional'] ?? '') !== '?';
+    }
+
+    /**
+     * The required top-level names of a nested set of lines: a root counts
+     * when its own line (`$address`, or `$tags[]` for a list of scalars) is
+     * not marked optional. A root known only through its children says
+     * nothing about itself.
+     *
+     * @param array $parsedParams
+     * @return string[]
+     */
+    private static function requiredRootsOf(array $parsedParams): array
+    {
+        $declared = [];
+        foreach ($parsedParams as $param) {
+            $variable = $param['variable'] ?? '';
+            $parts = explode('.', str_replace('[]', '', $variable));
+            if (count($parts) !== 1) {
+                continue;
+            }
+            // `$tags` decides over `$tags[]` whatever the order.
+            if (str_contains($variable, '[]') && array_key_exists($parts[0], $declared)) {
+                continue;
+            }
+            $declared[$parts[0]] = static::isRequiredParam($param);
+        }
+
+        return array_keys(array_filter($declared));
+    }
+
+    /**
      * @param array $parsedParams
      * @return array
      */
@@ -895,23 +1223,41 @@ trait OpenApiTrait
             $variable = $param['variable'] ?? '';
             $type = static::getSafeDataType($param['type'] ?? 'string');
             $description = $param['description'] ?? '';
+            $isArray = str_contains($variable, '[]');
 
-            $parts = preg_split('/\./', str_replace('[]', '', $variable));
+            $parts = explode('.', str_replace('[]', '', $variable));
             $root = $parts[0];
+            $groups[$root] = $groups[$root] ?? [];
 
-            if (count($parts) === 1 && !str_contains($variable, '[]')) {
-                $groups[$root] = ['type' => $type, 'description' => $description];
-            } else {
-                if (!isset($groups[$root])) {
-                    $groups[$root] = ['type' => 'object', 'properties' => []];
+            if (count($parts) === 1 && !$isArray) {
+                // The root's own line. It may come after its children, so it
+                // must not wipe what they already put there.
+                $groups[$root]['declaredType'] = $type;
+                $groups[$root]['description'] = $description;
+                continue;
+            }
+
+            if ($isArray) {
+                $groups[$root]['isArray'] = true;
+            }
+
+            if (count($parts) === 1) {
+                // `$tags[]` — the element of a list of scalars.
+                $groups[$root]['itemType'] = $type;
+                if (!isset($groups[$root]['description'])) {
+                    $groups[$root]['description'] = $description;
                 }
-                if (count($parts) > 1) {
-                    $child = $parts[1];
-                    $groups[$root]['properties'][$child] = ['type' => $type, 'description' => $description];
-                }
-                if (str_contains($variable, '[]')) {
-                    $groups[$root]['type'] = 'array';
-                }
+                continue;
+            }
+
+            $child = $parts[1];
+            $property = ['type' => $type, 'description' => $description];
+            if (!empty($param['format'])) {
+                $property['format'] = $param['format'];
+            }
+            $groups[$root]['properties'][$child] = $property;
+            if (static::isRequiredParam($param)) {
+                $groups[$root]['required'][] = $child;
             }
         }
 
@@ -926,24 +1272,33 @@ trait OpenApiTrait
     {
         $result = [];
         foreach ($groups as $key => $spec) {
-            $type = $spec['type'] ?? 'object';
             $description = $spec['description'] ?? '';
+            $properties = $spec['properties'] ?? null;
+            $required = array_values(array_unique($spec['required'] ?? []));
+            $declaredType = $spec['declaredType'] ?? null;
 
-            if ($type === 'array' && isset($spec['properties'])) {
+            $isArray = !empty($spec['isArray']) || $declaredType === 'array';
+            $type = $isArray
+                ? 'array'
+                : ($declaredType ?? ($properties !== null ? 'object' : 'string'));
+
+            if ($type === 'array' && $properties !== null) {
+                $items = ['type' => 'object', 'properties' => $properties];
+                if (!empty($required)) {
+                    $items['required'] = $required;
+                }
+                $result[$key] = ['type' => 'array', 'description' => $description, 'items' => $items];
+            } elseif ($type === 'array' && isset($spec['itemType'])) {
                 $result[$key] = [
                     'type' => 'array',
                     'description' => $description,
-                    'items' => [
-                        'type' => 'object',
-                        'properties' => $spec['properties'],
-                    ],
+                    'items' => ['type' => $spec['itemType']],
                 ];
-            } elseif ($type === 'object' && isset($spec['properties'])) {
-                $result[$key] = [
-                    'type' => 'object',
-                    'description' => $description,
-                    'properties' => $spec['properties'],
-                ];
+            } elseif ($type === 'object' && $properties !== null) {
+                $result[$key] = ['type' => 'object', 'description' => $description, 'properties' => $properties];
+                if (!empty($required)) {
+                    $result[$key]['required'] = $required;
+                }
             } else {
                 $result[$key] = ['type' => $type, 'description' => $description];
             }
@@ -953,19 +1308,25 @@ trait OpenApiTrait
 
     /**
      * @param array $schema
+     * @param string[] $required
      * @return array
      */
-    private static function getBodyParameterFromNested(array $schema): array
+    private static function getBodyParameterFromNested(array $schema, array $required = []): array
     {
+        $bodySchema = [
+            'type' => 'object',
+            'properties' => $schema,
+        ];
+        if (!empty($required)) {
+            $bodySchema['required'] = array_values($required);
+        }
+
         return [
             'in' => 'body',
             'name' => 'body',
             'description' => 'Request body',
             'required' => true,
-            'schema' => [
-                'type' => 'object',
-                'properties' => $schema,
-            ],
+            'schema' => $bodySchema,
         ];
     }
 
@@ -984,7 +1345,18 @@ trait OpenApiTrait
         foreach ($rawParameters as $param) {
             $in = $param['in'] ?? 'query';
 
-            if ($in === 'query' || $in === 'header') {
+            if (($in === 'query' || $in === 'header') && isset($param['schema'])) {
+                // Already a schema: it came from an object schema a `[method]`
+                // returned, constraints and all.
+                $oasParam = [
+                    'name' => $param['name'],
+                    'in' => $in,
+                    'description' => $param['description'] ?? '',
+                    'required' => $param['required'] ?? false,
+                    'schema' => $param['schema'],
+                ];
+                $oasParams[] = $oasParam;
+            } elseif ($in === 'query' || $in === 'header') {
                 $schema = ['type' => $param['type'] ?? 'string'];
                 if (isset($param['format'])) {
                     $schema['format'] = $param['format'];

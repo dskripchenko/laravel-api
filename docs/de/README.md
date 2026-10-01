@@ -287,6 +287,39 @@ Die Dokumentation wird automatisch aus PHP-Docblöcken generiert. Keine YAML- od
  *  @input integer $items[].quantity Quantity */
 ```
 
+Eine Liste von Skalaren schreibt man mit `[]` ohne Kindfeld: `@input string $tags[]`.
+
+### Felder, die erst zur Laufzeit bekannt sind
+
+Hängen die Felder von der Route ab — ein generischer Controller ist pro Entität
+unter einem eigenen Schlüssel registriert —, fragt `@input [method]` eine
+Controller-Methode, und der Methode wird mitgeteilt, welche Operation gerade
+beschrieben wird:
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * @input integer $id
+ * @input [entityFields]
+ */
+public function update(Request $request) { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    // $context->controllerKey is `users` on /v1/users/update, `posts` on /v1/posts/update
+    return [
+        'type' => 'object',
+        'properties' => ['email' => ['type' => 'string', 'format' => 'email', 'maxLength' => 255]],
+        'required' => ['email'],
+    ];
+}
+```
+
+Die Methode darf Docblock-Zeilen (`['string $email Email']`) oder ein JSON-Schema-Objekt
+zurückgeben, das unverändert in die Spezifikation übernommen wird — samt aller
+Einschränkungen. `@output [method]` funktioniert genauso. Siehe [docblock-tags.md](docblock-tags.md#dynamische-eingaben-aus-einer-methode).
+
 ### Header, Sicherheit, Antworten
 
 ```php
@@ -463,7 +496,9 @@ php artisan api:lint --unrouted # zusätzlich: öffentliche Methoden ohne Aktion
 ```
 
 Liest Routen-Tabelle und Docblocks mit demselben Parser wie der
-OpenAPI-Generator. Vollständige Regelliste: [linting.md](linting.md).
+OpenAPI-Generator und meldet außerdem eine Aktion, die ihre Eingaben validiert,
+ohne welche zu deklarieren (`input.undeclared`). Vollständige Regelliste:
+[linting.md](linting.md).
 
 ## API-Export
 

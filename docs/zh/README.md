@@ -287,6 +287,37 @@ V2自动继承V1中的`list`、`show`、`create`、`update`，同时覆盖控制
  *  @input integer $items[].quantity 数量 */
 ```
 
+标量列表用不带子字段的 `[]` 表示：`@input string $tags[]`。
+
+### 仅在运行时才知道的字段
+
+当字段取决于路由时——同一个通用控制器按每个实体各注册一个键——`@input [method]`
+会询问控制器的方法，并告诉该方法当前描述的是哪个操作：
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+
+/**
+ * @input integer $id
+ * @input [entityFields]
+ */
+public function update(Request $request) { /* ... */ }
+
+public function entityFields(OperationContext $context): array
+{
+    // $context->controllerKey is `users` on /v1/users/update, `posts` on /v1/posts/update
+    return [
+        'type' => 'object',
+        'properties' => ['email' => ['type' => 'string', 'format' => 'email', 'maxLength' => 255]],
+        'required' => ['email'],
+    ];
+}
+```
+
+方法可以返回 docblock 行（`['string $email Email']`），也可以返回一个 JSON Schema
+对象，后者会原样写入规范，所有约束一并保留。`@output [method]` 的用法相同。详见
+[docblock-tags.md](docblock-tags.md#从方法动态获取输入)。
+
 ### 头部、安全性、响应
 
 ```php
@@ -459,7 +490,8 @@ php artisan api:lint --strict   # 用于 CI：警告也算失败
 php artisan api:lint --unrouted # 另外检查没有动作指向的公有方法
 ```
 
-它用与 OpenAPI 生成器相同的解析器读取路由表和 docblock。完整规则列表：
+它用与 OpenAPI 生成器相同的解析器读取路由表和 docblock，并且还会报告校验了输入
+却没有声明任何输入的动作（`input.undeclared`）。完整规则列表：
 [linting.md](linting.md)。
 
 ## API 导出

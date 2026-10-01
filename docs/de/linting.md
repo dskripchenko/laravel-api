@@ -76,10 +76,10 @@ Gruppe zu unterscheiden, geht nicht ohne die ganze Anwendung hochzufahren.
 |---|---|---|
 | `tag.malformed` | Fehler | Der Tag-Inhalt lässt sich nicht parsen, und der Generator verwirft ihn kommentarlos |
 | `tag.empty` | Warnung | Ein Tag, hinter dem nichts steht |
-| `tag.callable-misplaced` | Warnung | Die `[method]`-Form an einem anderen Tag als `@input` |
+| `tag.callable-misplaced` | Warnung | Die `[method]`-Form an einem anderen Tag als `@input` und `@output` |
 | `tag.template-misplaced` | Warnung | Die `{Template}`-Form an einem anderen Tag als `@output` |
 | `tag.unknown-template` | Fehler | `@input @Model` / `@output @Model[]` nennt ein nicht definiertes Template |
-| `tag.callable-missing` | Fehler | `@input [method]` nennt eine Methode, die der Controller nicht hat |
+| `tag.callable-missing` | Fehler | `@input [method]` / `@output [method]` nennt eine Methode, die der Controller nicht hat |
 | `tag.unknown-type` | Warnung | Ein Typ außerhalb der bekannten Menge — er wird stillschweigend zu `string` |
 | `tag.duplicate-variable` | Warnung | Dieselbe Variable zweimal deklariert; die letzte gewinnt |
 | `tag.orphan-nesting` | Warnung | `$address.city` ohne deklariertes `$address` |
@@ -96,6 +96,26 @@ Gruppe zu unterscheiden, geht nicht ohne die ganze Anwendung hochzufahren.
 
 Von Middleware beigesteuerte Eingaben werden berücksichtigt: ein `@default` für
 eine dort deklarierte Variable ist legitim und wird nicht gemeldet.
+
+### Fehlende Auszeichnung
+
+| Regel | Schwere | Bedeutung |
+|---|---|---|
+| `input.undeclared` | Warnung | Die Methode validiert ihre Eingaben, und ihr Docblock hat überhaupt kein `@input` |
+
+Alles oben prüft die vorhandene Auszeichnung; diese Regel betrifft die fehlende.
+„Kein `@input`“ allein wäre Rauschen — viele Aktionen nehmen nichts entgegen —,
+deshalb schlägt die Regel nur dort an, wo die Methode sichtbar etwas validiert:
+ein Aufruf von `validate()` / `validateWithBag()`, `Validator::make()`, der
+Helper `validator()` oder ein `FormRequest`-Parameter. Ob die Regeln als Literal
+dastehen oder zur Laufzeit zusammengesetzt werden, spielt keine Rolle: so oder so
+hat der Endpunkt Felder, und die Spezifikation beschreibt keines davon. Kommentare
+werden ignoriert, und es zählen nur die eigenen Tags der Methode — ein von
+Middleware beigesteuertes `@input` beschreibt die Eingaben der Middleware, nicht
+die Felder, die die Methode prüft.
+
+Sind die Felder erst zur Laufzeit bekannt, deklarieren Sie sie mit
+[`@input [method]`](docblock-tags.md#dynamische-eingaben-aus-einer-methode).
 
 ## Den Bericht lesen
 
