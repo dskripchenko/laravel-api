@@ -171,7 +171,7 @@ return [
 - `POST /api/v1/user/update` — 更新用户
 - `POST /api/v1/user/delete` — 删除用户
 - `POST /api/v1/order/create` — 创建订单
-- `GET  /api/doc` — API 文档（Scalar）
+- `GET  /api/doc` — API 文档（[@dskripchenko/openapi](https://github.com/dskripchenko/openapi) 参考页面）
 
 ---
 

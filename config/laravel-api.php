@@ -46,6 +46,10 @@ return [
         // without CORS). Null sends them straight from the page.
         'proxy' => env('LARAVEL_API_DOC_PROXY'),
 
+        // The OAuth2 redirect URI the try-it sign-in comes back to; the page's
+        // own URL when empty. The identity provider must allow it.
+        'oauth_redirect_url' => env('LARAVEL_API_DOC_OAUTH_REDIRECT_URL'),
+
         // Keep the keys and tokens a reader types: false, 'session' or 'local'.
         'persist_credentials' => env('LARAVEL_API_DOC_PERSIST_CREDENTIALS', false),
 

@@ -44,11 +44,11 @@ class ApiDocumentationController extends Controller
             $filesData[] = [
                 'url'  => route('api-doc-source', ['version' => $version]) . '?r=' . $this->cacheStamp($version),
                 'name' => ($config['info']['title'] ?? '') ?: $version,
-                // Without this Scalar derives the slug from the title, and the
-                // title is the first line of a docblock: reword it and every
-                // link into the page — bookmarks, tickets, the IDE's — points
-                // at nothing, silently. The version's own name is what the URL
-                // already carries, so it costs a reader nothing to recognise.
+                // The version's id on the page and the first segment of its
+                // anchors. Derived from the title, it would change whenever the
+                // docblock is reworded, and every link into the page —
+                // bookmarks, tickets, the IDE's — would point at nothing. The
+                // version's own name is what the URL already carries.
                 'slug' => DocLink::documentSlug($version),
             ];
         }
@@ -60,11 +60,13 @@ class ApiDocumentationController extends Controller
         ]);
     }
 
+    /** The pinned script on jsdelivr; config/laravel-api.php repeats it (a test keeps them equal). */
+    public const DEFAULT_SCRIPT = 'https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js';
+
     /** The URL of the reference's script (`laravel-api.documentation.script`). */
     public static function documentationScript(): string
     {
-        return (string) (config('laravel-api.documentation.script')
-            ?: 'https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js');
+        return (string) (config('laravel-api.documentation.script') ?: static::DEFAULT_SCRIPT);
     }
 
     /**
@@ -101,6 +103,9 @@ class ApiDocumentationController extends Controller
         }
         if (!empty($config['proxy'])) {
             $options['proxy'] = (string) $config['proxy'];
+        }
+        if (!empty($config['oauth_redirect_url'])) {
+            $options['oauthRedirectUrl'] = (string) $config['oauth_redirect_url'];
         }
         if (!empty($config['snippet_targets']) && is_array($config['snippet_targets'])) {
             $options['snippetTargets'] = array_values($config['snippet_targets']);

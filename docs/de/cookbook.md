@@ -171,7 +171,7 @@ return [
 - `POST /api/v1/user/update` — Benutzer aktualisieren
 - `POST /api/v1/user/delete` — Benutzer löschen
 - `POST /api/v1/order/create` — Bestellung erstellen
-- `GET  /api/doc` — API-Dokumentation (Scalar)
+- `GET  /api/doc` — API-Dokumentation (die Referenz von [@dskripchenko/openapi](https://github.com/dskripchenko/openapi))
 
 ---
 

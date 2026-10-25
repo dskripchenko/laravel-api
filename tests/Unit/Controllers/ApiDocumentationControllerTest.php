@@ -177,3 +177,23 @@ it('still serves a hidden version by direct URL', function () {
     expect($response->getStatusCode())->toBe(200);
     expect($response->getData(true))->toHaveKey('openapi');
 });
+
+it('keeps the default script in the config and the controller the same', function () {
+    $config = require __DIR__ . '/../../../config/laravel-api.php';
+
+    // The env fallback in the config file is the pinned default.
+    expect($config['documentation']['script'] ?? ApiDocumentationController::DEFAULT_SCRIPT)->toBe(ApiDocumentationController::DEFAULT_SCRIPT);
+});
+
+it('passes the OAuth redirect URI when set', function () {
+    Storage::fake();
+    config()->set('laravel-api.documentation.oauth_redirect_url', 'https://docs.example.com/api/doc');
+
+    expect((new ApiDocumentationController())->index()->getData()['documentationOptions']['oauthRedirectUrl'])->toBe('https://docs.example.com/api/doc');
+});
+
+it('applies laravel-api.doc_middleware to the documentation routes', function () {
+    config()->set('laravel-api.doc_middleware', ['web']);
+
+    expect(\Dskripchenko\LaravelApi\Facades\ApiModule::getDocMiddleware())->toBe(['web']);
+});

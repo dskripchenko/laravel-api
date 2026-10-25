@@ -94,7 +94,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 
 **结果：**
 - `GET /api/v1/user/list` — API端点
-- `GET /api/doc` — 自动生成的API文档 (Scalar)
+- `GET /api/doc` — 自动生成的API文档（[@dskripchenko/openapi](https://github.com/dskripchenko/openapi) 参考页面）
 
 ## 功能特性
 
@@ -102,6 +102,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 |------|------|
 | **版本化路由** | `api/{version}/{controller}/{action}` 支持版本间继承 |
 | **OpenAPI 3.0** | 从`@input`/`@output`文档块自动生成——无需YAML文件 |
+| **文档页面** | `/api/doc` —— 带切换器的全部版本、搜索、try-it、代码示例、TypeScript 类型；通过 `api:doc-assets` 可离线使用 |
 | **CRUD脚手架** | 完整的搜索/创建/读取/更新/删除功能，支持筛选、排序、分页 |
 | **中间件级联** | 全局→控制器→操作，支持细粒度排除 |
 | **响应模板** | `components/schemas`中可重用的`$ref`模式 |
@@ -365,6 +366,73 @@ class Api extends BaseApi {
 
 **响应信封。** 每个响应实际上都以 `{success, payload}` 的形式返回。在 Api 类上加 `public static $responseEnvelope = true;` 后规范也如此描述：模板描述的是 payload，每个响应——`@output` 字段、`{Template}` 引用、错误码——都会被包装。模板可以嵌套（`'client!' => ['email' => 'string(email)']`、`['string']`、`[['id' => 'integer!']]`），自定义信封是一个字段映射，用 `'{payload}'` 标记响应体位置。详见 [docblock-tags.md](docblock-tags.md#响应信封)。
 
+### 文档页面
+
+`GET /api/doc` 渲染 [@dskripchenko/openapi](https://github.com/dskripchenko/openapi) 的参考页面：
+一个脚本，项目中无需构建步骤。每个列出的 API 版本在页面上是一份规范，页面提供：
+
+- 版本切换器和全文搜索；
+- 每个操作上的“Try it”：参数和请求体的表单，外加自定义的 query 参数、请求头和 cookie；
+- 针对规范中安全方案的认证面板，包括 OAuth2；
+- 13 种语言的请求示例；
+- TypeScript 类型标签页，以及以 `.d.ts` 文件下载类型；
+- 通过浏览器打印对话框生成单个操作或整份规范的 PDF；
+- 浅色、深色或跟随系统的主题，英文或俄文界面。
+
+各项功能的工作方式见 [@dskripchenko/openapi 文档](https://github.com/dskripchenko/openapi)。
+`laravel-api.hidden_versions` 中的版本不会显示在页面上；它们的规范仍可通过
+`/api/doc/{version}` 获取。
+
+页面通过 `config/laravel-api.php` 中的 `documentation` 块配置：
+
+| 键 | Env | 默认值 | |
+|----|-----|--------|---|
+| `script` | `LARAVEL_API_DOC_SCRIPT` | `https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js` | 页面脚本——单个文件，已包含样式。 |
+| `title` | `LARAVEL_API_DOC_TITLE` | `null` | 页面标题；为空时使用当前打开版本的标题。 |
+| `locale` | `LARAVEL_API_DOC_LOCALE` | `'auto'` | `'en'`、`'ru'` 或 `'auto'`（浏览器语言）。 |
+| `theme` | `LARAVEL_API_DOC_THEME` | `'system'` | `'light'`、`'dark'` 或 `'system'`（跟随操作系统）。读者可以切换，选择会被记住。 |
+| `try_it` | `LARAVEL_API_DOC_TRY_IT` | `true` | `false` 隐藏“Try it”面板。 |
+| `proxy` | `LARAVEL_API_DOC_PROXY` | `null` | 转发 try-it 请求的 URL；见下文。`null` 表示直接从页面发送。 |
+| `oauth_redirect_url` | `LARAVEL_API_DOC_OAUTH_REDIRECT_URL` | `null` | try-it 登录返回的 OAuth2 重定向 URI；`null` 表示页面自身的 URL。身份提供方必须允许该地址。 |
+| `persist_credentials` | `LARAVEL_API_DOC_PERSIST_CREDENTIALS` | `false` | 保存读者输入的密钥和令牌：`false`、`'session'` 或 `'local'`。 |
+| `snippet_targets` | — | `null` | 代码示例提供的语言，按顺序；`null` 表示全部。 |
+| `default_snippet` | — | `'curl'` | 首先显示的语言。 |
+
+**脚本未加载时。** 服务器会渲染一个普通链接列表，指向每个版本的原始 OpenAPI 规范，
+脚本启动后会替换它。因此 CDN 被屏蔽时，页面显示的是链接而不是空白。
+
+**没有 CDN 的网络。** `api:doc-assets` 将配置的脚本下载一次并放入 `public/`：
+
+```bash
+php artisan api:doc-assets
+# Saved … bytes to public/vendor/laravel-api/openapi/standalone.js
+# Point the page at it: LARAVEL_API_DOC_SCRIPT=/vendor/laravel-api/openapi/standalone.js
+```
+
+```dotenv
+LARAVEL_API_DOC_SCRIPT=/vendor/laravel-api/openapi/standalone.js
+```
+
+`--from=<url>` 下载另一个地址（其他版本、内部镜像）；`--path=<path>` 修改文件存放位置
+（相对于 `public/`）。请在能访问互联网的地方运行该命令——例如构建阶段——并将文件随应用
+一起发布。当 `script` 指向本地路径后，再次下载需要传 `--from`。
+
+**通过代理使用 try-it。** try-it 请求从读者的浏览器发出，因此位于其他 origin 的 API
+需要通过 CORS 允许它们。无法做到时，将 `proxy` 设置为转发这些请求的 URL。本包不提供
+这样的端点——需要你自己编写并保护。它必须：
+
+- 接受 `POST`，其 JSON 请求体即为请求（`HttpRequest`：方法、绝对 URL、请求头、请求体）；
+- 按允许列表检查 URL 的主机，并要求与后台其他部分相同的登录——否则它就是一个开放转发；
+- 执行请求，并以 `200` 返回 JSON 格式的响应（`HttpResponse`：状态、响应头、响应体）。
+
+确切的约定见 [standalone 页面文档](https://github.com/dskripchenko/openapi/blob/main/docs/zh/standalone.md#代理)。
+当文档路由带会话运行时（`'doc_middleware' => ['web']`），页面会带有
+`<meta name="csrf-token">`，页面会把它的值放在 `X-CSRF-TOKEN` 中发送，因此位于 Laravel
+CSRF 校验之后的代理路由可以接受该调用。
+
+**访问控制。** `doc_middleware` 作用于 `/api/doc` 和 `/api/doc/{version}`：在其中加入
+认证中间件即可关闭页面和规范。
+
 ### 链接到单个接口
 
 文档页面通过哈希定位每个操作，`DocLink` 无需打开浏览器即可生成它——可用于工单、
@@ -382,6 +450,45 @@ DocLink::anchor('v1', 'order', 'create', 'post');  // 仅哈希，不含 '#'
 第一段是 API 版本，这是有意为之：页面会为每个版本传入显式 slug，因此改写 docblock
 的首行不会让链接失效。声明了多个 HTTP 方法的 action 在页面上就是多个操作——每个
 方法对应一个锚点。
+
+6.0 之前构建的锚点继续有效：页面能识别 `{version}/tag/{controller}/{METHOD}{path}`
+形式，因此书签、工单和 IDE 插件中的链接仍指向相同的操作。
+
+### 预填链接
+
+`DocLink::prefilled()` 生成一个链接，打开接口时其 try-it 表单已填好——用于缺陷报告、
+聊天或测试报告。`DocLink::prefillPayload()` 只返回 `?f=` 的值。
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
+
+DocLink::prefilled('v1', 'order', 'create', 'post', [
+    'header'  => ['Idempotency-Key' => 'k-1'],
+    'query'   => ['draft' => true],
+    'body'    => ['customerId' => 42, 'items' => [['sku' => 'A-1', 'qty' => 2]]],
+    'xHeader' => [['X-Debug', 'on']],
+]);
+// https://example.test/api/doc#v1/tag/order/POST/v1/order/create?f=z…
+
+DocLink::prefillPayload(['path' => ['id' => 42]]);  // 'z…'
+```
+
+| 键 | |
+|----|---|
+| `path`, `query`, `header`, `cookie` | 按名称给出的参数值。 |
+| `body` | 按输入形式给出的请求体文本；数组会被编码为 JSON。 |
+| `mediaType` | 请求体的媒体类型。 |
+| `server` | 规范中服务器的索引，或服务器 URL。 |
+| `vars` | 按名称给出的服务器变量。 |
+| `xQuery`, `xHeader`, `xCookie` | 规范中未声明的参数，以 `[name, value]` 对的列表表示。 |
+| `auth` | 按安全方案名称给出的凭据。除非显式传入，否则不包含：链接传播得比作者预想的更远。 |
+
+`path`、`query`、`header`、`cookie` 和 `vars` 的值会被转换为字符串
+（`true` → `'true'`，`2` → `'2'`），因为页面把每个值都当作文本读取。
+
+页面从不自行发送请求：它填好表单，提示检查这些值，由读者按下“Send”。数据位于哈希中、
+锚点之后，因此不会到达你的服务器及其日志。格式见
+[深度链接文档](https://github.com/dskripchenko/openapi/blob/main/docs/zh/links.md#预填链接)。
 
 > 完整标签参考：[docblock-tags.zh.md](docblock-tags.md) | 标记检查：[linting.md](linting.md) | 操作指南：[cookbook.zh.md](cookbook.md)
 
@@ -542,7 +649,20 @@ return [
     'uri_pattern' => '{version}/{controller}/{action}',          // 路由模式
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
     'openapi_path' => 'public/openapi',                           // OpenAPI JSON输出
-    'doc_middleware' => [],                                       // /api/doc的中间件
+    'doc_middleware' => [],                                       // /api/doc 和 /api/doc/{version} 的中间件，例如 ['web']
+    'hidden_versions' => [],                                      // 不在 /api/doc 上显示的版本
+    'documentation' => [                                          // /api/doc 页面——见“文档页面”
+        'script' => env('LARAVEL_API_DOC_SCRIPT', 'https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js'),
+        'title' => env('LARAVEL_API_DOC_TITLE'),
+        'locale' => env('LARAVEL_API_DOC_LOCALE', 'auto'),            // 'en', 'ru', 'auto'
+        'theme' => env('LARAVEL_API_DOC_THEME', 'system'),            // 'light', 'dark', 'system'
+        'try_it' => env('LARAVEL_API_DOC_TRY_IT', true),
+        'proxy' => env('LARAVEL_API_DOC_PROXY'),
+        'oauth_redirect_url' => env('LARAVEL_API_DOC_OAUTH_REDIRECT_URL'),
+        'persist_credentials' => env('LARAVEL_API_DOC_PERSIST_CREDENTIALS', false), // false, 'session', 'local'
+        'snippet_targets' => null,                                    // null 提供全部语言
+        'default_snippet' => 'curl',
+    ],
 ];
 ```
 

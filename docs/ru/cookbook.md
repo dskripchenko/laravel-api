@@ -171,7 +171,7 @@ return [
 - `POST /api/v1/user/update` — обновить пользователя
 - `POST /api/v1/user/delete` — удалить пользователя
 - `POST /api/v1/order/create` — создать заказ
-- `GET  /api/doc` — документация API (Scalar)
+- `GET  /api/doc` — документация API (справочник [@dskripchenko/openapi](https://github.com/dskripchenko/openapi))
 
 ---
 
