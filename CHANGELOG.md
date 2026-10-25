@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.11.1] — 2026-10-25
+
+### Fixed
+
+- **Duplicate `operationId` for an action served by several HTTP methods.**
+  `'method' => ['get', 'post']` produced two operations with the same id, which
+  OpenAPI forbids — validators reported it and code generators merged the two.
+  The first method keeps the plain `{controller}_{action}` id, so existing ids
+  do not change; the others get the method as a suffix
+  (`{controller}_{action}_post`). `OperationContext::operationId()` returns the
+  same per-method id.
+
 ## [5.11.0] — 2026-10-02
 
 ### Added

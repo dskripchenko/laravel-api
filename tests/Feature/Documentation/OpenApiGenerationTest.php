@@ -195,3 +195,11 @@ it('keeps a description on an array of refs', function () {
     expect($users['items'])->toBe(['$ref' => '#/components/schemas/UserResponse']);
     expect($users['description'])->toBe('Everyone involved');
 });
+
+it('gives every HTTP method of one action its own operationId', function () {
+    $config = \Tests\Fixtures\OpenApi\MultiMethodApi::getOpenApiConfig('v1');
+    $item = $config['paths']['/v1/open/ping'];
+    // The first method keeps the plain id, so existing ids do not change.
+    expect($item['get']['operationId'])->toBe('open_ping');
+    expect($item['post']['operationId'])->toBe('open_ping_post');
+});
