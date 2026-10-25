@@ -200,7 +200,15 @@ trait OpenApiTrait
                 $security = !empty($actionSecurity) ? $actionSecurity : static::parseSecurityTags($securityTags);
                 $defaultsAndExamples = static::parseDefaultAndExampleTags($defaultTags, $exampleTags);
 
-                foreach ($httpMethods as $httpMethod) {
+                foreach (array_values($httpMethods) as $methodIndex => $httpMethod) {
+                    // An action serving several HTTP methods is several
+                    // operations, and OpenAPI wants their ids unique: the first
+                    // method keeps the plain id (as before), the others get the
+                    // method as a suffix.
+                    $methodOperationId = $methodIndex === 0
+                        ? $operationId
+                        : $operationId.'_'.strtolower((string) $httpMethod);
+
                     // Who is being described: a dynamic `[method]` serving many
                     // routes cannot answer for one of them without being told.
                     $context = new OperationContext(
@@ -213,6 +221,7 @@ trait OpenApiTrait
                         strtolower((string) $httpMethod),
                         'input',
                         is_array($value) ? $value : [],
+                        $methodOperationId,
                     );
 
                     $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod, $defaultsAndExamples, $context);
@@ -228,7 +237,7 @@ trait OpenApiTrait
                         'tags' => $tags,
                         'parameters' => $parameters,
                         'responses' => $responses,
-                        'operationId' => $operationId,
+                        'operationId' => $methodOperationId,
                         'deprecated' => $deprecated,
                         'security' => $security,
                         'hasExplicitResponses' => $hasExplicitResponses,

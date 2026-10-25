@@ -42,13 +42,17 @@ final class OperationContext
         public readonly string $httpMethod,
         public readonly string $tag = 'input',
         public readonly array $actionOptions = [],
+        private readonly ?string $operationId = null,
     ) {
     }
 
-    /** The operationId the generator gives this operation. */
+    /**
+     * The operationId the generator gives this operation: `{controller}_{action}`,
+     * with `_{method}` for the second and later HTTP methods of one action.
+     */
     public function operationId(): string
     {
-        return "{$this->controllerKey}_{$this->actionKey}";
+        return $this->operationId ?? "{$this->controllerKey}_{$this->actionKey}";
     }
 
     public function isInput(): bool
@@ -74,6 +78,7 @@ final class OperationContext
             $this->httpMethod,
             $tag,
             $this->actionOptions,
+            $this->operationId,
         );
     }
 
