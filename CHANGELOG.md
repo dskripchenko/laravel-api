@@ -5,6 +5,84 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0] — 2026-10-25
+
+### Changed (breaking)
+
+- **`/api/doc` renders the reference of
+  [@dskripchenko/openapi](https://github.com/dskripchenko/openapi) instead of
+  Scalar.** Every listed version is one spec on the page, with a version
+  switcher, full-text search, try-it (forms, your own headers, an auth panel
+  with OAuth2), request samples in 13 languages, a TypeScript types tab with a
+  `.d.ts` download, PDF through the browser's print dialog, a light/dark/system
+  theme and an English or Russian interface. Each version is handed to the page
+  with `DocLink`'s slug, so existing deep links land on the same operations.
+- **`documentation_script` and `LARAVEL_API_SCALAR_SCRIPT` are removed** in
+  favour of `documentation.script` / `LARAVEL_API_DOC_SCRIPT`. The default is
+  the pinned `@dskripchenko/openapi@1.0.0` build on jsdelivr. A value pointing at
+  a Scalar bundle no longer works: the page calls
+  `DskOpenApi.createApiReference()`, which a Scalar bundle does not define, and
+  only the server-rendered list of spec links is shown.
+- **The page's markup and script changed.** An application that overrides the
+  view (`resources/views/vendor/api_module/api/documentation.blade.php`) must
+  rebuild its copy from the package's new one: the view now receives
+  `documentationOptions` and mounts the page with
+  `DskOpenApi.createApiReference('#app', options)`.
+
+### Added
+
+- **`laravel-api.documentation`** — the page's settings: `script`, `title`,
+  `locale`, `theme`, `try_it`, `proxy`, `oauth_redirect_url`,
+  `persist_credentials` (env `LARAVEL_API_DOC_SCRIPT`, `LARAVEL_API_DOC_TITLE`,
+  `LARAVEL_API_DOC_LOCALE`, `LARAVEL_API_DOC_THEME`, `LARAVEL_API_DOC_TRY_IT`,
+  `LARAVEL_API_DOC_PROXY`, `LARAVEL_API_DOC_OAUTH_REDIRECT_URL`,
+  `LARAVEL_API_DOC_PERSIST_CREDENTIALS`), plus `snippet_targets` and
+  `default_snippet`. `oauth_redirect_url` is the OAuth2 redirect URI the try-it
+  sign-in returns to (the page's own URL when empty); the identity provider
+  must allow it.
+- **`php artisan api:doc-assets`** downloads the configured script into
+  `public/` (`vendor/laravel-api/openapi/standalone.js` by default; `--from`
+  and `--path` override the source and the target), for networks without a CDN.
+  Point `LARAVEL_API_DOC_SCRIPT` at the file afterwards.
+- **`DocLink::prefilled($version, $controller, $action, $httpMethod, $values)`**
+  builds a link that opens an endpoint with its try-it form filled in — path,
+  query, header and cookie values, the body, the media type, the server, and
+  parameters the spec does not declare. Credentials go in only when `auth` is
+  passed explicitly; the page never sends the request by itself; the payload
+  rides in the hash and does not reach the server.
+  **`DocLink::prefillPayload($values)`** returns the `?f=` payload alone.
+- **A CSRF meta tag for a try-it proxy.** When the documentation routes run
+  with a session, the page carries `<meta name="csrf-token">`, and the page
+  sends it in `X-CSRF-TOKEN` to the endpoint set in `documentation.proxy`.
+
+### Fixed
+
+- **`laravel-api.doc_middleware` was never applied.** The documentation routes
+  took their middleware from `BaseModule::getDocMiddleware()`, which returned an
+  empty list and ignored the config key. It now returns
+  `config('laravel-api.doc_middleware')`, so `/api/doc` and `/api/doc/{version}`
+  run with what the key lists — `['web']` for a session (and the CSRF meta), an
+  authentication middleware to close the page.
+
+### Upgrading from 5.x
+
+1. Rename `LARAVEL_API_SCALAR_SCRIPT` to `LARAVEL_API_DOC_SCRIPT` in `.env` — or
+   drop it to use the default. If it pointed at a self-hosted Scalar bundle,
+   replace that file with the openapi script (step 3).
+2. In a published `config/laravel-api.php`, replace the `documentation_script`
+   key with the `documentation` block from the package's config.
+3. Optional, for networks without a CDN: run `php artisan api:doc-assets` and
+   set `LARAVEL_API_DOC_SCRIPT=/vendor/laravel-api/openapi/standalone.js`.
+4. If you override the documentation view
+   (`resources/views/vendor/api_module/api/documentation.blade.php`), copy the
+   package's new `resources/views/api/documentation.blade.php` over it and
+   reapply your changes.
+5. Check `doc_middleware` in a published config: a non-empty value was silently
+   ignored before and now takes effect on `/api/doc` and `/api/doc/{version}`.
+   A module that overrides `getDocMiddleware()` keeps its own list.
+6. Deep links need nothing: anchors built by `DocLink`, the IDE plugin or saved
+   as bookmarks open the same operations.
+
 ## [5.11.1] — 2026-10-25
 
 ### Fixed

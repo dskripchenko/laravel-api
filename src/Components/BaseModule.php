@@ -118,11 +118,15 @@ class BaseModule
     }
 
     /**
+     * Middleware of the documentation routes (/api/doc and the spec sources):
+     * `laravel-api.doc_middleware` by default — e.g. `['web']` for a session
+     * (the try-it proxy's CSRF token), or an auth middleware to close the page.
+     *
      * @return array
      */
     public function getDocMiddleware(): array
     {
-        return [];
+        return (array) config('laravel-api.doc_middleware', []);
     }
 
     /**

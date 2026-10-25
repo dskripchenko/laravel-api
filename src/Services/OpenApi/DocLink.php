@@ -9,8 +9,8 @@ use Dskripchenko\LaravelApi\Facades\ApiModule;
 /**
  * Deep links into the reference page — `/api/doc#<anchor>`.
  *
- * The page is rendered by Scalar, and Scalar addresses an operation by a hash
- * it builds itself:
+ * The page is @dskripchenko/openapi's reference. It understands the anchors
+ * Scalar — the page's previous renderer — built, and keeps them working:
  *
  *     {document}/tag/{tag}/{METHOD}{path}
  *
@@ -21,11 +21,10 @@ use Dskripchenko\LaravelApi\Facades\ApiModule;
  * endpoint is wanted from an editor, a README or a ticket, none of which can
  * run the page and read its URL bar.
  *
- * Slugs are Scalar's rule, reimplemented here for one reason: whatever we pass
- * it as a document slug, it slugifies again. The only safe thing to send is
- * something that survives the trip unchanged, and the cheapest such thing is
- * the output of the same rule. `ApiDocumentationController::index()` hands the
- * slug to the page so that it does not have to guess.
+ * Slugs follow Scalar's rule, and the page matches by the same rule, so links
+ * built before the switch and after it are the same links. The output of the
+ * rule survives it unchanged; `ApiDocumentationController::index()` hands the
+ * slug to the page as the version's id so that it does not have to guess.
  */
 final class DocLink
 {
@@ -97,6 +96,57 @@ final class DocLink
         $anchor = static::anchor($version, $controller, $action, $httpMethod);
 
         return route('api-doc') . '#' . $anchor;
+    }
+
+    /**
+     * A link that opens the endpoint with its try-it form filled in — for a
+     * ticket, a chat or a test report. The reader still presses Send: the page
+     * never sends a request by itself.
+     *
+     * `$values` takes the keys of the format (v1) of @dskripchenko/openapi:
+     * `path`, `query`, `header`, `cookie` (maps of name => string), `body`
+     * (the body text as typed, e.g. JSON), `mediaType`, `server` (an index or
+     * a URL), `vars` (server variables), and `xQuery`/`xHeader`/`xCookie`
+     * (lists of [name, value] for parameters the spec does not declare).
+     * Credentials (`auth`) are left out unless passed explicitly — a link
+     * travels further than its author expects.
+     *
+     * The payload is raw DEFLATE of the JSON in base64url, prefixed with `z`;
+     * it rides in the hash (`#anchor?f=…`), so it never reaches the server.
+     *
+     * @param array<string, mixed> $values
+     */
+    public static function prefilled(string $version, string $controller, string $action, string $httpMethod, array $values): string
+    {
+        return static::url($version, $controller, $action, $httpMethod) . '?f=' . static::prefillPayload($values);
+    }
+
+    /**
+     * The `?f=` payload of a prefilled link, on its own.
+     *
+     * @param array<string, mixed> $values
+     */
+    public static function prefillPayload(array $values): string
+    {
+        $data = ['v' => 1] + $values;
+        foreach (['path', 'query', 'header', 'cookie', 'vars'] as $map) {
+            if (isset($data[$map]) && is_array($data[$map])) {
+                // The page reads every value as text.
+                $data[$map] = array_map(static fn ($v): string => is_scalar($v) ? (is_bool($v) ? ($v ? 'true' : 'false') : (string) $v) : (string) json_encode($v), $data[$map]);
+            }
+        }
+        foreach (['xQuery', 'xHeader', 'xCookie'] as $list) {
+            if (isset($data[$list]) && is_array($data[$list])) {
+                $data[$list] = array_values(array_map(static fn ($pair): array => [(string) ($pair[0] ?? ''), (string) ($pair[1] ?? '')], $data[$list]));
+            }
+        }
+        if (isset($data['body']) && !is_string($data['body'])) {
+            $data['body'] = (string) json_encode($data['body'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
+        $json = (string) json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return 'z' . rtrim(strtr(base64_encode((string) gzdeflate($json, 9)), '+/', '-_'), '=');
     }
 
     /**

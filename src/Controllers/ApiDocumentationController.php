@@ -44,22 +44,74 @@ class ApiDocumentationController extends Controller
             $filesData[] = [
                 'url'  => route('api-doc-source', ['version' => $version]) . '?r=' . $this->cacheStamp($version),
                 'name' => ($config['info']['title'] ?? '') ?: $version,
-                // Without this Scalar derives the slug from the title, and the
-                // title is the first line of a docblock: reword it and every
-                // link into the page — bookmarks, tickets, the IDE's — points
-                // at nothing, silently. The version's own name is what the URL
-                // already carries, so it costs a reader nothing to recognise.
+                // The version's id on the page and the first segment of its
+                // anchors. Derived from the title, it would change whenever the
+                // docblock is reworded, and every link into the page —
+                // bookmarks, tickets, the IDE's — would point at nothing. The
+                // version's own name is what the URL already carries.
                 'slug' => DocLink::documentSlug($version),
             ];
         }
 
         return view('api_module::api/documentation', [
             'filesData' => $filesData,
-            'documentationScript' => (string) config(
-                'laravel-api.documentation_script',
-                'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
-            ),
+            'documentationScript' => static::documentationScript(),
+            'documentationOptions' => $this->documentationOptions($filesData),
         ]);
+    }
+
+    /** The pinned script on jsdelivr; config/laravel-api.php repeats it (a test keeps them equal). */
+    public const DEFAULT_SCRIPT = 'https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js';
+
+    /** The URL of the reference's script (`laravel-api.documentation.script`). */
+    public static function documentationScript(): string
+    {
+        return (string) (config('laravel-api.documentation.script') ?: static::DEFAULT_SCRIPT);
+    }
+
+    /**
+     * The options `DskOpenApi.createApiReference()` gets: the versions as
+     * sources (their slugs are DocLink's document slugs, so its anchors land)
+     * and the page settings from `laravel-api.documentation`.
+     *
+     * @param array<int, array{url: string, name: string, slug: string}> $filesData
+     * @return array<string, mixed>
+     */
+    protected function documentationOptions(array $filesData): array
+    {
+        $config = (array) config('laravel-api.documentation', []);
+        $persist = $config['persist_credentials'] ?? false;
+        if (is_string($persist) && !in_array($persist, ['session', 'local'], true)) {
+            $persist = filter_var($persist, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $options = [
+            'sources' => array_map(static fn (array $file): array => [
+                'url'   => $file['url'],
+                'title' => $file['name'],
+                'slug'  => $file['slug'],
+            ], $filesData),
+            'locale' => (string) ($config['locale'] ?? 'auto'),
+            'theme' => (string) ($config['theme'] ?? 'system'),
+            'persistTheme' => true,
+            'tryIt' => filter_var($config['try_it'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'persistCredentials' => $persist,
+            'defaultSnippet' => (string) ($config['default_snippet'] ?? 'curl'),
+        ];
+        if (!empty($config['title'])) {
+            $options['title'] = (string) $config['title'];
+        }
+        if (!empty($config['proxy'])) {
+            $options['proxy'] = (string) $config['proxy'];
+        }
+        if (!empty($config['oauth_redirect_url'])) {
+            $options['oauthRedirectUrl'] = (string) $config['oauth_redirect_url'];
+        }
+        if (!empty($config['snippet_targets']) && is_array($config['snippet_targets'])) {
+            $options['snippetTargets'] = array_values($config['snippet_targets']);
+        }
+
+        return $options;
     }
 
     /**

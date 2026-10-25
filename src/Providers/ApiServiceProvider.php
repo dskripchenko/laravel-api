@@ -2,6 +2,7 @@
 
 namespace Dskripchenko\LaravelApi\Providers;
 
+use Dskripchenko\LaravelApi\Console\Commands\ApiDocAssets;
 use Dskripchenko\LaravelApi\Console\Commands\ApiDocClear;
 use Dskripchenko\LaravelApi\Console\Commands\ApiExport;
 use Dskripchenko\LaravelApi\Console\Commands\ApiGenerateTypes;
@@ -72,6 +73,7 @@ class ApiServiceProvider extends ServiceProvider
                 ApiGenerateTypes::class,
                 ApiExport::class,
                 ApiDocClear::class,
+                ApiDocAssets::class,
                 ApiLint::class,
             ]
         );

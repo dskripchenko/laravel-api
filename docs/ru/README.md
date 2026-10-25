@@ -94,7 +94,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 
 **Результат:**
 - `GET /api/v1/user/list` — API endpoint
-- `GET /api/doc` — автоматически сгенерированная документация API (Scalar)
+- `GET /api/doc` — автоматически сгенерированная документация API (справочник [@dskripchenko/openapi](https://github.com/dskripchenko/openapi))
 
 ## Возможности
 
@@ -102,6 +102,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 |---------|-------------|
 | **Версионированная маршрутизация** | `api/{version}/{controller}/{action}` с наследованием между версиями |
 | **OpenAPI 3.0** | Автоматическая генерация из `@input`/`@output` docblock'ов — без YAML-файлов |
+| **Страница документации** | `/api/doc` — все версии с переключателем, поиск, try-it, примеры кода, типы TypeScript; работает без интернета через `api:doc-assets` |
 | **CRUD скаффолдинг** | Полная реализация поиска/создания/чтения/обновления/удаления с фильтрацией, сортировкой, пагинацией |
 | **Cascade middleware** | Глобальный → контроллер → action с гибким исключением |
 | **Шаблоны ответов** | Переиспользуемые `$ref` схемы в `components/schemas` |
@@ -366,6 +367,86 @@ class Api extends BaseApi {
 
 **Конверт ответа.** Каждый ответ реально уходит как `{success, payload}`. `public static $responseEnvelope = true;` на классе Api заставляет спецификацию говорить то же: шаблоны описывают payload, а каждый ответ — поля `@output`, ссылки `{Template}`, коды ошибок — оборачивается. Шаблоны могут быть вложенными (`'client!' => ['email' => 'string(email)']`, `['string']`, `[['id' => 'integer!']]`), а собственный конверт — это массив полей с `'{payload}'` на месте тела. Подробнее: [docblock-tags.md](docblock-tags.md#конверт-ответа).
 
+### Страница документации
+
+`GET /api/doc` отдаёт справочник
+[@dskripchenko/openapi](https://github.com/dskripchenko/openapi): один скрипт, без сборки в вашем
+проекте. Каждая показываемая версия API — отдельная спецификация на странице, а
+сама страница даёт:
+
+- переключатель версий и полнотекстовый поиск;
+- «Try it» на каждой операции: форма для параметров и тела запроса, плюс
+  собственные query-параметры, заголовки и cookie;
+- панель авторизации для схем безопасности спецификации, включая OAuth2;
+- примеры запросов на 13 языках;
+- вкладку с типами TypeScript и скачивание типов файлом `.d.ts`;
+- PDF одной операции или всей спецификации через диалог печати браузера;
+- светлую, тёмную или системную тему и интерфейс на английском или русском.
+
+Как устроена каждая из этих возможностей — в
+[документации @dskripchenko/openapi](https://github.com/dskripchenko/openapi).
+Версии из `laravel-api.hidden_versions` на странице не показываются; их
+спецификации по-прежнему отдаются по `/api/doc/{version}`.
+
+Страница настраивается блоком `documentation` в `config/laravel-api.php`:
+
+| Ключ | Env | По умолчанию | |
+|------|-----|--------------|---|
+| `script` | `LARAVEL_API_DOC_SCRIPT` | `https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js` | Скрипт страницы — один файл, стили внутри. |
+| `title` | `LARAVEL_API_DOC_TITLE` | `null` | Заголовок страницы; если пусто — заголовок открытой версии. |
+| `locale` | `LARAVEL_API_DOC_LOCALE` | `'auto'` | `'en'`, `'ru'` или `'auto'` (язык браузера). |
+| `theme` | `LARAVEL_API_DOC_THEME` | `'system'` | `'light'`, `'dark'` или `'system'` (как в ОС). Читатель может переключить тему, выбор запоминается. |
+| `try_it` | `LARAVEL_API_DOC_TRY_IT` | `true` | `false` скрывает панели «Try it». |
+| `proxy` | `LARAVEL_API_DOC_PROXY` | `null` | URL, через который идут запросы try-it; см. ниже. `null` — запросы уходят прямо со страницы. |
+| `oauth_redirect_url` | `LARAVEL_API_DOC_OAUTH_REDIRECT_URL` | `null` | OAuth2 redirect URI, на который возвращается вход из try-it; `null` — собственный URL страницы. Провайдер идентификации должен его разрешать. |
+| `persist_credentials` | `LARAVEL_API_DOC_PERSIST_CREDENTIALS` | `false` | Хранить ключи и токены, которые вводит читатель: `false`, `'session'` или `'local'`. |
+| `snippet_targets` | — | `null` | Языки примеров кода, по порядку; `null` — все. |
+| `default_snippet` | — | `'curl'` | Язык, показываемый первым. |
+
+**Если скрипт не загрузился.** Сервер рендерит обычный список ссылок на сырую
+OpenAPI-спецификацию каждой версии, а скрипт заменяет его, когда запускается.
+Поэтому при заблокированном CDN страница показывает ссылки, а не пустой экран.
+
+**Сети без CDN.** `api:doc-assets` один раз скачивает настроенный скрипт и кладёт
+его в `public/`:
+
+```bash
+php artisan api:doc-assets
+# Saved … bytes to public/vendor/laravel-api/openapi/standalone.js
+# Point the page at it: LARAVEL_API_DOC_SCRIPT=/vendor/laravel-api/openapi/standalone.js
+```
+
+```dotenv
+LARAVEL_API_DOC_SCRIPT=/vendor/laravel-api/openapi/standalone.js
+```
+
+`--from=<url>` скачивает другой адрес (другую версию, внутреннее зеркало);
+`--path=<path>` меняет, куда положить файл, относительно `public/`. Запускайте
+команду там, где есть интернет — например, на этапе сборки, — и поставляйте файл
+вместе с приложением. Когда `script` указывает на локальный путь, для повторного
+скачивания команде нужен `--from`.
+
+**Try-it через прокси.** Запросы try-it уходят из браузера читателя, поэтому API
+на другом origin должен разрешить их через CORS. Если это невозможно, укажите в
+`proxy` URL, который их пересылает. Пакет такой эндпоинт не поставляет — его
+пишете и защищаете вы. Он должен:
+
+- принимать `POST`, в JSON-теле которого лежит запрос (`HttpRequest`: метод,
+  абсолютный URL, заголовки, тело);
+- сверять хост URL со списком разрешённых и требовать тот же вход, что и
+  остальная админка, — иначе это открытый релей;
+- выполнять запрос и отвечать `200` с ответом в JSON (`HttpResponse`: статус,
+  заголовки, тело).
+
+Точный контракт — в
+[документации standalone-страницы](https://github.com/dskripchenko/openapi/blob/main/docs/ru/standalone.md#прокси).
+Когда маршруты документации работают с сессией (`'doc_middleware' => ['web']`),
+на странице есть `<meta name="csrf-token">`, и страница отправляет его значение в
+`X-CSRF-TOKEN`, так что маршрут прокси за CSRF-проверкой Laravel принимает вызов.
+
+**Доступ.** `doc_middleware` применяется к `/api/doc` и `/api/doc/{version}`:
+добавьте туда middleware аутентификации, чтобы закрыть страницу и спецификации.
+
 ### Ссылка на конкретный метод
 
 Страница документации адресует каждую операцию хешем, и `DocLink` собирает его,
@@ -384,6 +465,48 @@ DocLink::anchor('v1', 'order', 'create', 'post');  // только хеш, бе�
 слаг на каждую версию, поэтому ссылка переживает переписывание первой строки
 докблока. Действие с несколькими HTTP-методами — это несколько операций на
 странице, по якорю на каждую.
+
+Якоря, собранные до 6.0, продолжают работать: страница понимает форму
+`{version}/tag/{controller}/{METHOD}{path}`, поэтому закладки, задачи и ссылки
+из IDE-плагина ведут на те же операции.
+
+### Предзаполненные ссылки
+
+`DocLink::prefilled()` собирает ссылку, которая открывает метод с уже заполненной
+формой try-it — для баг-репорта, чата или отчёта о тестировании.
+`DocLink::prefillPayload()` возвращает только значение `?f=`.
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
+
+DocLink::prefilled('v1', 'order', 'create', 'post', [
+    'header'  => ['Idempotency-Key' => 'k-1'],
+    'query'   => ['draft' => true],
+    'body'    => ['customerId' => 42, 'items' => [['sku' => 'A-1', 'qty' => 2]]],
+    'xHeader' => [['X-Debug', 'on']],
+]);
+// https://example.test/api/doc#v1/tag/order/POST/v1/order/create?f=z…
+
+DocLink::prefillPayload(['path' => ['id' => 42]]);  // 'z…'
+```
+
+| Ключ | |
+|------|---|
+| `path`, `query`, `header`, `cookie` | Значения параметров по имени. |
+| `body` | Текст тела, как его вводят; массив кодируется в JSON. |
+| `mediaType` | Media type тела. |
+| `server` | Индекс сервера из спецификации или URL сервера. |
+| `vars` | Переменные сервера по имени. |
+| `xQuery`, `xHeader`, `xCookie` | Параметры, которых нет в спецификации, — список пар `[name, value]`. |
+| `auth` | Учётные данные по имени схемы безопасности. Не попадают в ссылку, если не переданы явно: ссылка уходит дальше, чем рассчитывает автор. |
+
+Значения `path`, `query`, `header`, `cookie` и `vars` превращаются в строки
+(`true` → `'true'`, `2` → `'2'`): страница читает каждое значение как текст.
+
+Страница никогда не отправляет запрос сама: она заполняет форму, показывает
+просьбу проверить значения, и читатель нажимает «Send». Данные едут в хеше, после
+якоря, поэтому не попадают ни на ваш сервер, ни в его логи. Формат описан в
+[документации по ссылкам](https://github.com/dskripchenko/openapi/blob/main/docs/ru/links.md#предзаполненные-ссылки).
 
 > Полный справочник тегов: [docblock-tags.ru.md](docblock-tags.md) | Проверка разметки: [linting.md](linting.md) | Рецепты: [cookbook.ru.md](cookbook.md)
 
@@ -548,7 +671,20 @@ return [
     'uri_pattern' => '{version}/{controller}/{action}',          // Шаблон маршрута
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
     'openapi_path' => 'public/openapi',                           // Выходной путь OpenAPI JSON
-    'doc_middleware' => [],                                       // Middleware для /api/doc
+    'doc_middleware' => [],                                       // Middleware для /api/doc и /api/doc/{version}, например ['web']
+    'hidden_versions' => [],                                      // Версии, скрытые с /api/doc
+    'documentation' => [                                          // Страница /api/doc — см. «Страница документации»
+        'script' => env('LARAVEL_API_DOC_SCRIPT', 'https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js'),
+        'title' => env('LARAVEL_API_DOC_TITLE'),
+        'locale' => env('LARAVEL_API_DOC_LOCALE', 'auto'),            // 'en', 'ru', 'auto'
+        'theme' => env('LARAVEL_API_DOC_THEME', 'system'),            // 'light', 'dark', 'system'
+        'try_it' => env('LARAVEL_API_DOC_TRY_IT', true),
+        'proxy' => env('LARAVEL_API_DOC_PROXY'),
+        'oauth_redirect_url' => env('LARAVEL_API_DOC_OAUTH_REDIRECT_URL'),
+        'persist_credentials' => env('LARAVEL_API_DOC_PERSIST_CREDENTIALS', false), // false, 'session', 'local'
+        'snippet_targets' => null,                                    // null — все языки
+        'default_snippet' => 'curl',
+    ],
 ];
 ```
 

@@ -69,3 +69,25 @@ it('points at the page the application actually serves', function () {
     expect($url)->toBe(route('api-doc') . '#v1/tag/user/GET/v1/user/list')
         ->and($url)->toContain('/doc#');
 });
+
+it('builds a prefilled link the reference can read', function () {
+    $url = DocLink::prefilled('v1', 'item', 'create', 'post', [
+        'header' => ['Idempotency-Key' => 'k-1'],
+        'query' => ['page' => 2, 'draft' => true],
+        'body' => ['name' => 'Мяч'],
+        'xHeader' => [['X-Debug', 'on']],
+    ]);
+
+    expect($url)->toContain('#v1/tag/item/POST/v1/item/create?f=z');
+    $payload = substr($url, strpos($url, '?f=') + 3);
+    expect($payload)->toMatch('/^z[A-Za-z0-9_-]+$/');
+
+    $json = gzinflate(base64_decode(strtr(substr($payload, 1), '-_', '+/')));
+    $data = json_decode((string) $json, true);
+    expect($data['v'])->toBe(1);
+    expect($data['header'])->toBe(['Idempotency-Key' => 'k-1']);
+    expect($data['query'])->toBe(['page' => '2', 'draft' => 'true']);
+    expect(json_decode($data['body'], true))->toBe(['name' => 'Мяч']);
+    expect($data['xHeader'])->toBe([['X-Debug', 'on']]);
+    expect($data)->not->toHaveKey('auth');
+});

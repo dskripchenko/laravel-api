@@ -96,7 +96,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 
 **Result:**
 - `GET /api/v1/user/list` — API endpoint
-- `GET /api/doc` — Auto-generated API documentation (Scalar)
+- `GET /api/doc` — Auto-generated API documentation ([@dskripchenko/openapi](https://github.com/dskripchenko/openapi) reference)
 
 ## Features
 
@@ -104,6 +104,7 @@ class UserController extends \Dskripchenko\LaravelApi\Controllers\ApiController
 |---------|-------------|
 | **Versioned routing** | `api/{version}/{controller}/{action}` with inheritance between versions |
 | **OpenAPI 3.0** | Auto-generated from `@input`/`@output` docblocks — no YAML files |
+| **Documentation page** | `/api/doc` — every version with a switcher, search, try-it, code samples, TypeScript types; works offline with `api:doc-assets` |
 | **CRUD scaffolding** | Complete search/create/read/update/delete with filtering, sorting, pagination |
 | **Middleware cascade** | Global → controller → action with fine-grained exclusion |
 | **Response templates** | Reusable `$ref` schemas in `components/schemas` |
@@ -391,6 +392,86 @@ Array format (`['type' => 'string', 'required' => true]`) is also supported and 
 
 **Response envelope.** Every response really leaves as `{success, payload}` (see [Response format](#response-format)). `public static $responseEnvelope = true;` on the Api class makes the spec say so: templates then describe payloads, and every response — `@output` fields, `{Template}` refs, error codes — is wrapped. Templates may nest (`'client!' => ['email' => 'string(email)']`, `['string']`, `[['id' => 'integer!']]`), and a custom envelope is a field map with `'{payload}'` where the body goes. Details: [docblock-tags.md](docs/en/docblock-tags.md#response-envelope).
 
+### Documentation page
+
+`GET /api/doc` renders the reference of
+[@dskripchenko/openapi](https://github.com/dskripchenko/openapi): one script,
+no build step in your project. Every listed API version is one spec on the page,
+and the page offers:
+
+- a switcher between the versions and full-text search;
+- "Try it" on every operation: a form for the parameters and the body, plus your
+  own query parameters, headers and cookies;
+- an authentication panel for the spec's security schemes, OAuth2 included;
+- request samples in 13 languages;
+- a TypeScript types tab, and the types as a `.d.ts` download;
+- PDF of one operation or of the whole spec, through the browser's print dialog;
+- a light, dark or system theme, and an English or Russian interface.
+
+How each of these works is described in the
+[@dskripchenko/openapi documentation](https://github.com/dskripchenko/openapi).
+Versions listed in `laravel-api.hidden_versions` stay off the page; their specs
+are still served at `/api/doc/{version}`.
+
+The page is configured in the `documentation` block of `config/laravel-api.php`:
+
+| Key | Env | Default | |
+|-----|-----|---------|---|
+| `script` | `LARAVEL_API_DOC_SCRIPT` | `https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js` | The page's script — one file, styles included. |
+| `title` | `LARAVEL_API_DOC_TITLE` | `null` | The page title; the open version's title when empty. |
+| `locale` | `LARAVEL_API_DOC_LOCALE` | `'auto'` | `'en'`, `'ru'` or `'auto'` (the browser's language). |
+| `theme` | `LARAVEL_API_DOC_THEME` | `'system'` | `'light'`, `'dark'` or `'system'` (follows the OS). The reader can switch, and the choice is remembered. |
+| `try_it` | `LARAVEL_API_DOC_TRY_IT` | `true` | `false` hides the "Try it" panels. |
+| `proxy` | `LARAVEL_API_DOC_PROXY` | `null` | A URL that relays try-it requests; see below. `null` sends them straight from the page. |
+| `oauth_redirect_url` | `LARAVEL_API_DOC_OAUTH_REDIRECT_URL` | `null` | The OAuth2 redirect URI the try-it sign-in returns to; `null` means the page's own URL. The identity provider must allow it. |
+| `persist_credentials` | `LARAVEL_API_DOC_PERSIST_CREDENTIALS` | `false` | Keep the keys and tokens a reader types: `false`, `'session'` or `'local'`. |
+| `snippet_targets` | — | `null` | The languages offered for code samples, in order; `null` offers all. |
+| `default_snippet` | — | `'curl'` | The language shown first. |
+
+**When the script does not load.** The server renders a plain list of links to
+each version's raw OpenAPI spec, and the script replaces it once it starts. A
+blocked CDN therefore gives a page with links, not a blank one.
+
+**Networks without a CDN.** `api:doc-assets` downloads the configured script once
+and puts it into `public/`:
+
+```bash
+php artisan api:doc-assets
+# Saved … bytes to public/vendor/laravel-api/openapi/standalone.js
+# Point the page at it: LARAVEL_API_DOC_SCRIPT=/vendor/laravel-api/openapi/standalone.js
+```
+
+```dotenv
+LARAVEL_API_DOC_SCRIPT=/vendor/laravel-api/openapi/standalone.js
+```
+
+`--from=<url>` downloads another URL (another version, an internal mirror);
+`--path=<path>` changes where the file goes, relative to `public/`. Run the
+command where the internet is reachable — a build stage, say — and ship the file
+with the application. Once `script` points at a local path, the command needs
+`--from` to download again.
+
+**Try-it through a proxy.** Try-it requests go from the reader's browser, so an
+API on another origin has to allow them with CORS. Where it cannot, set `proxy`
+to a URL that relays them. The package does not ship such an endpoint — it is
+yours to write and to protect. It must:
+
+- accept a `POST` whose JSON body is the request (`HttpRequest`: method,
+  absolute URL, headers, body);
+- check the URL's host against an allowlist, and require the same sign-in as the
+  rest of your back office — otherwise it is an open relay;
+- perform the request and answer `200` with the response as JSON
+  (`HttpResponse`: status, headers, body).
+
+The exact contract is in
+[the standalone page docs](https://github.com/dskripchenko/openapi/blob/main/docs/en/standalone.md#the-proxy).
+When the documentation routes run with a session (`'doc_middleware' => ['web']`),
+the page carries a `<meta name="csrf-token">`, and the page sends its value in
+`X-CSRF-TOKEN`, so a proxy route behind Laravel's CSRF check accepts the call.
+
+**Access.** `doc_middleware` applies to `/api/doc` and `/api/doc/{version}`:
+add an authentication middleware there to close the page and the specs.
+
 ### Linking to a single endpoint
 
 The reference page addresses every operation by a hash, and `DocLink` builds it
@@ -409,6 +490,49 @@ The first segment is the API version, and it is deliberate: the page is handed
 an explicit slug per version, so a link survives the docblock summary being
 reworded. An action declaring several HTTP methods is several operations on the
 page — one anchor each.
+
+Anchors built before 6.0 keep working: the page reads the
+`{version}/tag/{controller}/{METHOD}{path}` form, so bookmarks, tickets and the
+IDE plugin's links land on the same operations.
+
+### Prefilled links
+
+`DocLink::prefilled()` builds a link that opens an endpoint with its try-it form
+already filled in — for a bug report, a chat or a test report.
+`DocLink::prefillPayload()` returns the `?f=` value alone.
+
+```php
+use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
+
+DocLink::prefilled('v1', 'order', 'create', 'post', [
+    'header'  => ['Idempotency-Key' => 'k-1'],
+    'query'   => ['draft' => true],
+    'body'    => ['customerId' => 42, 'items' => [['sku' => 'A-1', 'qty' => 2]]],
+    'xHeader' => [['X-Debug', 'on']],
+]);
+// https://example.test/api/doc#v1/tag/order/POST/v1/order/create?f=z…
+
+DocLink::prefillPayload(['path' => ['id' => 42]]);  // 'z…'
+```
+
+| Key | |
+|-----|---|
+| `path`, `query`, `header`, `cookie` | Parameter values by name. |
+| `body` | The body text as typed; an array is JSON-encoded. |
+| `mediaType` | The body's media type. |
+| `server` | An index into the spec's servers, or a server URL. |
+| `vars` | Server variables by name. |
+| `xQuery`, `xHeader`, `xCookie` | Parameters the spec does not declare, as a list of `[name, value]` pairs. |
+| `auth` | Credentials by security scheme name. Left out unless you pass it explicitly: a link travels further than its author expects. |
+
+The values of `path`, `query`, `header`, `cookie` and `vars` become strings
+(`true` → `'true'`, `2` → `'2'`), since the page reads every value as text.
+
+The page never sends the request by itself: it fills the form, shows a notice
+asking to check the values, and the reader presses "Send". The payload rides in
+the hash, after the anchor, so it does not reach your server or its logs. The
+format is described in
+[the deep links docs](https://github.com/dskripchenko/openapi/blob/main/docs/en/links.md#prefilled-links).
 
 > Full tag reference: [docs/docblock-tags.md](docs/en/docblock-tags.md) | Linting: [docs/linting.md](docs/en/linting.md) | Cookbook: [docs/cookbook.md](docs/en/cookbook.md)
 
@@ -648,7 +772,20 @@ return [
     'uri_pattern' => '{version}/{controller}/{action}',          // Route pattern
     'available_methods' => ['get', 'post', 'put', 'patch', 'delete'],
     'openapi_path' => 'public/openapi',                           // OpenAPI JSON output
-    'doc_middleware' => [],                                       // Middleware for /api/doc
+    'doc_middleware' => [],                                       // Middleware for /api/doc and /api/doc/{version}, e.g. ['web']
+    'hidden_versions' => [],                                      // Versions kept off /api/doc
+    'documentation' => [                                          // The /api/doc page — see "Documentation page"
+        'script' => env('LARAVEL_API_DOC_SCRIPT', 'https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js'),
+        'title' => env('LARAVEL_API_DOC_TITLE'),
+        'locale' => env('LARAVEL_API_DOC_LOCALE', 'auto'),            // 'en', 'ru', 'auto'
+        'theme' => env('LARAVEL_API_DOC_THEME', 'system'),            // 'light', 'dark', 'system'
+        'try_it' => env('LARAVEL_API_DOC_TRY_IT', true),
+        'proxy' => env('LARAVEL_API_DOC_PROXY'),
+        'oauth_redirect_url' => env('LARAVEL_API_DOC_OAUTH_REDIRECT_URL'),
+        'persist_credentials' => env('LARAVEL_API_DOC_PERSIST_CREDENTIALS', false), // false, 'session', 'local'
+        'snippet_targets' => null,                                    // null offers all languages
+        'default_snippet' => 'curl',
+    ],
 ];
 ```
 
