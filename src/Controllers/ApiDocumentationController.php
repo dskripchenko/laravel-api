@@ -55,11 +55,58 @@ class ApiDocumentationController extends Controller
 
         return view('api_module::api/documentation', [
             'filesData' => $filesData,
-            'documentationScript' => (string) config(
-                'laravel-api.documentation_script',
-                'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
-            ),
+            'documentationScript' => static::documentationScript(),
+            'documentationOptions' => $this->documentationOptions($filesData),
         ]);
+    }
+
+    /** The URL of the reference's script (`laravel-api.documentation.script`). */
+    public static function documentationScript(): string
+    {
+        return (string) (config('laravel-api.documentation.script')
+            ?: 'https://cdn.jsdelivr.net/npm/@dskripchenko/openapi@1.0.0/dist/standalone.js');
+    }
+
+    /**
+     * The options `DskOpenApi.createApiReference()` gets: the versions as
+     * sources (their slugs are DocLink's document slugs, so its anchors land)
+     * and the page settings from `laravel-api.documentation`.
+     *
+     * @param array<int, array{url: string, name: string, slug: string}> $filesData
+     * @return array<string, mixed>
+     */
+    protected function documentationOptions(array $filesData): array
+    {
+        $config = (array) config('laravel-api.documentation', []);
+        $persist = $config['persist_credentials'] ?? false;
+        if (is_string($persist) && !in_array($persist, ['session', 'local'], true)) {
+            $persist = filter_var($persist, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $options = [
+            'sources' => array_map(static fn (array $file): array => [
+                'url'   => $file['url'],
+                'title' => $file['name'],
+                'slug'  => $file['slug'],
+            ], $filesData),
+            'locale' => (string) ($config['locale'] ?? 'auto'),
+            'theme' => (string) ($config['theme'] ?? 'system'),
+            'persistTheme' => true,
+            'tryIt' => filter_var($config['try_it'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'persistCredentials' => $persist,
+            'defaultSnippet' => (string) ($config['default_snippet'] ?? 'curl'),
+        ];
+        if (!empty($config['title'])) {
+            $options['title'] = (string) $config['title'];
+        }
+        if (!empty($config['proxy'])) {
+            $options['proxy'] = (string) $config['proxy'];
+        }
+        if (!empty($config['snippet_targets']) && is_array($config['snippet_targets'])) {
+            $options['snippetTargets'] = array_values($config['snippet_targets']);
+        }
+
+        return $options;
     }
 
     /**

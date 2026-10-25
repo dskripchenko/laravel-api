@@ -3,6 +3,10 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @if (request()->hasSession())
+            {{-- Read by the try-it proxy (if configured) for Laravel's CSRF check. --}}
+            <meta name="csrf-token" content="{{ csrf_token() }}">
+        @endif
         <title>API Documentation</title>
         <style>
             body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
@@ -12,12 +16,13 @@
         </style>
     </head>
     <body>
-        {{-- Fallback: если Scalar-бандл не загрузился (нет CDN / офлайн), страница
-             не остаётся белой — показываем прямые ссылки на сырые OpenAPI-спеки. --}}
+        {{-- Fallback: when the reference's script does not load (no CDN,
+             offline), the page does not stay blank — the raw OpenAPI specs are
+             listed by the server, with no JavaScript involved. --}}
         <div id="api-doc-fallback" class="api-doc-fallback">
             <h1>API Documentation</h1>
-            <p>Интерактивная документация загружается… Если она не появилась —
-               рендерер недоступен (нет соединения с CDN). Сырые OpenAPI-спеки:</p>
+            <p>The interactive documentation is loading… If it does not show up, its
+               script is unavailable (no connection to the CDN). The raw OpenAPI specs:</p>
             <ul id="api-doc-fallback-list">
                 @foreach ($filesData as $file)
                     <li><a href="{{ $file['url'] }}">{{ $file['name'] ?: $file['url'] }}</a></li>
@@ -26,26 +31,18 @@
         </div>
 
         <div id="app"></div>
-        <script src="{{ $documentationScript ?? 'https://cdn.jsdelivr.net/npm/@scalar/api-reference' }}"></script>
+        <script src="{{ $documentationScript }}"></script>
         <script>
-            // The specs are embedded as a JS literal (the Blade json
-            // directive, JSON_HEX_APOS|JSON_HEX_QUOT). The JSON used to be put
-            // into a string in SINGLE quotes: any apostrophe in a version's
-            // description ("caller's") brought the script down with a syntax
-            // error, and an escaped line break brought down JSON.parse itself.
-            // The page stayed empty, and even the fallback list was not built —
-            // it was filled by that same broken script (the list is now rendered
-            // on the server).
-            // `slug` is passed explicitly: left to itself Scalar slugifies the
-            // title, and the title is prose from a docblock. Every deep link
-            // into this page would then break on a reworded sentence.
-            var sources = @json($filesData).map(function (item) {
-                return { url: item.url, title: item.name, slug: item.slug };
-            });
-            if (typeof Scalar !== 'undefined' && Scalar.createApiReference) {
-                Scalar.createApiReference('#app', { sources: sources });
-                var f = document.getElementById('api-doc-fallback');
-                if (f) { f.remove(); }
+            // The options are a JS literal (the Blade json directive escapes
+            // quotes and apostrophes): a version's description with "caller's"
+            // in it cannot break the script. Each source's `slug` is DocLink's
+            // document slug, so the anchors DocLink and the IDE plugin build
+            // (`#v1/tag/item/GET/v1/item/list`) open the right operation.
+            var options = @json($documentationOptions);
+            if (typeof DskOpenApi !== 'undefined' && DskOpenApi.createApiReference) {
+                var fallback = document.getElementById('api-doc-fallback');
+                if (fallback) { fallback.remove(); }
+                DskOpenApi.createApiReference('#app', options);
             }
         </script>
     </body>

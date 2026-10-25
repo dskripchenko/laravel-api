@@ -54,28 +54,68 @@ it('generated JSON is valid OpenAPI', function () {
 
 it('passes a configurable documentation script URL to the view', function () {
     Storage::fake();
-    config()->set('laravel-api.documentation_script', '/vendor/scalar/api-reference.js');
+    config()->set('laravel-api.documentation.script', '/vendor/laravel-api/openapi/standalone.js');
 
-    $controller = new ApiDocumentationController();
-    $view = $controller->index();
+    $view = (new ApiDocumentationController())->index();
 
-    expect($view->getData()['documentationScript'])->toBe('/vendor/scalar/api-reference.js');
+    expect($view->getData()['documentationScript'])->toBe('/vendor/laravel-api/openapi/standalone.js');
 });
 
-it('documentation view renders configured script and a fallback block', function () {
+it('defaults to the pinned @dskripchenko/openapi script', function () {
     Storage::fake();
-    config()->set('laravel-api.documentation_script', '/vendor/scalar/api-reference.js');
+    config()->set('laravel-api.documentation.script', null);
+
+    $view = (new ApiDocumentationController())->index();
+
+    expect($view->getData()['documentationScript'])->toContain('@dskripchenko/openapi@')->toContain('/dist/standalone.js');
+});
+
+it('hands the versions to the page as sources with DocLink slugs and the page settings', function () {
+    Storage::fake();
+    config()->set('laravel-api.documentation', [
+        'locale' => 'ru',
+        'theme' => 'dark',
+        'try_it' => 'false',
+        'proxy' => '/api/doc-proxy',
+        'persist_credentials' => 'local',
+        'snippet_targets' => ['curl', 'php-laravel'],
+        'default_snippet' => 'php-laravel',
+        'title' => 'Shop API',
+    ]);
+
+    $options = (new ApiDocumentationController())->index()->getData()['documentationOptions'];
+
+    expect($options['sources'][0])->toHaveKeys(['url', 'title', 'slug']);
+    expect(array_column($options['sources'], 'slug'))->toContain('v1');
+    expect($options)->toMatchArray([
+        'locale' => 'ru',
+        'theme' => 'dark',
+        'tryIt' => false,
+        'proxy' => '/api/doc-proxy',
+        'persistCredentials' => 'local',
+        'snippetTargets' => ['curl', 'php-laravel'],
+        'defaultSnippet' => 'php-laravel',
+        'title' => 'Shop API',
+    ]);
+});
+
+it('documentation view mounts the reference and keeps a fallback block', function () {
+    Storage::fake();
 
     $html = view('api_module::api/documentation', [
-        'filesData' => [['url' => '/openapi/v1.json', 'name' => 'V1']],
-        'documentationScript' => (string) config('laravel-api.documentation_script'),
+        'filesData' => [['url' => '/openapi/v1.json', 'name' => "The caller's API", 'slug' => 'v1']],
+        'documentationScript' => '/vendor/laravel-api/openapi/standalone.js',
+        'documentationOptions' => ['sources' => [['url' => '/openapi/v1.json', 'title' => "The caller's API", 'slug' => 'v1']]],
     ])->render();
 
-    expect($html)->toContain('src="/vendor/scalar/api-reference.js"');
-    expect($html)->not->toContain('cdn.jsdelivr.net');
+    expect($html)->toContain('src="/vendor/laravel-api/openapi/standalone.js"');
+    expect($html)->toContain('DskOpenApi.createApiReference');
+    expect($html)->not->toContain('Scalar');
     expect($html)->toContain('api-doc-fallback');
     // The list of specs is rendered by the server — it must not depend on JS.
     expect($html)->toContain('href="/openapi/v1.json"');
+    // An apostrophe in a title cannot break the script.
+    expect($html)->toContain('caller' . '\\' . 'u0027s');
 });
 
 it('documentation view survives apostrophes and newlines in spec titles', function () {
@@ -84,18 +124,17 @@ it('documentation view survives apostrophes and newlines in spec titles', functi
     // The JSON used to be put into a JS string in single quotes: an apostrophe
     // brought the script down with a syntax error and a line break brought down
     // JSON.parse itself.
+    $title = "Admin API — описание endpoint'ов\nи caller's flow";
     $html = view('api_module::api/documentation', [
-        'filesData' => [[
-            'url' => '/openapi/v1.json',
-            'name' => "Admin API — описание endpoint'ов\nи caller's flow",
-        ]],
-        'documentationScript' => '/vendor/scalar/api-reference.js',
+        'filesData' => [['url' => '/openapi/v1.json', 'name' => $title, 'slug' => 'v1']],
+        'documentationScript' => '/vendor/laravel-api/openapi/standalone.js',
+        'documentationOptions' => ['sources' => [['url' => '/openapi/v1.json', 'title' => $title, 'slug' => 'v1']]],
     ])->render();
 
     expect($html)->not->toContain("JSON.parse('");
     // An apostrophe inside a JS literal must be escaped (@json → \u0027).
     expect($html)->toContain('\u0027');
-    expect($html)->not->toMatch("/var sources = .*endpoint'ов/");
+    expect($html)->not->toMatch("/var options = .*endpoint'ов/");
 });
 
 it('keeps hidden versions out of the reference index', function () {
@@ -120,17 +159,13 @@ it('hands the page a slug per version, so deep links do not hang off prose', fun
 });
 
 it('renders the slug into the sources the page is built from', function () {
-    $html = view('api_module::api/documentation', [
-        'filesData' => [[
-            'url' => '/openapi/v1.json',
-            'name' => 'Some API — the title may say anything',
-            'slug' => 'v1',
-        ]],
-        'documentationScript' => '/vendor/scalar/api-reference.js',
-    ])->render();
+    Storage::fake();
 
-    expect($html)->toContain('slug: item.slug')
-        ->and($html)->toContain('"slug":"v1"');
+    $html = (new ApiDocumentationController())->index()->render();
+
+    // The slug is the version's id on the page: DocLink's anchors start with it.
+    expect($html)->toContain('"slug":"v1"')
+        ->and($html)->toContain('DskOpenApi.createApiReference');
 });
 
 it('still serves a hidden version by direct URL', function () {
