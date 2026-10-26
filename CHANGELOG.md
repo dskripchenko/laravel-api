@@ -5,7 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [6.2.0] — 2026-10-26
+
+The API beyond HTTP. An action can be called without an HTTP request of its
+own (`Runtime\Dispatcher`) — through the same router, middleware and
+validation — and on top of that every version can be served to agents as an
+**MCP server** and over **JSON-RPC 2.0** with an OpenRPC description. Both are
+off unless enabled. The OpenAPI documents now pass validation.
+
+### Upgrading from 6.1
+
+1. **Run `php artisan api:cache` again** if you use it: the cache format is 2.
+   A file written by 6.1 is ignored — requests build the map as if there were
+   no cache — until the command runs.
+2. **Cached specs.** The OpenAPI specs stored on disk by 6.1 (`openapi_path`)
+   still carry the invalid parts until they are rebuilt: `api:cache`, or
+   `api:doc-clear` and the next `/api/doc` request.
+3. **If you read the `getOpenApiConfig()` array**: the schemas of `@output`
+   fields no longer carry a `name` key, and empty `required` lists are gone. The
+   documents served as JSON write empty `properties` as `{}`.
+4. **MCP and JSON-RPC expose actions to whoever can reach their endpoints** —
+   every action of every served version, as the caller of the request. Both are
+   off by default; when enabling them, restrict `versions`, put authentication
+   in `middleware`, and leave out with `'mcp' => false` / `'jsonrpc' => false`
+   what should not be called that way.
 
 ### Added
 
@@ -61,8 +84,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **The OpenAPI documents validate.** Checked with
-  `@apidevtools/swagger-parser`, 14 of the 17 the fixtures and the example
-  produce were invalid OpenAPI 3.0, for three reasons, each now gone:
+  `@apidevtools/swagger-parser`, 14 of the 17 documents produced for the
+  fixtures and the example were invalid OpenAPI 3.0, for three reasons, each
+  now gone:
   `"properties": []` — PHP's empty array written as a JSON list where a map is
   due (an `@output` without fields, envelope payloads) —, `"required": []` —
   draft 4, which OpenAPI 3.0 builds on, wants at least one name —, and a `name`
