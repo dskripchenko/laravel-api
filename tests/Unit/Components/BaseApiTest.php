@@ -92,6 +92,30 @@ it('caches prepared methods per class', function () {
     expect($methods1)->toBe($methods2);
 });
 
+it('does not hand a version the controllers of another hierarchy', function () {
+    // V2 extends V1: preparing it used to merge V1's methods into the cache
+    // itself, and every API prepared afterwards inherited them.
+    callPrivateStaticMethod(V2Api::class, 'getPreparedMethods');
+
+    $methods = callPrivateStaticMethod(\Tests\Fixtures\OpenApi\NestedApi::class, 'getPreparedMethods');
+
+    expect(array_keys($methods['controllers']))->toBe(['nested']);
+    expect(array_keys($methods))->toBe(array_keys(\Tests\Fixtures\OpenApi\NestedApi::getMethods()));
+});
+
+it('re-enables with true an action an earlier version disabled', function () {
+    // v1.1 sets 'a' => false, v1.2 brings it back with 'a' => true.
+    $api = \Dskripchenko\LaravelApiExample\Versions\v1_2\Api::class;
+
+    $methods = callPrivateStaticMethod($api, 'getPreparedMethods');
+    expect($methods['controllers']['a']['actions']['a'])->toBe(['action' => 'a']);
+
+    expect(callPrivateStaticMethod($api, 'getPreparedAction', ['a', 'a']))
+        ->toBe(\Dskripchenko\LaravelApiExample\Versions\v1_1\Controllers\AController::class . '@a');
+
+    expect(array_keys($api::getOpenApiConfig('v1.2')['paths']))->toContain('/v1.2/a/a');
+});
+
 // getMiddleware tests
 it('returns empty middleware for invalid action', function () {
     ApiRequest::shouldReceive('getApiControllerKey')->andReturn('nonexistent');

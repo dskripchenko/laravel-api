@@ -74,6 +74,7 @@ public static function getMethods(): array
                     'list',                                   // simple: method name = action key
                     'show' => 'getById',                      // alias: action key → method name
                     'disabled' => false,                      // disabled action
+                    'restored' => true,                       // re-enable an action disabled earlier; method = action key
                     'create' => [
                         'action' => 'store',                  // explicit method name
                         'method' => ['post'],                 // HTTP methods (default: ['post'])

@@ -54,7 +54,9 @@ it('reports the method left behind when an action was disabled', function () {
         lintExample(unrouted: true)
     );
 
-    expect($messages)->toHaveCount(2);
+    // Only v1.1: v1.2 turns the action back on, and v2 is a hierarchy of its
+    // own — it used to be reported too, from controllers leaked into it.
+    expect($messages)->toHaveCount(1);
     expect($messages[0])->toContain('v1.1 · a');
     expect($messages[0])->toContain('AController::a()');
 });

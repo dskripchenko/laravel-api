@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.2] — 2026-10-26
+
+### Fixed
+
+- **Versions no longer leak into each other.** `BaseApi::getPreparedMethods()`
+  merged the parents' methods into the shared cache instead of a local
+  accumulator, so every API prepared after a hierarchy inherited that
+  hierarchy's controllers: with `v2 extends v1` and a standalone `v3`, `v3`
+  served — and documented — the endpoints of `v1`. Each version now gets only
+  its own class and its own parents. If an application relied on the leak, the
+  missing controllers have to be declared in that version or inherited
+  explicitly.
+- **`'action' => true` re-enables an action.** An action disabled in an earlier
+  version (`'a' => false`) and turned back on with `'a' => true` was normalized
+  to `['action' => true]`: the route answered 404 and `/api/doc/{version}`
+  failed with `ReflectionException: Method ...::1() does not exist`, while the
+  linter reported nothing. `true` now means the same as a plain list entry —
+  the method is named as the action key.
+
 ## [6.0.1] — 2026-10-25
 
 ### Changed

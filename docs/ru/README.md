@@ -233,6 +233,7 @@ V2 автоматически наследует `list`, `show`, `create`, `upda
     'list',                              // простой: имя метода = имя action'а
     'show' => 'getById',                 // алиас: show → вызывает getById()
     'disabled' => false,                 // отключённый action (404)
+    'restored' => true,                  // вернуть action, отключённый в прошлой версии; метод = имя action'а
     'create' => [
         'action' => 'store',             // явное имя метода
         'method' => ['post'],            // разрешённые HTTP методы (по умолчанию: ['post'])
