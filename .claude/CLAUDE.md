@@ -40,6 +40,8 @@ HTTP Request → ApiServiceProvider (route registration)
 
 **OperationDocParser** (`src/Operations/Doc/`) is the one reader of action docblocks: `OperationDocParser::parse($docComment, $middleware)` → `OperationDoc` (sanitized summary/description, `DocLine`s per tag with their syntactic `kind()`/`parts()`, security, deprecated, defaults/examples). `@input`/`@header` lines include the middleware's (classes and groups) ahead of the method's. Both `OpenApiTrait` and `OpenApiLinter` go through it — don't call `DocBlockFactory` elsewhere.
 
+**DescriptorBuilder** (`src/Operations/DescriptorBuilder.php`) turns an `Operation` + its `OperationDoc` into one `OperationDescriptor` per HTTP method (`Operations/Descriptor/`): input (`InputDeclaration` — `schema()` is the transport-neutral JSON Schema; `refs`/`lines`/`schemas`/`isNested()` say how it was declared), headers, output payload (`OutputDeclaration`, no envelope) or `@response` list, security, deprecated, operationId, context. `[method]` callables are invoked here. Schema helpers live in `Operations/Schema/` (`Shorthand`, `SchemaRegistry` — templates + envelope, `FieldSchemas`, `SchemaRef`). `OpenApiTrait` only renders descriptors into OpenAPI (HTTP binding: GET flat → query, flat → form, nested/[method]/@Model → JSON body; envelope wrapping).
+
 Golden-master snapshots (`tests/Feature/GoldenMaster`, stored in `tests/.pest/snapshots`) pin the spec, TS types, exports, lint report and routes of every fixture API and the example. A snapshot changes only on purpose; regenerate with `vendor/bin/pest --update-snapshots`.
 
 ### Extension points
@@ -272,8 +274,10 @@ src/
 ├── Facades/           ApiRequest, ApiModule, ApiErrorHandler
 ├── Interfaces/        CrudServiceInterface, ApiInterface
 ├── Middlewares/       ApiMiddleware, RequestIdMiddleware
-├── Operations/        OperationRegistry, Operation, ControllerDefinition
-│   └── Doc/           OperationDocParser, OperationDoc, DocLine
+├── Operations/        OperationRegistry, Operation, ControllerDefinition, DescriptorBuilder
+│   ├── Doc/           OperationDocParser, OperationDoc, DocLine
+│   ├── Descriptor/    OperationDescriptor, InputDeclaration, OutputDeclaration, ResponseDeclaration
+│   └── Schema/        Shorthand, SchemaRegistry, FieldSchemas, SchemaRef
 ├── Providers/         ApiServiceProvider, BaseServiceProvider
 ├── Requests/          BaseApiRequest, CrudSearchRequest
 ├── Resources/         BaseJsonResource, BaseJsonResourceCollection

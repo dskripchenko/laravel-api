@@ -26,6 +26,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   include the middleware's, ahead of the method's own. The OpenAPI generator and
   the linter both read docblocks through it now; the spec, types, exports and
   lint report of the fixtures and the example are unchanged.
+- **Operation descriptors** (`Dskripchenko\LaravelApi\Operations\DescriptorBuilder`,
+  `Operations\Descriptor`). `DescriptorBuilder::for($apiClass)->build($operation)`
+  returns one `OperationDescriptor` per HTTP method of an action: the action,
+  its `OperationDoc`, the `OperationContext`, `operationId`, `deprecated`,
+  `security`, the input (`InputDeclaration` — the JSON Schema of the whole
+  input via `schema()`, and how it was declared: flat fields, nested lines,
+  `[method]` schemas, `@Model` refs), the `@header` fields, and either the
+  success payload (`OutputDeclaration`, without the envelope) or the `@response`
+  list. The OpenAPI generator renders these now; `OpenApiTrait` is down from
+  ~1670 to ~500 lines, and the spec of the fixtures and the example is
+  unchanged.
+- **Schema modules** (`Operations\Schema`): `Shorthand` (the template
+  shorthand), `SchemaRegistry` (an API class's templates with `Error`/`Success`,
+  and its response envelope), `FieldSchemas` (object schemas from docblock
+  lines), `SchemaRef` (`#/components/schemas/{Name}` stays the one spelling of
+  a template reference; `SchemaRef::name()` takes the name).
+- `Operation::operationId(int $methodIndex)`.
 - Lint rule **`action.invalid-method-name`**: an `action` key that is not a
   string. The OpenAPI generator used to fail on it; it now falls back to the
   action key, the same way the dispatcher does.
@@ -38,15 +55,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A middleware group holding an alias (`throttle:api`) no longer fails the spec
   with a `ReflectionException`; the aliases are skipped when the group's
   `@input`/`@header` are collected.
+- `{Template}` on `@output` is read only as the whole line. It used to be
+  matched anywhere in it: with templates on, `@output string $status The
+  status, e.g. {Active}` turned the whole response into a `$ref` to `Active`.
+- Lines the linter reports as malformed are no longer documented: `@input
+  {User} $user` and `@input @not-a-model $x` used to become string fields
+  `user` and `x`. (An `@output @Model $field` whose template does not resolve
+  still documents `field` as a string, as before.)
 - The linter reads `@input` from middleware groups too, as the generator does:
   a `@default` for an input a grouped middleware declares is no longer reported
   as `default.unknown-variable`.
 
 ### Deprecated
 
-- `OpenApiTrait::$docBlockFactory` and `OpenApiTrait::$middlewareInputTagCache`
-  are unused; they go in 7.0. Use `OperationDocParser::flush()` to reset the
-  parser's cache.
+- `OpenApiTrait::$docBlockFactory`, `$middlewareInputTagCache` and
+  `$cachedRawTemplatesByClass` are unused; they go in 7.0. Use
+  `OperationDocParser::flush()` and `SchemaRegistry::flush()` to reset the
+  caches.
 
 ### Changed
 

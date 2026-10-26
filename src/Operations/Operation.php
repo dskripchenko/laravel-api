@@ -60,6 +60,24 @@ final class Operation
         return "{$this->controllerClass}@{$this->controllerMethod}";
     }
 
+    /**
+     * The id of the operation served by the HTTP method at that position.
+     *
+     * An action serving several HTTP methods is several operations, and their
+     * ids have to be unique: the first method keeps the plain
+     * `{controller}_{action}`, the others get the method as a suffix.
+     */
+    public function operationId(int $methodIndex = 0): string
+    {
+        $id = "{$this->controllerKey}_{$this->actionKey}";
+
+        if ($methodIndex === 0) {
+            return $id;
+        }
+
+        return $id . '_' . strtolower((string) (array_values($this->httpMethods)[$methodIndex] ?? ''));
+    }
+
     public function allowsHttpMethod(string $method): bool
     {
         return in_array($method, $this->httpMethods, true);
