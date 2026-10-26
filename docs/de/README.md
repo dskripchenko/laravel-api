@@ -180,6 +180,29 @@ das über HTTP geht, entscheidet `OpenApiRenderer`. Das Modell liegt in
 `src/Operations/`; `php artisan api:cache` friert die Tabelle für die Produktion
 ein.
 
+### Eine Action ohne HTTP aufrufen
+
+```php
+use Dskripchenko\LaravelApi\Runtime\ApiInvocation;
+use Dskripchenko\LaravelApi\Runtime\Dispatcher;
+
+$result = app(Dispatcher::class)->dispatch(
+    new ApiInvocation('v1', 'user', 'create', ['name' => 'Ann'])
+);
+
+$result->success;     // true
+$result->payload;     // ['id' => 1, 'name' => 'Ann']
+$result->errorKey();  // null, or 'auth_error', 'validation_error', …
+```
+
+Der Aufruf läuft durch den Router wie eine Anfrage an die URL der Action —
+Middleware-Kaskade, Validierung, `auth()`, `ApiRequest` — und die Antwort wird
+aus demselben `{success, payload}`-Umschlag gelesen, den ein HTTP-Client
+bekommt. Er läuft innerhalb der aktuellen Anfrage als derselbe Aufrufer
+(Header und Cookies werden weitergereicht), und diese Anfrage wird danach
+wiederhergestellt. GET-Eingaben gehen als Query-String, alles andere als
+JSON-Body. Darauf bauen Transporte jenseits von HTTP auf.
+
 ### Antwortformat
 
 Jede Antwort ist in einer Standard-Umhüllung eingebunden:

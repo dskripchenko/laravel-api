@@ -182,6 +182,28 @@ transport-neutral JSON Schema, plus how the input was declared.
 `src/Operations/`; `php artisan api:cache` freezes the map for production
 (see [Production](#production)).
 
+### Calling an action without HTTP
+
+```php
+use Dskripchenko\LaravelApi\Runtime\ApiInvocation;
+use Dskripchenko\LaravelApi\Runtime\Dispatcher;
+
+$result = app(Dispatcher::class)->dispatch(
+    new ApiInvocation('v1', 'user', 'create', ['name' => 'Ann'])
+);
+
+$result->success;     // true
+$result->payload;     // ['id' => 1, 'name' => 'Ann']
+$result->errorKey();  // null, or 'auth_error', 'validation_error', …
+```
+
+The call goes through the router the way a request to the action's URL would —
+middleware cascade, validation, `auth()`, `ApiRequest` — and the answer is read
+from the `{success, payload}` envelope an HTTP client gets. It runs inside the
+current request as the same caller (its headers and cookies are passed on), and
+that request is put back afterwards. GET input travels as a query string, the
+rest as a JSON body. This is what non-HTTP transports build on.
+
 ### Response format
 
 Every response is wrapped in a standard envelope:

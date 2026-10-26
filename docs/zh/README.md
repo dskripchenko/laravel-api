@@ -174,6 +174,23 @@ docblocks     ──► OperationDocParser ─► OperationDoc       tag lines, 
 
 `getMethods()` 只在 `OperationRegistry` 中读取，docblock 只在 `OperationDocParser` 中读取；`DescriptorBuilder` 把两者合成每个 HTTP 方法一个 `OperationDescriptor`——输入和输出是与传输无关的 JSON Schema，并记录输入的声明方式。如何通过 HTTP 传输由 `OpenApiRenderer` 决定。模型位于 `src/Operations/`；`php artisan api:cache` 为生产环境冻结映射（见“生产环境”）。
 
+### 不经 HTTP 调用操作
+
+```php
+use Dskripchenko\LaravelApi\Runtime\ApiInvocation;
+use Dskripchenko\LaravelApi\Runtime\Dispatcher;
+
+$result = app(Dispatcher::class)->dispatch(
+    new ApiInvocation('v1', 'user', 'create', ['name' => 'Ann'])
+);
+
+$result->success;     // true
+$result->payload;     // ['id' => 1, 'name' => 'Ann']
+$result->errorKey();  // null, or 'auth_error', 'validation_error', …
+```
+
+调用像访问该操作 URL 的请求一样经过路由——中间件级联、验证、`auth()`、`ApiRequest`——响应从 HTTP 客户端收到的同一个 `{success, payload}` 信封中读取。它在当前请求内以同一调用者身份运行（请求头和 cookie 会传递），调用后当前请求会被恢复。GET 输入以查询字符串传递，其余以 JSON 请求体传递。非 HTTP 传输就建立在此之上。
+
 ### 响应格式
 
 每个响应都包装在标准信封中：

@@ -103,6 +103,19 @@ class BaseApiRequest extends FormRequest
     }
 
     /**
+     * Puts another request in place of the current one — for a call that is not
+     * the request PHP received — and returns the one it replaces, so the caller
+     * can put it back.
+     */
+    public static function swapInstance(?BaseApiRequest $request): ?BaseApiRequest
+    {
+        $previous = static::$_instance;
+        static::$_instance = $request;
+
+        return $previous;
+    }
+
+    /**
      * @param SymfonyRequest $request
      *
      * @return BaseApiRequest|static|null

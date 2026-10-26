@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Calling an action without HTTP: `Runtime\Dispatcher`.**
+  `app(Dispatcher::class)->dispatch(new ApiInvocation($version, $controller,
+  $action, $params, $headers))` sends the call through the router the way a
+  request to the action's URL would — middleware cascade, validation,
+  `auth()`, `ApiRequest` — and returns an `ApiResult` (`success`, `payload`,
+  `status`, `errorKey()`, `message()`) read from the envelope an HTTP client
+  gets. It runs inside the current request as the same caller (headers and
+  cookies are passed on, an invocation's own headers on top) and puts that
+  request back afterwards: the container's `request`, the facades, `ApiRequest`,
+  the router's current route. GET input travels as a query string, the rest as a
+  JSON body. The global HTTP middleware is not run again. The groundwork for
+  transports other than HTTP.
+- `BaseApiRequest::swapInstance()`.
+
 ### Changed
 
 - The documentation and the `api:lint` hints use `getSchemaTemplates()` and
