@@ -3,14 +3,11 @@
 namespace Dskripchenko\LaravelApi\Traits;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Operations\Doc\OperationDocParser;
 use Dskripchenko\LaravelApi\Operations\OperationRegistry;
 use Dskripchenko\LaravelApi\Services\OpenApi\DocPatterns;
 use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
-use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Route;
-use phpDocumentor\Reflection\DocBlock;
-use phpDocumentor\Reflection\DocBlock\Tag;
 use phpDocumentor\Reflection\DocBlockFactory;
 
 /**
@@ -64,6 +61,7 @@ trait OpenApiTrait
 
     private const SCHEMA_TYPES = ['object', 'array', 'string', 'integer', 'number', 'boolean', 'null'];
 
+    /** @deprecated 6.1 Unused: docblocks are read by OperationDocParser. Removed in 7.0. */
     protected static ?DocBlockFactory $docBlockFactory = null;
 
     /** @var array<class-string, array<string, mixed>> */
@@ -77,7 +75,7 @@ trait OpenApiTrait
     public static function getOpenApiConfig(string $version)
     {
         $reflectionClass = new \ReflectionClass(static::class);
-        $docBlock        = static::getDocBlockByComment($reflectionClass->getDocComment());
+        $doc             = OperationDocParser::parse($reflectionClass->getDocComment());
 
         $scheme   = request()->getScheme();
         $host     = request()->getHttpHost();
@@ -86,8 +84,8 @@ trait OpenApiTrait
         $config = [
             'openapi' => '3.0.0',
             'info' => [
-                'title' => static::sanitizeDocText($docBlock->getSummary()),
-                'description' => static::sanitizeDocText($docBlock->getDescription()->render()),
+                'title' => $doc->summary,
+                'description' => $doc->description,
                 'version' => $version,
             ],
             'servers' => [
@@ -114,7 +112,6 @@ trait OpenApiTrait
         return $config;
     }
 
-
     /**
      * @param string $version
      * @return array
@@ -137,21 +134,12 @@ trait OpenApiTrait
 
                 $middlewareList   = $operation->middleware();
                 $reflectionMethod = $reflectionClass->getMethod($methodKey);
-                $docBlock = static::getDocBlockByComment($reflectionMethod->getDocComment());
-
-
-                $inputTagList  = static::getInputTags($docBlock, $middlewareList);
-                $outputTagList = static::getOutputTagList($docBlock);
-                $headerTagList = static::getTagsByNameFromDocBlockAndMiddleware('header', $docBlock, $middlewareList);
-                $responseTags  = static::getResponseTags($docBlock);
-                $securityTags  = static::getSecurityTags($docBlock);
-                $defaultTags   = static::getDefaultTags($docBlock);
-                $exampleTags   = static::getExampleTags($docBlock);
+                $doc = OperationDocParser::parse($reflectionMethod->getDocComment(), $middlewareList);
 
                 $declaringClass = $reflectionMethod->getDeclaringClass()->name;
 
-                $summary     = static::sanitizeDocText($docBlock->getSummary());
-                $description = static::sanitizeDocText($docBlock->getDescription()->render());
+                $summary     = $doc->summary;
+                $description = $doc->description;
 
                 // A controller's FQCN is a debugging detail: in a public spec
                 // it exposes the internal structure of the namespaces. It is off
@@ -169,10 +157,12 @@ trait OpenApiTrait
                 // controller may serve several API versions — and then only one
                 // of them has to be marked deprecated. That is what the flag in
                 // getMethods() is for.
-                $deprecated = static::isDeprecated($docBlock) || $operation->deprecated;
+                $deprecated = $doc->isDeprecated() || $operation->deprecated;
                 $operationId = static::getOperationId($controller, $action);
-                $security = !empty($actionSecurity) ? $actionSecurity : static::parseSecurityTags($securityTags);
-                $defaultsAndExamples = static::parseDefaultAndExampleTags($defaultTags, $exampleTags);
+                $security = !empty($actionSecurity)
+                    ? $actionSecurity
+                    : array_map(static fn (string $name): array => [$name => []], $doc->securitySchemes());
+                $defaultsAndExamples = $doc->defaultsAndExamples();
 
                 foreach (array_values($httpMethods) as $methodIndex => $httpMethod) {
                     // An action serving several HTTP methods is several
@@ -198,14 +188,14 @@ trait OpenApiTrait
                         $methodOperationId,
                     );
 
-                    $parameters  = static::getParametersByTags($inputTagList, $class, $httpMethod, $defaultsAndExamples, $context);
-                    $headerParameters = static::getHeaderParametersByTags($headerTagList);
+                    $parameters  = static::getParametersByTags($doc->inputs(), $class, $httpMethod, $defaultsAndExamples, $context);
+                    $headerParameters = static::getHeaderParametersByTags($doc->headers());
                     $parameters = array_merge($headerParameters, $parameters);
 
-                    $hasExplicitResponses = !empty($responseTags);
+                    $hasExplicitResponses = $doc->responses() !== [];
                     $responses = $hasExplicitResponses
-                        ? static::getResponsesByTags($responseTags, $outputTagList)
-                        : static::getResponseByTags($outputTagList, $class, $context->forTag('output'));
+                        ? static::getResponsesByTags($doc->responses())
+                        : static::getResponseByTags($doc->outputs(), $class, $context->forTag('output'));
 
                     $methodData = static::getMethodData($summary, $description, [
                         'tags' => $tags,
@@ -225,80 +215,7 @@ trait OpenApiTrait
     }
 
     /**
-     * Brings a docblock's text into a shape fit for a public spec.
-     *
-     * phpDocumentor returns the inline tags as they are, and they travel into
-     * the OpenAPI raw: `{@see \App\Foo::bar()}` reads as rubbish and
-     * `{@inheritDoc}` as an empty promise. We unfold them into text and leave
-     * the links as URLs.
-     *
-     * @param  string|null  $text
-     * @return string
-     */
-    private static function sanitizeDocText($text)
-    {
-        $text = (string) $text;
-
-        if ($text === '') {
-            return '';
-        }
-
-        // {@inheritDoc} / {@inheritdoc} — there is nothing to unfold, they are removed.
-        $text = preg_replace('/\{@inheritdoc}/i', '', $text);
-
-        // {@link https://... description} → "description (https://...)", or just the URL.
-        $text = preg_replace_callback(
-            '/\{@link\s+(\S+)(?:\s+([^}]*))?}/i',
-            static function (array $m): string {
-                $url   = $m[1];
-                $label = isset($m[2]) ? trim($m[2]) : '';
-
-                return $label === '' ? $url : "{$label} ({$url})";
-            },
-            (string) $text
-        );
-
-        // {@see \Foo\Bar::baz()} → "Bar::baz()": a full namespace is not needed
-        // in public documentation, and the short name keeps the reference's
-        // meaning.
-        $text = preg_replace_callback(
-            '/\{@see\s+([^}\s]+)(?:\s+([^}]*))?}/i',
-            static function (array $m): string {
-                $label = isset($m[2]) ? trim($m[2]) : '';
-
-                if ($label !== '') {
-                    return $label;
-                }
-
-                $target = ltrim($m[1], '\\');
-                $pos    = strrpos($target, '\\');
-
-                return $pos === false ? $target : substr($target, $pos + 1);
-            },
-            (string) $text
-        );
-
-        return trim(preg_replace('/[ \t]+\n/', "\n", (string) $text));
-    }
-
-    /**
-     * @param $comment
-     * @return \phpDocumentor\Reflection\DocBlock
-     */
-    private static function getDocBlockByComment($comment)
-    {
-        if (!$comment) {
-            $comment = ' ';
-        }
-        if (static::$docBlockFactory === null) {
-            static::$docBlockFactory = DocBlockFactory::createInstance();
-        }
-
-        return static::$docBlockFactory->create($comment);
-    }
-
-    /**
-     * @param  array  $tags
+     * @param  \Dskripchenko\LaravelApi\Operations\Doc\DocLine[]  $lines
      * @param $class
      * @param  string  $httpMethod
      * @param  array  $defaultsAndExamples
@@ -307,7 +224,7 @@ trait OpenApiTrait
      * @return array
      */
     private static function getParametersByTags(
-        array $tags,
+        array $lines,
         $class,
         $httpMethod = 'post',
         array $defaultsAndExamples = [],
@@ -324,11 +241,8 @@ trait OpenApiTrait
         $parsedParams = [];
         $explicitSchemas = [];
 
-        /**
-         * @var Tag $tag
-         */
-        foreach ($tags as $tag) {
-            $description  = $tag->getDescription()->render();
+        foreach ($lines as $line) {
+            $description  = $line->body;
             $descriptions = [$description];
 
             if (preg_match($callableInputsPattern, $description, $matches)) {
@@ -599,23 +513,20 @@ trait OpenApiTrait
     }
 
     /**
-     * @param array $tags
+     * @param \Dskripchenko\LaravelApi\Operations\Doc\DocLine[] $docLines
      * @param string|null $class The controller, for `@output [method]`.
      * @param OperationContext|null $context The operation, for `@output [method]`.
      * @return array
      */
-    private static function getResponseByTags(array $tags, ?string $class = null, ?OperationContext $context = null)
+    private static function getResponseByTags(array $docLines, ?string $class = null, ?OperationContext $context = null)
     {
 
         // `@output [method]` unfolds into the lines it returns, or into an
         // object schema merged over whatever the other lines describe.
         $lines = [];
         $explicitSchemas = [];
-        /**
-         * @var Tag $tag
-         */
-        foreach ($tags as $tag) {
-            $line = $tag->getDescription()->render();
+        foreach ($docLines as $docLine) {
+            $line = $docLine->body;
 
             if ($class !== null && preg_match(static::getDocInputsCallablePattern(), $line, $matches)) {
                 $result = static::callSchemaMethod($class, $matches['callable'], $context);
@@ -860,130 +771,10 @@ trait OpenApiTrait
     }
 
     /**
-     * @param DocBlock $methodDocBlock
-     * @param array $middlewareList
-     * @return Tag[]
-     * @throws \ReflectionException
+     * @deprecated 6.1 Unused: the middleware tags are cached by OperationDocParser. Removed in 7.0.
+     * @var array<class-string, array<string, array>>
      */
-
-    /** @var array<class-string, array<string, array>> */
     protected static array $middlewareInputTagCache = [];
-
-    private static function getInputTags(DocBlock $methodDocBlock, array $middlewareList = [])
-    {
-        return static::getTagsByNameFromDocBlockAndMiddleware('input', $methodDocBlock, $middlewareList);
-    }
-
-    /**
-     * @param string $tagName
-     * @param DocBlock $methodDocBlock
-     * @param array $middlewareList
-     * @return Tag[]
-     * @throws \ReflectionException
-     */
-    private static function getTagsByNameFromDocBlockAndMiddleware(
-        string $tagName,
-        DocBlock $methodDocBlock,
-        array $middlewareList = []
-    ) {
-        $tagList = [];
-        $methodTagList = $methodDocBlock->getTagsByName($tagName);
-        $cacheKey = $tagName;
-
-        $addTagsFromMiddleware = function ($middleware, &$tagList) use ($tagName, $cacheKey) {
-            $key = "{$cacheKey}:{$middleware}";
-            $classCache = &static::$middlewareInputTagCache[static::class];
-            if (! isset($classCache)) {
-                $classCache = [];
-            }
-            if (isset($classCache[$key])) {
-                $tagList = array_merge_deep($tagList, $classCache[$key]);
-                return;
-            }
-
-            $middlewareReflection = new \ReflectionClass($middleware);
-            $method = 'run';
-            if (!$middlewareReflection->hasMethod($method)) {
-                $method = 'handle';
-                if (!$middlewareReflection->hasMethod($method)) {
-                    $classCache[$key] = [];
-                    return;
-                }
-            }
-
-            $middlewareReflectionMethod = $middlewareReflection->getMethod($method);
-            $middlewareDocBlock = static::getDocBlockByComment($middlewareReflectionMethod->getDocComment());
-            $middlewareTagList = $middlewareDocBlock->getTagsByName($tagName);
-            $classCache[$key] = $middlewareTagList;
-            $tagList = array_merge_deep($tagList, $middlewareTagList);
-        };
-
-        foreach ($middlewareList as $middleware) {
-            if (class_exists($middleware)) {
-                $addTagsFromMiddleware($middleware, $tagList);
-            } else {
-                foreach (Arr::get(Route::getMiddlewareGroups(), $middleware, []) as $groupedMiddleware) {
-                    $addTagsFromMiddleware($groupedMiddleware, $tagList);
-                }
-            }
-        }
-
-        return array_merge_deep($tagList, $methodTagList);
-    }
-
-    /**
-     * @param DocBlock $methodDocBlock
-     * @return Tag[]
-     */
-    private static function getOutputTagList(DocBlock $methodDocBlock)
-    {
-        return $methodDocBlock->getTagsByName('output');
-    }
-
-    /**
-     * @param DocBlock $docBlock
-     * @return Tag[]
-     */
-    private static function getResponseTags(DocBlock $docBlock)
-    {
-        return $docBlock->getTagsByName('response');
-    }
-
-    /**
-     * @param DocBlock $docBlock
-     * @return Tag[]
-     */
-    private static function getSecurityTags(DocBlock $docBlock)
-    {
-        return $docBlock->getTagsByName('security');
-    }
-
-    /**
-     * @param DocBlock $docBlock
-     * @return Tag[]
-     */
-    private static function getDefaultTags(DocBlock $docBlock)
-    {
-        return $docBlock->getTagsByName('default');
-    }
-
-    /**
-     * @param DocBlock $docBlock
-     * @return Tag[]
-     */
-    private static function getExampleTags(DocBlock $docBlock)
-    {
-        return $docBlock->getTagsByName('example');
-    }
-
-    /**
-     * @param DocBlock $docBlock
-     * @return bool
-     */
-    private static function isDeprecated(DocBlock $docBlock): bool
-    {
-        return !empty($docBlock->getTagsByName('deprecated'));
-    }
 
     /**
      * @param string $controllerKey
@@ -1009,16 +800,16 @@ trait OpenApiTrait
     }
 
     /**
-     * @param array $headerTags
+     * @param \Dskripchenko\LaravelApi\Operations\Doc\DocLine[] $headerLines
      * @return array
      */
-    private static function getHeaderParametersByTags(array $headerTags): array
+    private static function getHeaderParametersByTags(array $headerLines): array
     {
         $parameters = [];
         $pattern = static::getDocInputOutputPattern();
 
-        foreach ($headerTags as $tag) {
-            $description = $tag->getDescription()->render();
+        foreach ($headerLines as $line) {
+            $description = $line->body;
             if (preg_match($pattern, $description, $matches)) {
                 $parameters[] = [
                     'in' => 'header',
@@ -1034,17 +825,16 @@ trait OpenApiTrait
     }
 
     /**
-     * @param array $responseTags
-     * @param array $outputTags
+     * @param \Dskripchenko\LaravelApi\Operations\Doc\DocLine[] $responseLines
      * @return array
      */
-    private static function getResponsesByTags(array $responseTags, array $outputTags): array
+    private static function getResponsesByTags(array $responseLines): array
     {
         $responses = [];
         $pattern = static::getDocResponsePattern();
 
-        foreach ($responseTags as $tag) {
-            $description = $tag->getDescription()->render();
+        foreach ($responseLines as $line) {
+            $description = $line->body;
             if (preg_match($pattern, $description, $matches)) {
                 $code = $matches['code'];
                 $template = Arr::get($matches, 'template', '');
@@ -1070,70 +860,6 @@ trait OpenApiTrait
         }
 
         return $responses;
-    }
-
-    /**
-     * @param array $securityTags
-     * @return array
-     */
-    private static function parseSecurityTags(array $securityTags): array
-    {
-        $security = [];
-        foreach ($securityTags as $tag) {
-            $name = trim($tag->getDescription()->render());
-            if ($name) {
-                $security[] = [$name => []];
-            }
-        }
-        return $security;
-    }
-
-    /**
-     * @param array $defaultTags
-     * @param array $exampleTags
-     * @return array
-     */
-    private static function parseDefaultAndExampleTags(array $defaultTags, array $exampleTags): array
-    {
-        $result = [];
-        $pattern = static::getDocDefaultExamplePattern();
-
-        foreach ($defaultTags as $tag) {
-            $desc = $tag->getDescription()->render();
-            if (preg_match($pattern, $desc, $matches)) {
-                $result[$matches['variable']]['default'] = static::castTagValue($matches['value']);
-            }
-        }
-
-        foreach ($exampleTags as $tag) {
-            $desc = $tag->getDescription()->render();
-            if (preg_match($pattern, $desc, $matches)) {
-                $result[$matches['variable']]['example'] = static::castTagValue($matches['value']);
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param string $value
-     * @return mixed
-     */
-    private static function castTagValue(string $value)
-    {
-        if (is_numeric($value)) {
-            return str_contains($value, '.') ? (float) $value : (int) $value;
-        }
-        if ($value === 'true') {
-            return true;
-        }
-        if ($value === 'false') {
-            return false;
-        }
-        if ($value === 'null') {
-            return null;
-        }
-        return $value;
     }
 
     /**
