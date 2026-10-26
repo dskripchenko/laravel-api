@@ -45,6 +45,23 @@ return [
         'name' => env('LARAVEL_API_MCP_NAME'),
     ],
 
+    // The API over JSON-RPC 2.0: one endpoint per version, at
+    // /{prefix}/{path}/{version}. Every action is a method named
+    // `controller.action`, its input passed by name; `rpc.discover` answers
+    // with the OpenRPC document. Leave an action or a controller out with
+    // `'jsonrpc' => false` in getMethods().
+    'jsonrpc' => [
+        'enabled' => env('LARAVEL_API_JSONRPC', false),
+
+        // The versions served; empty serves every one not in hidden_versions.
+        'versions' => [],
+
+        'path' => 'rpc',
+
+        // Run on the endpoint itself — authentication, rate limiting.
+        'middleware' => [],
+    ],
+
     // The documentation page on /api/doc: @dskripchenko/openapi's standalone
     // reference — the versions with a switcher, search, try-it, code samples,
     // TypeScript types, PDF, and links that keep working (DocLink's anchors).

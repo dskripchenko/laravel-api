@@ -680,6 +680,31 @@ OpenAPI-Generator und meldet außerdem eine Aktion, die ihre Eingaben validiert,
 ohne welche zu deklarieren (`input.undeclared`). Vollständige Regelliste:
 [linting.md](linting.md).
 
+## JSON-RPC 2.0
+
+Jede API-Version kann über JSON-RPC 2.0 unter `POST /{prefix}/rpc/{version}` bereitgestellt werden:
+
+```php
+'jsonrpc' => ['enabled' => true, 'versions' => ['v2'], 'middleware' => ['auth:sanctum']],
+```
+
+```bash
+curl -s https://shop.test/api/rpc/v2 -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"user.show","params":{"id":7}}'
+# {"jsonrpc":"2.0","result":{"id":"7","name":"…"},"id":1}
+```
+
+Jede Action ist eine Methode namens `controller.action`, aufgerufen mit ihrer
+Eingabe als benannte params, durch denselben Router, dieselbe Middleware und
+Validierung wie eine HTTP-Anfrage. Der Payload ist das `result`; eine
+fehlgeschlagene Action ist ein `error` — `-32602` bei einem
+Validierungsfehler (Status 422), sonst `-32000` — mit Status und Payload
+(samt `errorKey`) in `data`. Batches und Notifications funktionieren laut
+Spezifikation. `rpc.discover` antwortet mit einem
+[OpenRPC](https://open-rpc.org)-Dokument der Version. Eine Action oder ein
+Controller wird mit `'jsonrpc' => false` in `getMethods()` ausgenommen.
+
 ## MCP-Server
 
 Jede API-Version kann ein [MCP](https://modelcontextprotocol.io)-Server sein,

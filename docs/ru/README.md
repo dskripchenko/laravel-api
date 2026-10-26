@@ -668,6 +668,29 @@ php artisan api:lint --unrouted # плюс публичные методы, на
 также сообщает о действии, которое валидирует вход, но ничего не объявляет
 (`input.undeclared`). Полный список правил: [linting.md](linting.md).
 
+## JSON-RPC 2.0
+
+Каждую версию API можно отдавать по JSON-RPC 2.0 на `POST /{prefix}/rpc/{version}`:
+
+```php
+'jsonrpc' => ['enabled' => true, 'versions' => ['v2'], 'middleware' => ['auth:sanctum']],
+```
+
+```bash
+curl -s https://shop.test/api/rpc/v2 -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"user.show","params":{"id":7}}'
+# {"jsonrpc":"2.0","result":{"id":"7","name":"…"},"id":1}
+```
+
+Каждый action — метод с именем `controller.action`, вызываемый со входом в
+виде именованных params, через тот же роутер, middleware и валидацию, что и
+HTTP-запрос. Payload — это `result`; неудачный action — `error`: `-32602` при
+ошибке валидации (статус 422), `-32000` в остальных случаях, а в `data` — статус
+и payload (включая `errorKey`). Батчи и уведомления работают по спецификации.
+`rpc.discover` отвечает [OpenRPC](https://open-rpc.org)-документом версии.
+Исключить action или контроллер — `'jsonrpc' => false` в `getMethods()`.
+
 ## MCP-сервер
 
 Каждая версия API может быть [MCP](https://modelcontextprotocol.io)-сервером —

@@ -6,9 +6,11 @@ namespace Dskripchenko\LaravelApi\Transports\Mcp;
 
 use Dskripchenko\LaravelApi\Operations\DescriptorBuilder;
 use Dskripchenko\LaravelApi\Operations\Operation;
+use Dskripchenko\LaravelApi\Operations\Schema\JsonSchemas;
 use Dskripchenko\LaravelApi\Operations\Schema\SchemaRef;
 use Dskripchenko\LaravelApi\Operations\Schema\SchemaRegistry;
 use Dskripchenko\LaravelApi\Services\ApiCache;
+use Dskripchenko\LaravelApi\Transports\NamedOperations;
 
 /**
  * The actions of one API version as MCP tools.
@@ -20,12 +22,11 @@ use Dskripchenko\LaravelApi\Services\ApiCache;
  * OpenAPI document.
  *
  * An action is left out with `'mcp' => false` in its definition, or in its
- * controller's.
+ * controller's ({@see NamedOperations}).
  */
 final class McpToolset
 {
-    /** @var array<string, Operation>|null Tool name → the operation it calls. */
-    private ?array $operations = null;
+    private readonly NamedOperations $operations;
 
     /** @var array[]|null */
     private ?array $tools = null;
@@ -37,6 +38,7 @@ final class McpToolset
         public readonly string $apiClass,
         public readonly string $version,
     ) {
+        $this->operations = new NamedOperations($apiClass, $version, 'mcp');
     }
 
     /**
@@ -58,38 +60,13 @@ final class McpToolset
      */
     public function find(string $name): ?Operation
     {
-        return $this->operations()[$name] ?? null;
+        return $this->operations->find($name);
     }
 
-    /** `controller.action`, with what a tool name cannot carry replaced by `_`. */
+    /** `controller.action` — see {@see NamedOperations::nameOf()}. */
     public static function toolName(Operation $operation): string
     {
-        return preg_replace('/[^A-Za-z0-9_\-]/', '_', $operation->controllerKey)
-            . '.'
-            . preg_replace('/[^A-Za-z0-9_\-]/', '_', $operation->actionKey);
-    }
-
-    /** @return array<string, Operation> */
-    private function operations(): array
-    {
-        if ($this->operations !== null) {
-            return $this->operations;
-        }
-
-        $operations = [];
-        foreach ($this->apiClass::operations($this->version)->controllers() as $controller) {
-            if (($controller->options['mcp'] ?? true) === false) {
-                continue;
-            }
-
-            foreach ($controller->operations as $operation) {
-                if (($operation->options['mcp'] ?? true) !== false && $operation->isCallable()) {
-                    $operations[self::toolName($operation)] = $operation;
-                }
-            }
-        }
-
-        return $this->operations = $operations;
+        return NamedOperations::nameOf($operation);
     }
 
     /** @return array[] */
@@ -99,7 +76,7 @@ final class McpToolset
         $templates = SchemaRegistry::for($this->apiClass)->all();
 
         $tools = [];
-        foreach ($this->operations() as $name => $operation) {
+        foreach ($this->operations->all() as $name => $operation) {
             [$descriptor] = $builder->build($operation);
 
             $description = trim($descriptor->summary() . "\n\n" . $descriptor->description());
@@ -112,7 +89,7 @@ final class McpToolset
                 // The first line: a docblock's second line runs into its summary.
                 'title' => trim(strtok($descriptor->summary(), "\n") ?: '') ?: $name,
                 'description' => $description,
-                'inputSchema' => self::withDefinitions(self::asObject($descriptor->input->schema()), $templates),
+                'inputSchema' => JsonSchemas::encodable(self::withDefinitions(self::asObject($descriptor->input->schema()), $templates)),
             ];
 
             if (strtolower($descriptor->httpMethod) === 'get') {

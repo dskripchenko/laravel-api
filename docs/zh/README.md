@@ -639,6 +639,23 @@ php artisan api:lint --unrouted # 另外检查没有动作指向的公有方法
 却没有声明任何输入的动作（`input.undeclared`）。完整规则列表：
 [linting.md](linting.md)。
 
+## JSON-RPC 2.0
+
+每个 API 版本都可以通过 JSON-RPC 2.0 在 `POST /{prefix}/rpc/{version}` 提供：
+
+```php
+'jsonrpc' => ['enabled' => true, 'versions' => ['v2'], 'middleware' => ['auth:sanctum']],
+```
+
+```bash
+curl -s https://shop.test/api/rpc/v2 -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"user.show","params":{"id":7}}'
+# {"jsonrpc":"2.0","result":{"id":"7","name":"…"},"id":1}
+```
+
+每个操作都是名为 `controller.action` 的方法，以按名称传递的 params 作为输入调用，经过与 HTTP 请求相同的路由、中间件和验证。payload 即 `result`；失败的操作返回 `error`——验证失败（状态 422）为 `-32602`，其余为 `-32000`，`data` 中包含状态和 payload（含 `errorKey`）。批量请求和通知按规范处理。`rpc.discover` 返回该版本的 [OpenRPC](https://open-rpc.org) 文档。在 `getMethods()` 中用 `'jsonrpc' => false` 排除某个操作或控制器。
+
 ## MCP 服务器
 
 每个 API 版本都可以作为 [MCP](https://modelcontextprotocol.io) 服务器，让智能体以工具的方式调用 API：
