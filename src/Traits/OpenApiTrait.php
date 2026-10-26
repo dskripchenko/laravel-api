@@ -3,6 +3,7 @@
 namespace Dskripchenko\LaravelApi\Traits;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Operations\OperationRegistry;
 use Dskripchenko\LaravelApi\Services\OpenApi\DocPatterns;
 use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
 use Illuminate\Routing\Router;
@@ -122,36 +123,19 @@ trait OpenApiTrait
     private static function getOpenApiPaths(string $version)
     {
         $result       = [];
-        $methods      = static::getPreparedMethods();
         $patternParts = explode('/', ApiModule::getApiUriPattern());
-        foreach (Arr::get($methods, 'controllers', []) as $controller => $options) {
-            $class = Arr::get($options, 'controller');
-            $reflectionClass = new \ReflectionClass($class);
+        foreach (OperationRegistry::for(static::class, (string) $version)->controllers() as $definition) {
+            // Reflected before the actions, as a controller entry: a wrong
+            // class fails the spec even when none of its actions is enabled.
+            $reflectionClass = new \ReflectionClass($definition->class);
 
-            $actions = Arr::get($options, 'actions', []);
-            foreach ($actions as $key => $value) {
-                if ($value === false) {
-                    continue;
-                }
+            foreach ($definition->operations as $operation) {
+                $controller = $operation->controllerKey;
+                $action     = $operation->actionKey;
+                $class      = $operation->controllerClass;
+                $methodKey  = $operation->controllerMethod;
 
-                $action = $key;
-                if (is_numeric($action)) {
-                    $action = $value;
-                }
-                if (!is_string($action)) {
-                    continue;
-                }
-
-                $methodKey = $action;
-                if (is_string($value)) {
-                    $methodKey = $value;
-                }
-                if (is_array($value) && isset($value['action'])) {
-                    $methodKey = $value['action'];
-                }
-
-
-                $middlewareList   = static::getMiddlewareByControllerAndActionKey($controller, $action);
+                $middlewareList   = $operation->middleware();
                 $reflectionMethod = $reflectionClass->getMethod($methodKey);
                 $docBlock = static::getDocBlockByComment($reflectionMethod->getDocComment());
 
@@ -177,25 +161,15 @@ trait OpenApiTrait
                     $description = trim($declaringClass . PHP_EOL . $description);
                 }
                 $tags        = [$controller];
-                $httpMethods  = Arr::get($actions, "{$key}.method", ['post']);
-                if (!$httpMethods) {
-                    $httpMethods = ['post'];
-                }
+                $httpMethods = $operation->httpMethods;
 
-                if (!is_array($httpMethods)) {
-                    $httpMethods = [$httpMethods];
-                }
-
-                $actionSecurity = is_array($value) ? Arr::get($value, 'security', []) : [];
+                $actionSecurity = $operation->security;
 
                 // `@deprecated` lives in a method's docblock, while one
                 // controller may serve several API versions — and then only one
                 // of them has to be marked deprecated. That is what the flag in
                 // getMethods() is for.
-                $deprecated = static::isDeprecated($docBlock)
-                    || (is_array($value) && (bool) Arr::get($value, 'deprecated', false))
-                    || (bool) Arr::get($options, 'deprecated', false)
-                    || (bool) Arr::get($methods, 'deprecated', false);
+                $deprecated = static::isDeprecated($docBlock) || $operation->deprecated;
                 $operationId = static::getOperationId($controller, $action);
                 $security = !empty($actionSecurity) ? $actionSecurity : static::parseSecurityTags($securityTags);
                 $defaultsAndExamples = static::parseDefaultAndExampleTags($defaultTags, $exampleTags);
@@ -220,7 +194,7 @@ trait OpenApiTrait
                         $methodKey,
                         strtolower((string) $httpMethod),
                         'input',
-                        is_array($value) ? $value : [],
+                        $operation->options,
                         $methodOperationId,
                     );
 

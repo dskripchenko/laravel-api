@@ -143,52 +143,25 @@ class BaseModule
                 continue;
             }
 
-            $methods = $apiClass::getPreparedMethods();
-            $controllers = Arr::get($methods, 'controllers', []);
+            foreach ($apiClass::operations((string) $version)->operations() as $operation) {
+                $nameSuffix = $operation->name ?: "{$operation->controllerKey}.{$operation->actionKey}";
 
-            foreach ($controllers as $controllerKey => $controllerConfig) {
-                $actions = Arr::get($controllerConfig, 'actions', []);
+                $uri = str_replace(
+                    ['{version}', '{controller}', '{action}'],
+                    [$version, $operation->controllerKey, $operation->actionKey],
+                    $uriPattern
+                );
 
-                foreach ($actions as $actionKey => $actionConfig) {
-                    if ($actionConfig === false) {
-                        continue;
-                    }
-
-                    $httpMethods = Arr::get($actionConfig, 'method', ['post']);
-                    if (!$httpMethods) {
-                        $httpMethods = ['post'];
-                    }
-                    if (!is_array($httpMethods)) {
-                        $httpMethods = [$httpMethods];
-                    }
-
-                    $customName = is_array($actionConfig) ? Arr::get($actionConfig, 'name') : null;
-                    $nameSuffix = $customName ?: "{$controllerKey}.{$actionKey}";
-                    $routeName = "api.{$version}.{$nameSuffix}";
-
-                    $uri = str_replace(
-                        ['{version}', '{controller}', '{action}'],
-                        [$version, $controllerKey, $actionKey],
-                        $uriPattern
-                    );
-
-                    $definitions[] = [
-                        'version' => $version,
-                        'controller' => $controllerKey,
-                        'action' => $actionKey,
-                        'methods' => $httpMethods,
-                        'name' => $routeName,
-                        'uri' => $uri,
-                        'middleware' => $apiClass::getMiddlewareByControllerAndActionKey(
-                            $controllerKey,
-                            $actionKey
-                        ),
-                        'exclude-middleware' => $apiClass::getExcludedMiddlewareByControllerAndActionKey(
-                            $controllerKey,
-                            $actionKey
-                        ),
-                    ];
-                }
+                $definitions[] = [
+                    'version' => $version,
+                    'controller' => $operation->controllerKey,
+                    'action' => $operation->actionKey,
+                    'methods' => $operation->httpMethods,
+                    'name' => "api.{$version}.{$nameSuffix}",
+                    'uri' => $uri,
+                    'middleware' => $operation->middleware(),
+                    'exclude-middleware' => $operation->excludedMiddleware(),
+                ];
             }
         }
 
