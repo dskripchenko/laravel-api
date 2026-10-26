@@ -173,7 +173,7 @@ class ApiV1_1 extends ApiV1 {
  */
 ```
 
-**Templates** are enabled via `$useResponseTemplates = true` on the Api class.
+**Templates** are enabled via `$useResponseTemplates = true` on the Api class. `getSchemaTemplates()` / `getSecuritySchemes()` are the neutral names of `getOpenApiTemplates()` / `getOpenApiSecurityDefinitions()`: package code calls the neutral ones (which default to the old ones); users may override either. Keep docs examples on the old names until the IDE plugin (`../laravel-api-idea`, hardcodes the old names in TemplateLookup/TemplateUsages/SecurityLookup/CreateTemplateFix) supports the new ones.
 
 Shorthand string syntax (recommended):
 ```

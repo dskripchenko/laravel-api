@@ -157,6 +157,23 @@ HTTP请求
                       └─ JsonResponse {success: true, payload: {...}}
 ```
 
+### 操作模型
+
+路由、文档和检查器通过同一个模型读取 API：
+
+```
+getMethods()  ──► OperationRegistry ──► Operation          keys, controller@method, HTTP methods, middleware
+docblocks     ──► OperationDocParser ─► OperationDoc       tag lines, also from middleware
+                  DescriptorBuilder ──► OperationDescriptor input / output schemas, security, notes
+                        │
+        ┌───────────────┼──────────────────┐
+  OpenApiRenderer   OpenApiLinter     BaseApi::make() (dispatch, via the registry)
+        │
+  /api/doc, api:export, api:generate-types
+```
+
+`getMethods()` 只在 `OperationRegistry` 中读取，docblock 只在 `OperationDocParser` 中读取；`DescriptorBuilder` 把两者合成每个 HTTP 方法一个 `OperationDescriptor`——输入和输出是与传输无关的 JSON Schema，并记录输入的声明方式。如何通过 HTTP 传输由 `OpenApiRenderer` 决定。模型位于 `src/Operations/`；`php artisan api:cache` 为生产环境冻结映射（见“生产环境”）。
+
 ### 响应格式
 
 每个响应都包装在标准信封中：
@@ -182,10 +199,11 @@ src/
 ├── Facades/        ApiRequest, ApiModule, ApiErrorHandler
 ├── Interfaces/     CrudServiceInterface, ApiInterface
 ├── Middlewares/    ApiMiddleware, RequestIdMiddleware
+├── Operations/     OperationRegistry, DescriptorBuilder; Doc/, Descriptor/, Schema/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator, ApiCache, OpenApi/ (OpenApiRenderer), Linter/, Export/
 └── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
@@ -362,6 +380,8 @@ class Api extends BaseApi {
     }
 }
 ```
+
+**中性名称。** `getSchemaTemplates()` 和 `getSecuritySchemes()` 是同样的钩子，只是名称与 OpenAPI 无关——模板描述的是负载，无论由什么传输。可以重写其中任意一个；本包读取中性名称，若未重写则返回旧钩子的结果。在 IDE 插件支持中性名称之前，这里的示例仍使用旧名称。
 
 **简写语法：** `type` — 可选，`type!` — 必填，`type(format)` — 带格式，`@Model` — 引用，`@Model[]` — 引用数组。数组格式（`['type' => '...', 'required' => true]`）同样支持。
 
@@ -875,7 +895,7 @@ https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugi
 
 | 类 | 方法 |
 |----|------|
-| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
 | `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 

@@ -157,6 +157,28 @@ HTTP Request
                       └─ JsonResponse {success: true, payload: {...}}
 ```
 
+### Модель операций
+
+Маршрутизация, документация и линтер читают API через одну модель:
+
+```
+getMethods()  ──► OperationRegistry ──► Operation          keys, controller@method, HTTP methods, middleware
+docblocks     ──► OperationDocParser ─► OperationDoc       tag lines, also from middleware
+                  DescriptorBuilder ──► OperationDescriptor input / output schemas, security, notes
+                        │
+        ┌───────────────┼──────────────────┐
+  OpenApiRenderer   OpenApiLinter     BaseApi::make() (dispatch, via the registry)
+        │
+  /api/doc, api:export, api:generate-types
+```
+
+`getMethods()` читается в одном месте (`OperationRegistry`), докблоки — в другом
+(`OperationDocParser`); `DescriptorBuilder` собирает из них по одному
+`OperationDescriptor` на HTTP-метод — вход и выход в виде JSON Schema, не
+привязанной к транспорту, и то, как вход объявлен. Как всё это идёт по HTTP,
+решает `OpenApiRenderer`. Модель живёт в `src/Operations/`;
+`php artisan api:cache` замораживает карту для продакшена (см. «Продакшен»).
+
 ### Формат ответа
 
 Каждый ответ обёрнут в стандартный конверт:
@@ -182,10 +204,11 @@ src/
 ├── Facades/        ApiRequest, ApiModule, ApiErrorHandler
 ├── Interfaces/     CrudServiceInterface, ApiInterface
 ├── Middlewares/    ApiMiddleware, RequestIdMiddleware
+├── Operations/     OperationRegistry, DescriptorBuilder; Doc/, Descriptor/, Schema/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator, ApiCache, OpenApi/ (OpenApiRenderer), Linter/, Export/
 └── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
@@ -363,6 +386,8 @@ class Api extends BaseApi {
     }
 }
 ```
+
+**Нейтральные имена.** `getSchemaTemplates()` и `getSecuritySchemes()` — те же хуки под именами, не привязанными к OpenAPI: шаблоны описывают payload, чем бы он ни передавался. Переопределяйте любое из имён; пакет читает нейтральное, а оно, если не переопределено, отвечает старым хуком. Примеры здесь остаются на старых именах, пока их не начнёт читать [IDE-плагин](#поддержка-ide).
 
 **Shorthand-синтаксис:** `type` — необязательное, `type!` — обязательное, `type(format)` — с форматом, `@Model` — ссылка, `@Model[]` — массив ссылок. Также поддерживается формат массивов (`['type' => '...', 'required' => true]`).
 
@@ -919,7 +944,7 @@ PhpStorm или IntelliJ IDEA Ultimate с плагином PHP. IDEA Community �
 
 | Класс | Методы |
 |-------|---------|
-| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
 | `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 

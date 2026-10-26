@@ -8,7 +8,7 @@ namespace Dskripchenko\LaravelApi\Operations\Schema;
  * The template shorthand, unfolded into JSON Schema.
  *
  * `'integer!'`, `'string(email)'`, `'@User[]'`, nested maps, one-element lists
- * and hand-written schemas — the notation of getOpenApiTemplates() and of a
+ * and hand-written schemas — the notation of getSchemaTemplates() and of a
  * custom response envelope. Nothing here knows about OpenAPI: a `@Model`
  * becomes a {@see SchemaRef}.
  */

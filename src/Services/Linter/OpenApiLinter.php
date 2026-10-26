@@ -103,7 +103,7 @@ final class OpenApiLinter
         }
 
         $templates = $this->templateNames($apiClass);
-        $securitySchemes = array_keys((array) $apiClass::getOpenApiSecurityDefinitions());
+        $securitySchemes = array_keys((array) $apiClass::getSecuritySchemes());
 
         $this->lintTemplates($version, $apiClass, $templates);
 
@@ -880,7 +880,7 @@ final class OpenApiLinter
     {
         $envelopeFields = $this->envelopeFieldNames($apiClass);
 
-        foreach ((array) $apiClass::getOpenApiTemplates() as $name => $properties) {
+        foreach ((array) $apiClass::getSchemaTemplates() as $name => $properties) {
             $where = "{$version} · template {$name}";
 
             // With the envelope on, a template is a payload. One that carries
@@ -974,7 +974,7 @@ final class OpenApiLinter
     {
         return array_values(array_unique(array_merge(
             ['Error', 'Success'],
-            array_map('strval', array_keys((array) $apiClass::getOpenApiTemplates()))
+            array_map('strval', array_keys((array) $apiClass::getSchemaTemplates()))
         )));
     }
 

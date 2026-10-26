@@ -159,6 +159,29 @@ HTTP Request
                       └─ JsonResponse {success: true, payload: {...}}
 ```
 
+### Operation model
+
+Routing, the documentation and the linter read the API through one model:
+
+```
+getMethods()  ──► OperationRegistry ──► Operation          keys, controller@method, HTTP methods, middleware
+docblocks     ──► OperationDocParser ─► OperationDoc       tag lines, also from middleware
+                  DescriptorBuilder ──► OperationDescriptor input / output schemas, security, notes
+                        │
+        ┌───────────────┼──────────────────┐
+  OpenApiRenderer   OpenApiLinter     BaseApi::make() (dispatch, via the registry)
+        │
+  /api/doc, api:export, api:generate-types
+```
+
+`getMethods()` is read in one place (`OperationRegistry`), the docblocks in
+another (`OperationDocParser`); `DescriptorBuilder` turns the two into one
+`OperationDescriptor` per HTTP method — the input and output as
+transport-neutral JSON Schema, plus how the input was declared.
+`OpenApiRenderer` decides how that travels over HTTP. The model lives in
+`src/Operations/`; `php artisan api:cache` freezes the map for production
+(see [Production](#production)).
+
 ### Response format
 
 Every response is wrapped in a standard envelope:
@@ -185,10 +208,11 @@ src/
 ├── Facades/        ApiRequest, ApiModule, ApiErrorHandler
 ├── Interfaces/     CrudServiceInterface, ApiInterface
 ├── Middlewares/    ApiMiddleware, RequestIdMiddleware
+├── Operations/     OperationRegistry, DescriptorBuilder; Doc/, Descriptor/, Schema/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator, ApiCache, OpenApi/ (OpenApiRenderer), Linter/, Export/
 └── Traits/
     ├── OpenApiTrait
     └── Testing/       MakesHttpApiRequests
@@ -377,6 +401,8 @@ class Api extends BaseApi {
     }
 }
 ```
+
+**Neutral names.** `getSchemaTemplates()` and `getSecuritySchemes()` are the same hooks under names that are not about OpenAPI — the templates describe payloads whatever carries them. Override either name; the package reads the neutral one, which answers with the OpenAPI-era hook unless overridden itself. The examples here keep the OpenAPI-era names until the [IDE plugin](#ide-support) reads the neutral ones too.
 
 **Shorthand syntax reference:**
 
@@ -955,7 +981,7 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 | Class | Methods |
 |-------|---------|
-| `BaseApi` (all methods are `static`) | `getMethods()`, `make()`, `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` (all methods are `static`) | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()`, `getDocMiddleware()` |
 | `Meta` | `string($key, $name)`, `integer($key, $name)`, `number($key, $name)`, `boolean($key, $name)`, `hidden($key, $name)`, `select($key, $name, $items)`, `file($key, $name, $src)`, `action($key, $condition)`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 

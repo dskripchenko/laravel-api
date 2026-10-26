@@ -63,6 +63,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   measurable. `optimize:clear` runs `api:clear`; `optimize` does not run
   `api:cache`, which freezes `getMethods()` and has to be asked for.
 - `BaseApi::flushPreparedMethods()`.
+- **Neutral hook names: `BaseApi::getSchemaTemplates()` and
+  `BaseApi::getSecuritySchemes()`.** The same hooks as `getOpenApiTemplates()`
+  and `getOpenApiSecurityDefinitions()`, under names that are not about
+  OpenAPI. Override either; the package reads the neutral one, which answers
+  with the old hook unless it is overridden itself. The old names are not
+  deprecated: the IDE plugin reads them, and the documentation keeps them until
+  it reads the neutral ones too.
 - **The linter checks what `[method]` returns.** It describes every action the
   way the spec does — calling `@input [method]` / `@output [method]` — and
   reports what used to be dropped without a word: `callable.not-array`,
