@@ -374,7 +374,7 @@ class Api extends BaseApi
 {
     public static $useResponseTemplates = true;
 
-    public static function getOpenApiTemplates(): array
+    public static function getSchemaTemplates(): array
     {
         return [
             'UserResponse' => [
@@ -389,7 +389,7 @@ class Api extends BaseApi
         ];
     }
 
-    public static function getOpenApiSecurityDefinitions(): array
+    public static function getSecuritySchemes(): array
     {
         return [
             'BearerAuth' => [
@@ -556,7 +556,7 @@ export interface UserShowOutput {
 | `$ref` | Interface-Name |
 | `enum` | `'a' \| 'b' \| 'c'` |
 
-Komponentenschemata aus `getOpenApiTemplates()` werden als benannte Interfaces generiert. Fuer jede Operation werden `{Controller}{Action}Input`- und `{Controller}{Action}Output`-Typen erstellt.
+Komponentenschemata aus `getSchemaTemplates()` werden als benannte Interfaces generiert. Fuer jede Operation werden `{Controller}{Action}Input`- und `{Controller}{Action}Output`-Typen erstellt.
 
 ---
 

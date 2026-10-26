@@ -359,7 +359,7 @@ public function entityFields(OperationContext $context): array
 class Api extends BaseApi {
     public static $useResponseTemplates = true;
 
-    public static function getOpenApiTemplates(): array {
+    public static function getSchemaTemplates(): array {
         return [
             'OrderResponse' => [
                 'id'         => 'integer!',            // 必填整数
@@ -373,7 +373,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getOpenApiSecurityDefinitions(): array {
+    public static function getSecuritySchemes(): array {
         return [
             'BearerAuth' => ['type' => 'apiKey', 'name' => 'Authorization', 'in' => 'header'],
         ];
@@ -381,7 +381,7 @@ class Api extends BaseApi {
 }
 ```
 
-**中性名称。** `getSchemaTemplates()` 和 `getSecuritySchemes()` 是同样的钩子，只是名称与 OpenAPI 无关——模板描述的是负载，无论由什么传输。可以重写其中任意一个；本包读取中性名称，若未重写则返回旧钩子的结果。在 IDE 插件支持中性名称之前，这里的示例仍使用旧名称。
+**6.1 之前的名称。** `getOpenApiTemplates()` 和 `getOpenApiSecurityDefinitions()` 仍然有效：它们是同样的钩子，只是旧名称。可以重写其中任意一个；本包读取 `getSchemaTemplates()` / `getSecuritySchemes()`，若未重写则返回旧名称的结果。IDE 插件从 1.1.0 起同时识别两种名称。
 
 **简写语法：** `type` — 可选，`type!` — 必填，`type(format)` — 带格式，`@Model` — 引用，`@Model[]` — 引用数组。数组格式（`['type' => '...', 'required' => true]`）同样支持。
 
@@ -765,7 +765,7 @@ https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugi
   上报出，并提供从规则写出标签的快速修复：`email` → `string(email)`，没有
   `required` 的规则 → 可选字段，`in:a,b` → 枚举。
 - 标出无人声明的 `@response` 模板或 `@security` 方案，并提议声明该模板——类中没有
-  `getOpenApiTemplates()` 时一并创建。
+  `getSchemaTemplates()` 时一并创建。
 - 让静默的 404 变红：指向缺失、非公开或静态方法的 action 在输入时即为错误，快速修复
   会按邻近方法的样子写出该方法。
 - 补全类型、格式、模板名、安全方案和状态码。
@@ -895,7 +895,7 @@ https://raw.githubusercontent.com/dskripchenko/laravel-api-idea/main/updatePlugi
 
 | 类 | 方法 |
 |----|------|
-| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getSchemaTemplates()`, `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
 | `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 

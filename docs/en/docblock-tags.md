@@ -110,7 +110,7 @@ Generates:
 @input @OrderCreateRequest
 ```
 
-Generates `$ref: '#/components/schemas/OrderCreateRequest'` in requestBody. The model must be defined in `getOpenApiTemplates()`.
+Generates `$ref: '#/components/schemas/OrderCreateRequest'` in requestBody. The model must be defined in `getSchemaTemplates()`.
 
 ### List of scalars
 
@@ -314,10 +314,10 @@ Applies a security scheme to the operation.
 @security BearerAuth
 ```
 
-The scheme must be defined in `getOpenApiSecurityDefinitions()` on the Api class:
+The scheme must be defined in `getSecuritySchemes()` on the Api class:
 
 ```php
-public static function getOpenApiSecurityDefinitions(): array {
+public static function getSecuritySchemes(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -382,7 +382,7 @@ Sets an example value for a parameter.
 
 ## Template shorthand syntax
 
-When defining templates in `getOpenApiTemplates()`, you can use a shorthand string notation instead of verbose arrays:
+When defining templates in `getSchemaTemplates()`, you can use a shorthand string notation instead of verbose arrays:
 
 | Syntax | Meaning | Equivalent array |
 |--------|---------|------------------|
@@ -401,7 +401,7 @@ When defining templates in `getOpenApiTemplates()`, you can use a shorthand stri
 ### Example
 
 ```php
-public static function getOpenApiTemplates(): array {
+public static function getSchemaTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

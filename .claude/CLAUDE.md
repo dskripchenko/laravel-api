@@ -173,7 +173,7 @@ class ApiV1_1 extends ApiV1 {
  */
 ```
 
-**Templates** are enabled via `$useResponseTemplates = true` on the Api class. `getSchemaTemplates()` / `getSecuritySchemes()` are the neutral names of `getOpenApiTemplates()` / `getOpenApiSecurityDefinitions()`: package code calls the neutral ones (which default to the old ones); users may override either. Keep docs examples on the old names until the IDE plugin (`../laravel-api-idea`, hardcodes the old names in TemplateLookup/TemplateUsages/SecurityLookup/CreateTemplateFix) supports the new ones.
+**Templates** are enabled via `$useResponseTemplates = true` on the Api class. Templates and security schemes are declared in `getSchemaTemplates()` / `getSecuritySchemes()` (since 6.1); `getOpenApiTemplates()` / `getOpenApiSecurityDefinitions()` are their earlier names and keep working — package code calls the new ones, which default to the old ones. Docs and lint hints use the new names; test fixtures keep the old ones on purpose (they cover the fallback). The IDE plugin (`../laravel-api-idea`) reads both since 1.1.0 (`ApiHooks`).
 
 Shorthand string syntax (recommended):
 ```
@@ -191,7 +191,7 @@ Both shorthand and array formats can be mixed in the same template.
 class Api extends BaseApi {
     public static bool $useResponseTemplates = true;
 
-    public static function getOpenApiTemplates(): array {
+    public static function getSchemaTemplates(): array {
         return [
             // Shorthand syntax
             'UserResponse' => [
@@ -207,7 +207,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getOpenApiSecurityDefinitions(): array {
+    public static function getSecuritySchemes(): array {
         return [
             'BearerAuth' => [
                 'type' => 'apiKey',

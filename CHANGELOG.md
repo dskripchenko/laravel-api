@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- The documentation and the `api:lint` hints use `getSchemaTemplates()` and
+  `getSecuritySchemes()`. `getOpenApiTemplates()` and
+  `getOpenApiSecurityDefinitions()` keep working; the IDE plugin reads both
+  names from 1.1.0.
+
 ## [6.1.0] — 2026-10-26
 
 The API is now read through one model of its operations: `getMethods()` in one

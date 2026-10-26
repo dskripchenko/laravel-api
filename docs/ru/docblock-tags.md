@@ -110,7 +110,7 @@
 @input @OrderCreateRequest
 ```
 
-Генерирует `$ref: '#/components/schemas/OrderCreateRequest'` в requestBody. Модель должна быть определена в `getOpenApiTemplates()`.
+Генерирует `$ref: '#/components/schemas/OrderCreateRequest'` в requestBody. Модель должна быть определена в `getSchemaTemplates()`.
 
 ### Список скаляров
 
@@ -314,10 +314,10 @@ public function entityFields(OperationContext $context): array
 @security BearerAuth
 ```
 
-Схема должна быть определена в `getOpenApiSecurityDefinitions()` класса Api:
+Схема должна быть определена в `getSecuritySchemes()` класса Api:
 
 ```php
-public static function getOpenApiSecurityDefinitions(): array {
+public static function getSecuritySchemes(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -382,7 +382,7 @@ public static function getOpenApiSecurityDefinitions(): array {
 
 ## Сокращённый синтаксис шаблонов
 
-При определении шаблонов в `getOpenApiTemplates()` можно использовать сокращённую строковую нотацию вместо подробных массивов:
+При определении шаблонов в `getSchemaTemplates()` можно использовать сокращённую строковую нотацию вместо подробных массивов:
 
 | Синтаксис | Значение | Эквивалентный массив |
 |--------|---------|------------------|
@@ -401,7 +401,7 @@ public static function getOpenApiSecurityDefinitions(): array {
 ### Пример
 
 ```php
-public static function getOpenApiTemplates(): array {
+public static function getSchemaTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

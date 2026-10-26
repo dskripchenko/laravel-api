@@ -371,7 +371,7 @@ Enable reusable schemas via `components/schemas`:
 class Api extends BaseApi {
     public static $useResponseTemplates = true;
 
-    public static function getOpenApiTemplates(): array {
+    public static function getSchemaTemplates(): array {
         return [
             'OrderResponse' => [
                 'id'         => 'integer!',            // required integer
@@ -394,7 +394,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getOpenApiSecurityDefinitions(): array {
+    public static function getSecuritySchemes(): array {
         return [
             'BearerAuth' => ['type' => 'apiKey', 'name' => 'Authorization', 'in' => 'header'],
         ];
@@ -402,7 +402,7 @@ class Api extends BaseApi {
 }
 ```
 
-**Neutral names.** `getSchemaTemplates()` and `getSecuritySchemes()` are the same hooks under names that are not about OpenAPI — the templates describe payloads whatever carries them. Override either name; the package reads the neutral one, which answers with the OpenAPI-era hook unless overridden itself. The examples here keep the OpenAPI-era names until the [IDE plugin](#ide-support) reads the neutral ones too.
+**Names before 6.1.** `getOpenApiTemplates()` and `getOpenApiSecurityDefinitions()` keep working: they are the same hooks under their earlier names. Override either name; the package reads `getSchemaTemplates()` / `getSecuritySchemes()`, which answer with the earlier ones unless overridden themselves. The [IDE plugin](#ide-support) reads both names from 1.1.0.
 
 **Shorthand syntax reference:**
 
@@ -703,7 +703,7 @@ publish that for Community.
   writes the tag from it — `email` becomes `string(email)`, a rule that is not
   `required` becomes optional, `in:a,b` becomes an enumeration.
 - Marks a `@response` template or a `@security` scheme nothing declares, and
-  offers to declare the template — creating `getOpenApiTemplates()` when the
+  offers to declare the template — creating `getSchemaTemplates()` when the
   class has none.
 - Turns the silent 404 red: an action pointing at a missing, non-public or
   static method is an error while typing, with a quick fix that writes the
@@ -981,7 +981,7 @@ Dskripchenko\LaravelApi\Middlewares\RequestIdMiddleware::class
 
 | Class | Methods |
 |-------|---------|
-| `BaseApi` (all methods are `static`) | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` (all methods are `static`) | `getMethods()`, `make()`, `getSchemaTemplates()`, `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()`, `getDocMiddleware()` |
 | `Meta` | `string($key, $name)`, `integer($key, $name)`, `number($key, $name)`, `boolean($key, $name)`, `hidden($key, $name)`, `select($key, $name, $items)`, `file($key, $name, $src)`, `action($key, $condition)`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 
