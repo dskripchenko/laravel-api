@@ -21,6 +21,30 @@ return [
     // the namespaces, so it is off by default.
     'expose_controller_class' => env('LARAVEL_API_EXPOSE_CONTROLLER_CLASS', false),
 
+    // The API as an MCP server, for agents: one per version, at
+    // /{prefix}/{path}/{version}. Every action is a tool named
+    // `controller.action`, called through the same router, middleware and
+    // validation as over HTTP, as the caller of the MCP request. Leave an
+    // action or a controller out with `'mcp' => false` in getMethods().
+    'mcp' => [
+        'enabled' => env('LARAVEL_API_MCP', false),
+
+        // The versions served; empty serves every one not in hidden_versions.
+        'versions' => [],
+
+        'path' => 'mcp',
+
+        // Run on the MCP endpoint itself — authentication, rate limiting.
+        'middleware' => [],
+
+        // Browser origins allowed besides the application's own (`*` for any).
+        // A request without an Origin — a client that is not a browser — passes.
+        'allowed_origins' => [],
+
+        // The server name agents see; the application's name when empty.
+        'name' => env('LARAVEL_API_MCP_NAME'),
+    ],
+
     // The documentation page on /api/doc: @dskripchenko/openapi's standalone
     // reference — the versions with a switcher, search, try-it, code samples,
     // TypeScript types, PDF, and links that keep working (DocLink's anchors).

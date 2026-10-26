@@ -639,6 +639,29 @@ php artisan api:lint --unrouted # 另外检查没有动作指向的公有方法
 却没有声明任何输入的动作（`input.undeclared`）。完整规则列表：
 [linting.md](linting.md)。
 
+## MCP 服务器
+
+每个 API 版本都可以作为 [MCP](https://modelcontextprotocol.io) 服务器，让智能体以工具的方式调用 API：
+
+```php
+// config/laravel-api.php
+'mcp' => [
+    'enabled' => true,                     // LARAVEL_API_MCP
+    'versions' => ['v2'],                  // empty: every version not in hidden_versions
+    'middleware' => ['auth:sanctum'],      // on the MCP endpoint itself
+    'allowed_origins' => [],               // browser origins besides the app's own
+],
+```
+
+```bash
+claude mcp add --transport http shop https://shop.test/api/mcp/v2 \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+每个操作都是一个名为 `controller.action`（如 `user.show`）的工具，由其 docblock 描述：summary 作为标题，`@input` 行作为输入模式（模板放在 `$defs` 下），GET 操作标记为只读。工具调用与 HTTP 请求一样经过同一路由、中间件级联和验证，以调用 MCP 端点者的身份执行（其请求头，包括 `Authorization`，会被传递），并返回操作的 `payload`（`success` 为 false 时 `isError` 为 true）。在 `getMethods()` 中用 `'mcp' => false` 排除某个操作或控制器。
+
+端点为 `POST /{prefix}/mcp/{version}`（Streamable HTTP，JSON 响应，无会话）；与应用自身不同的浏览器 `Origin` 会被拒绝。`api:cache` 也会缓存工具列表。不支持：resources、prompts、流式传输、文件上传以及 `outputSchema`——docblock 的 `@output` 不足以精确到让客户端据此校验。
+
 ## 生产环境
 
 ```bash

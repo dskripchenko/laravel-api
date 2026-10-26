@@ -6,6 +6,8 @@ namespace Dskripchenko\LaravelApi\Services;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;
 use Dskripchenko\LaravelApi\Components\BaseModule;
+use Dskripchenko\LaravelApi\Transports\Mcp\McpController;
+use Dskripchenko\LaravelApi\Transports\Mcp\McpToolset;
 
 /**
  * The API map frozen into a file — what `php artisan api:cache` writes.
@@ -22,7 +24,7 @@ use Dskripchenko\LaravelApi\Components\BaseModule;
 final class ApiCache
 {
     /** Bumped when the shape of the file changes; a file of another shape is ignored. */
-    private const FORMAT = 1;
+    private const FORMAT = 2;
 
     /** @var array|false|null The file's contents; false when there is none; null before it was looked for. */
     private static array|false|null $loaded = null;
@@ -67,8 +69,21 @@ final class ApiCache
     }
 
     /**
+     * The MCP tools of a version, as `tools/list` answers with them, or null
+     * when they are not cached.
+     */
+    public static function mcpTools(string $apiClass, string $version): ?array
+    {
+        $cache = self::load();
+        $entry = $cache === false ? null : ($cache['mcp'][$version] ?? null);
+
+        return ($entry['api'] ?? null) === $apiClass ? $entry['tools'] : null;
+    }
+
+    /**
      * What the cache of a module holds: the prepared methods of every version
-     * class and the module's route definitions.
+     * class, the module's route definitions, and — with MCP on — the tools of
+     * every version it serves.
      *
      * @throws \UnexpectedValueException When the map holds something a PHP file cannot carry.
      */
@@ -81,11 +96,22 @@ final class ApiCache
             }
         }
 
+        $mcp = [];
+        if (config('laravel-api.mcp.enabled', false)) {
+            foreach (McpController::servedVersions() as $version => $apiClass) {
+                $mcp[(string) $version] = [
+                    'api' => $apiClass,
+                    'tools' => (new McpToolset($apiClass, (string) $version))->tools(),
+                ];
+            }
+        }
+
         $data = [
             'format' => self::FORMAT,
             'module' => get_class($module),
             'prepared' => $prepared,
             'routes' => $module->getRouteDefinitions(),
+            'mcp' => $mcp,
         ];
 
         self::assertExportable($data, '');
@@ -132,9 +158,19 @@ final class ApiCache
         return self::$loaded = is_array($data) && ($data['format'] ?? null) === self::FORMAT ? $data : false;
     }
 
-    /** var_export() writes an object as a call that brings back nothing useful. */
+    /**
+     * var_export() writes an object as a call that brings back nothing useful —
+     * except stdClass, which it writes as `(object) array(...)` and an empty
+     * JSON object needs.
+     */
     private static function assertExportable(mixed $value, string $path): void
     {
+        if ($value instanceof \stdClass) {
+            self::assertExportable((array) $value, $path);
+
+            return;
+        }
+
         if (is_object($value) || is_resource($value)) {
             throw new \UnexpectedValueException(
                 "The API map holds a " . get_debug_type($value) . " at `{$path}`, which a cache file cannot carry."

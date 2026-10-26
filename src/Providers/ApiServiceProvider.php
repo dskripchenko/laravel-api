@@ -16,6 +16,7 @@ use Dskripchenko\LaravelApi\Exceptions\Handler;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Components\BaseModule;
 use Dskripchenko\LaravelApi\Requests\BaseApiRequest;
+use Dskripchenko\LaravelApi\Transports\Mcp\McpController;
 use Exception;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Routing\Router;
@@ -123,6 +124,24 @@ class ApiServiceProvider extends ServiceProvider
         return BaseApiRequest::getInstance();
     }
 
+    /**
+     * The MCP endpoint, when `laravel-api.mcp.enabled` is on — inside the API
+     * prefix, ahead of the catch-all route.
+     */
+    public static function registerMcpRoutes(): void
+    {
+        if (!config('laravel-api.mcp.enabled', false)) {
+            return;
+        }
+
+        $path = trim((string) config('laravel-api.mcp.path', 'mcp'), '/');
+
+        Route::match(['get', 'post', 'delete'], "{$path}/{version}", static function (string $version) {
+            return app()->call(McpController::class . '@handle', ['version' => $version]);
+        })->name('api-mcp')
+            ->middleware((array) config('laravel-api.mcp.middleware', []));
+    }
+
     public function makeApiRoutes()
     {
         $middlewareGroupName = "api-middleware-group";
@@ -149,6 +168,8 @@ class ApiServiceProvider extends ServiceProvider
                 return app()->call(ApiDocumentationController::class . '@source', ['version' => $version]);
             })->name('api-doc-source')
                 ->middleware(ApiModule::getDocMiddleware());
+
+            static::registerMcpRoutes();
 
             $routeDefinitions = ApiModule::getRouteDefinitions();
             foreach ($routeDefinitions as $definition) {

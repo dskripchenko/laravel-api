@@ -22,6 +22,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   JSON body. The global HTTP middleware is not run again. The groundwork for
   transports other than HTTP.
 - `BaseApiRequest::swapInstance()`.
+- **MCP server.** With `laravel-api.mcp.enabled`, every served API version is
+  an MCP server at `POST /{prefix}/mcp/{version}` (Streamable HTTP, JSON
+  answers, no sessions): `initialize`, `ping`, `tools/list`, `tools/call`. Each
+  action is a tool named `controller.action`, its input schema the action's
+  input as JSON Schema with the templates under `$defs`, GET actions marked
+  `readOnlyHint`. A call goes through `Runtime\Dispatcher` — router,
+  middleware, validation, as the caller of the MCP request — and returns the
+  action's payload as `structuredContent` and text, `isError` when `success`
+  is false. `'mcp' => false` in `getMethods()` leaves an action or a controller
+  out; `mcp.versions`, `mcp.middleware`, `mcp.allowed_origins` (the `Origin`
+  check against DNS rebinding) and `mcp.name` configure it. `api:cache` caches
+  the tool lists (cache format 2: files written by 6.1 are ignored and rebuilt
+  by the next `api:cache`); a call finds its action through the route map
+  without describing the others.
 
 ### Changed
 
