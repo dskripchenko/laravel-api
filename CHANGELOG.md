@@ -34,9 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   input via `schema()`, and how it was declared: flat fields, nested lines,
   `[method]` schemas, `@Model` refs), the `@header` fields, and either the
   success payload (`OutputDeclaration`, without the envelope) or the `@response`
-  list. The OpenAPI generator renders these now; `OpenApiTrait` is down from
-  ~1670 to ~500 lines, and the spec of the fixtures and the example is
-  unchanged.
+  list. The OpenAPI document is rendered from these; the spec of the fixtures and
+  the example is unchanged.
+- **`OpenApiRenderer`** (`Services\OpenApi`). Renders the descriptors of an API
+  class as the OpenAPI 3.0 document: `render($version)`, `paths($version)`,
+  `operation($descriptor)`. The HTTP binding — paths, query/form/JSON body,
+  the response envelope, the error answer — is decided there.
+  `OpenApiTrait::getOpenApiConfig()` delegates to it; the trait keeps only the
+  flags and hooks (`$useResponseTemplates`, `$responseEnvelope`,
+  `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`).
 - **Schema modules** (`Operations\Schema`): `Shorthand` (the template
   shorthand), `SchemaRegistry` (an API class's templates with `Error`/`Success`,
   and its response envelope), `FieldSchemas` (object schemas from docblock

@@ -40,7 +40,7 @@ HTTP Request → ApiServiceProvider (route registration)
 
 **OperationDocParser** (`src/Operations/Doc/`) is the one reader of action docblocks: `OperationDocParser::parse($docComment, $middleware)` → `OperationDoc` (sanitized summary/description, `DocLine`s per tag with their syntactic `kind()`/`parts()`, security, deprecated, defaults/examples). `@input`/`@header` lines include the middleware's (classes and groups) ahead of the method's. Both `OpenApiTrait` and `OpenApiLinter` go through it — don't call `DocBlockFactory` elsewhere.
 
-**DescriptorBuilder** (`src/Operations/DescriptorBuilder.php`) turns an `Operation` + its `OperationDoc` into one `OperationDescriptor` per HTTP method (`Operations/Descriptor/`): input (`InputDeclaration` — `schema()` is the transport-neutral JSON Schema; `refs`/`lines`/`schemas`/`isNested()` say how it was declared), headers, output payload (`OutputDeclaration`, no envelope) or `@response` list, security, deprecated, operationId, context. `[method]` callables are invoked here. Schema helpers live in `Operations/Schema/` (`Shorthand`, `SchemaRegistry` — templates + envelope, `FieldSchemas`, `SchemaRef`). `OpenApiTrait` only renders descriptors into OpenAPI (HTTP binding: GET flat → query, flat → form, nested/[method]/@Model → JSON body; envelope wrapping).
+**DescriptorBuilder** (`src/Operations/DescriptorBuilder.php`) turns an `Operation` + its `OperationDoc` into one `OperationDescriptor` per HTTP method (`Operations/Descriptor/`): input (`InputDeclaration` — `schema()` is the transport-neutral JSON Schema; `refs`/`lines`/`schemas`/`isNested()` say how it was declared), headers, output payload (`OutputDeclaration`, no envelope) or `@response` list, security, deprecated, operationId, context. `[method]` callables are invoked here. Schema helpers live in `Operations/Schema/` (`Shorthand`, `SchemaRegistry` — templates + envelope, `FieldSchemas`, `SchemaRef`). **OpenApiRenderer** (`src/Services/OpenApi/OpenApiRenderer.php`) renders descriptors into the OpenAPI document — the HTTP binding lives there (GET flat → query, flat → form, nested/[method]/@Model → JSON body; envelope wrapping; `default` error answer). `OpenApiTrait::getOpenApiConfig()` just delegates; the trait holds only the flags and hooks.
 
 Golden-master snapshots (`tests/Feature/GoldenMaster`, stored in `tests/.pest/snapshots`) pin the spec, TS types, exports, lint report and routes of every fixture API and the example. A snapshot changes only on purpose; regenerate with `vendor/bin/pest --update-snapshots`.
 
@@ -124,7 +124,7 @@ class ApiV1_1 extends ApiV1 {
 
 ### OpenAPI 3.0 documentation
 
-**OpenApiTrait** generates OpenAPI 3.0 spec from docblock annotations on controller methods. Available at `GET /api/doc`.
+**OpenApiTrait** exposes the OpenAPI 3.0 spec (rendered by `OpenApiRenderer`) from docblock annotations on controller methods. Available at `GET /api/doc`.
 
 #### Docblock tags reference
 
