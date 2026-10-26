@@ -1,0 +1,158 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface UserResponse {
+  id: number;
+  name: string;
+  email?: string;
+}
+
+export interface ValidationError {
+  message: string;
+  errors?: Record<string, unknown>;
+}
+
+export interface OrderCreateRequest {
+  product_id: number;
+  quantity: number;
+}
+
+export interface User {
+  id: number;
+  name: string;
+}
+
+export interface Error {
+  success?: boolean;
+  errorKey?: string;
+  message?: string;
+}
+
+export interface Success {
+  success?: boolean;
+  /** Response payload */
+  payload?: Record<string, unknown>;
+}
+
+export interface ExtendedHeaderActionInput {
+  /** User name */
+  name: string;
+}
+
+export interface ExtendedHeaderActionOutput {
+  /** Result */
+  result: string;
+}
+
+export interface ExtendedSecurityActionInput {
+  /** Some data */
+  data: string;
+}
+
+export interface ExtendedSecurityActionOutput {
+  /** Result */
+  result: string;
+}
+
+export interface ExtendedDeprecatedActionInput {
+  /** Old param */
+  old: string;
+}
+
+export interface ExtendedDeprecatedActionOutput {
+  /** Result */
+  result: string;
+}
+
+export interface ExtendedMultiResponseActionInput {
+  /** User ID */
+  id: number;
+}
+
+export type ExtendedMultiResponseActionOutput = UserResponse;
+
+export interface ExtendedNestedInputActionInput {
+  /** Address object */
+  address: { city: string; street: string };
+  /** Tags array */
+  tags: { id: number; name: string }[];
+}
+
+export interface ExtendedNestedInputActionOutput {
+  /** Address */
+  address: { city: string };
+}
+
+export interface ExtendedFormatActionInput {
+  /** @format email — Email address */
+  email: string;
+  /** @format int64 — Big ID */
+  bigId: number;
+}
+
+export interface ExtendedFormatActionOutput {
+  /** @format date-time — Created at */
+  createdAt: string;
+  /** @format int32 — Count */
+  count: number;
+}
+
+export interface ExtendedEnumActionInput {
+  /** Status */
+  status: 'active' | 'blocked' | 'pending';
+  /** Role */
+  role?: 'admin' | 'user' | 'moderator';
+}
+
+export interface ExtendedEnumActionOutput {
+  /** Current status */
+  status: 'active' | 'blocked' | 'pending';
+}
+
+export type ExtendedModelRefActionInput = OrderCreateRequest;
+
+export interface ExtendedModelRefActionOutput {
+  /** User object */
+  user?: User;
+  /** Users list */
+  users?: User[];
+}
+
+export interface ExtendedDefaultExampleActionInput {
+  /** Page number */
+  page?: number;
+  /** Items per page */
+  perPage?: number;
+}
+
+export interface ExtendedDefaultExampleActionOutput {
+  /** Items */
+  items: string[];
+}
+
+export interface ExtendedFileUploadActionInput {
+  /** @format binary — User avatar */
+  avatar: File;
+  /** User name */
+  name: string;
+}
+
+export interface ExtendedFileUploadActionOutput {
+  /** File URL */
+  url: string;
+}
+
+export interface ExtendedOptionalOutputActionInput {
+  /** User ID */
+  id: number;
+}
+
+export interface ExtendedOptionalOutputActionOutput {
+  /** User ID */
+  id: number;
+  /** User name */
+  name: string;
+  /** User email */
+  email?: string;
+  /** User phone */
+  phone?: string;
+}

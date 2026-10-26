@@ -1,0 +1,895 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Extended API\nAPI with extended OpenAPI features",
+            "description": "",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/extended/headerAction": {
+                "post": {
+                    "summary": "Header action\nAction with header parameters",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "in": "header",
+                            "description": "Bearer token",
+                            "required": true,
+                            "schema": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "name": "X-Request-Id",
+                            "in": "header",
+                            "description": "Request ID",
+                            "required": false,
+                            "schema": {
+                                "type": "string"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "result": {
+                                                "type": "string",
+                                                "name": "result",
+                                                "description": "Result"
+                                            }
+                                        },
+                                        "required": [
+                                            "result"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "User name"
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_headerAction"
+                }
+            },
+            "/v1/extended/securityAction": {
+                "post": {
+                    "summary": "Security action\nAction with security",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "result": {
+                                                "type": "string",
+                                                "name": "result",
+                                                "description": "Result"
+                                            }
+                                        },
+                                        "required": [
+                                            "result"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "description": "Some data"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_securityAction",
+                    "security": [
+                        {
+                            "BearerAuth": []
+                        }
+                    ]
+                }
+            },
+            "/v1/extended/deprecatedAction": {
+                "post": {
+                    "summary": "Deprecated action\nUse newAction instead",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "result": {
+                                                "type": "string",
+                                                "name": "result",
+                                                "description": "Result"
+                                            }
+                                        },
+                                        "required": [
+                                            "result"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "old": {
+                                            "type": "string",
+                                            "description": "Old param"
+                                        }
+                                    },
+                                    "required": [
+                                        "old"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_deprecatedAction",
+                    "deprecated": true
+                }
+            },
+            "/v1/extended/multiResponseAction": {
+                "get": {
+                    "summary": "Multi response action\nAction with multiple responses",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "in": "query",
+                            "description": "User ID",
+                            "required": true,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "UserResponse",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/UserResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "422": {
+                            "description": "ValidationError",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/ValidationError"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_multiResponseAction"
+                }
+            },
+            "/v1/extended/nestedInputAction": {
+                "post": {
+                    "summary": "Nested input action\nAction with nested inputs",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "address": {
+                                                "type": "object",
+                                                "description": "Address",
+                                                "properties": {
+                                                    "city": {
+                                                        "type": "string",
+                                                        "description": "City"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "city"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "address"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "address": {
+                                            "type": "object",
+                                            "description": "Address object",
+                                            "properties": {
+                                                "city": {
+                                                    "type": "string",
+                                                    "description": "City name"
+                                                },
+                                                "street": {
+                                                    "type": "string",
+                                                    "description": "Street name"
+                                                }
+                                            },
+                                            "required": [
+                                                "city",
+                                                "street"
+                                            ]
+                                        },
+                                        "tags": {
+                                            "type": "array",
+                                            "description": "Tags array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "description": "Tag ID"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "Tag name"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "address",
+                                        "tags"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_nestedInputAction"
+                }
+            },
+            "/v1/extended/formatAction": {
+                "post": {
+                    "summary": "Format action\nAction with format specifiers",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "createdAt": {
+                                                "type": "string",
+                                                "name": "createdAt",
+                                                "description": "Created at",
+                                                "format": "date-time"
+                                            },
+                                            "count": {
+                                                "type": "integer",
+                                                "name": "count",
+                                                "description": "Count",
+                                                "format": "int32"
+                                            }
+                                        },
+                                        "required": [
+                                            "createdAt",
+                                            "count"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "description": "Email address"
+                                        },
+                                        "bigId": {
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "description": "Big ID"
+                                        }
+                                    },
+                                    "required": [
+                                        "email",
+                                        "bigId"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_formatAction"
+                }
+            },
+            "/v1/extended/enumAction": {
+                "post": {
+                    "summary": "Enum action\nAction with enum values",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "status": {
+                                                "type": "string",
+                                                "name": "status",
+                                                "description": "Current status",
+                                                "enum": [
+                                                    "active",
+                                                    "blocked",
+                                                    "pending"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "status"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "active",
+                                                "blocked",
+                                                "pending"
+                                            ],
+                                            "description": "Status"
+                                        },
+                                        "role": {
+                                            "type": "string",
+                                            "enum": [
+                                                "admin",
+                                                "user",
+                                                "moderator"
+                                            ],
+                                            "description": "Role"
+                                        }
+                                    },
+                                    "required": [
+                                        "status"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_enumAction"
+                }
+            },
+            "/v1/extended/modelRefAction": {
+                "post": {
+                    "summary": "Model ref action\nAction with model references",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "user": {
+                                                "$ref": "#/components/schemas/User",
+                                                "description": "User object"
+                                            },
+                                            "users": {
+                                                "type": "array",
+                                                "items": {
+                                                    "$ref": "#/components/schemas/User"
+                                                },
+                                                "description": "Users list"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderCreateRequest"
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_modelRefAction"
+                }
+            },
+            "/v1/extended/defaultExampleAction": {
+                "get": {
+                    "summary": "Default example action\nAction with defaults and examples",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "page",
+                            "in": "query",
+                            "description": "Page number",
+                            "required": false,
+                            "schema": {
+                                "type": "integer",
+                                "default": 1
+                            },
+                            "example": 3
+                        },
+                        {
+                            "name": "perPage",
+                            "in": "query",
+                            "description": "Items per page",
+                            "required": false,
+                            "schema": {
+                                "type": "integer",
+                                "default": 20
+                            },
+                            "example": 50
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "items": {
+                                                "type": "array",
+                                                "name": "items",
+                                                "description": "Items"
+                                            }
+                                        },
+                                        "required": [
+                                            "items"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_defaultExampleAction"
+                }
+            },
+            "/v1/extended/fileUploadAction": {
+                "post": {
+                    "summary": "File upload action\nAction with file upload",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "url": {
+                                                "type": "string",
+                                                "name": "url",
+                                                "description": "File URL"
+                                            }
+                                        },
+                                        "required": [
+                                            "url"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "multipart/form-data": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "avatar": {
+                                            "type": "string",
+                                            "format": "binary",
+                                            "description": "User avatar"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "User name"
+                                        }
+                                    },
+                                    "required": [
+                                        "avatar",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_fileUploadAction"
+                }
+            },
+            "/v1/extended/optionalOutputAction": {
+                "get": {
+                    "summary": "Optional output action\nAction with required and optional output fields",
+                    "description": "",
+                    "tags": [
+                        "extended"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "in": "query",
+                            "description": "User ID",
+                            "required": true,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "name": "id",
+                                                "description": "User ID"
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "name": "name",
+                                                "description": "User name"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "name": "email",
+                                                "description": "User email"
+                                            },
+                                            "phone": {
+                                                "type": "string",
+                                                "name": "phone",
+                                                "description": "User phone"
+                                            }
+                                        },
+                                        "required": [
+                                            "id",
+                                            "name"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "extended_optionalOutputAction"
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "UserResponse": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "email": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "name"
+                    ]
+                },
+                "ValidationError": {
+                    "type": "object",
+                    "properties": {
+                        "message": {
+                            "type": "string"
+                        },
+                        "errors": {
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "message"
+                    ]
+                },
+                "OrderCreateRequest": {
+                    "type": "object",
+                    "properties": {
+                        "product_id": {
+                            "type": "integer"
+                        },
+                        "quantity": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "product_id",
+                        "quantity"
+                    ]
+                },
+                "User": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "name"
+                    ]
+                },
+                "Error": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "errorKey": {
+                            "type": "string"
+                        },
+                        "message": {
+                            "type": "string"
+                        }
+                    },
+                    "required": []
+                },
+                "Success": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "payload": {
+                            "type": "object",
+                            "description": "Response payload"
+                        }
+                    },
+                    "required": []
+                }
+            },
+            "securitySchemes": {
+                "BearerAuth": {
+                    "type": "apiKey",
+                    "name": "Authorization",
+                    "in": "header"
+                }
+            }
+        }
+    }
+}

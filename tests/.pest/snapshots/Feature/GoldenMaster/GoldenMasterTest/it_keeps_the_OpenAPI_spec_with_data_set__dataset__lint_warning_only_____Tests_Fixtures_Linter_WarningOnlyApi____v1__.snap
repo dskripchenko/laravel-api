@@ -1,0 +1,60 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Warning-only API",
+            "description": "Nothing here is broken enough to fail a build — which is exactly what\n--strict is for.",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/soft/unknownType": {
+                "post": {
+                    "summary": "An unknown type is a warning: the generator carries on and calls it a\nstring, so the spec is wrong but nothing is broken.",
+                    "description": "",
+                    "tags": [
+                        "soft"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "when": {
+                                            "type": "string",
+                                            "description": "When"
+                                        }
+                                    },
+                                    "required": [
+                                        "when"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "soft_unknownType"
+                }
+            }
+        }
+    }
+}

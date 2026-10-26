@@ -1,0 +1,1121 @@
+[
+    {
+        "version": "fixture-v1",
+        "controller": "item",
+        "action": "list",
+        "methods": [
+            "get"
+        ],
+        "name": "api.fixture-v1.item.list",
+        "uri": "fixture-v1/item/list",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "fixture-v1",
+        "controller": "item",
+        "action": "show",
+        "methods": [
+            "get"
+        ],
+        "name": "api.fixture-v1.item.show",
+        "uri": "fixture-v1/item/show",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "fixture-v1",
+        "controller": "item",
+        "action": "create",
+        "methods": [
+            "post"
+        ],
+        "name": "api.fixture-v1.item.create",
+        "uri": "fixture-v1/item/create",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "fixture-v1",
+        "controller": "item",
+        "action": "update",
+        "methods": [
+            "post"
+        ],
+        "name": "api.fixture-v1.item.update",
+        "uri": "fixture-v1/item/update",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "fixture-v1",
+        "controller": "item",
+        "action": "remove",
+        "methods": [
+            "post"
+        ],
+        "name": "api.fixture-v1.item.remove",
+        "uri": "fixture-v1/item/remove",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "fixture-v1",
+        "controller": "open",
+        "action": "ping",
+        "methods": [
+            "get"
+        ],
+        "name": "api.fixture-v1.open.ping",
+        "uri": "fixture-v1/open/ping",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "fixture-v2",
+        "controller": "item",
+        "action": "list",
+        "methods": [
+            "get"
+        ],
+        "name": "api.fixture-v2.item.list",
+        "uri": "fixture-v2/item/list",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ]
+    },
+    {
+        "version": "fixture-v2",
+        "controller": "item",
+        "action": "show",
+        "methods": [
+            "get"
+        ],
+        "name": "api.fixture-v2.item.show",
+        "uri": "fixture-v2/item/show",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ]
+    },
+    {
+        "version": "fixture-v2",
+        "controller": "item",
+        "action": "create",
+        "methods": [
+            "post"
+        ],
+        "name": "api.fixture-v2.item.create",
+        "uri": "fixture-v2/item/create",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ]
+    },
+    {
+        "version": "fixture-v2",
+        "controller": "item",
+        "action": "update",
+        "methods": [
+            "post"
+        ],
+        "name": "api.fixture-v2.item.update",
+        "uri": "fixture-v2/item/update",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ]
+    },
+    {
+        "version": "fixture-v2",
+        "controller": "item",
+        "action": "search",
+        "methods": [
+            "get"
+        ],
+        "name": "api.fixture-v2.item.search",
+        "uri": "fixture-v2/item/search",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware",
+            "Tests\\Fixtures\\Middleware\\TestAuthMiddleware"
+        ],
+        "exclude-middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ]
+    },
+    {
+        "version": "fixture-v2",
+        "controller": "open",
+        "action": "ping",
+        "methods": [
+            "get"
+        ],
+        "name": "api.fixture-v2.open.ping",
+        "uri": "fixture-v2/open/ping",
+        "middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ],
+        "exclude-middleware": [
+            "Tests\\Fixtures\\Middleware\\TestLogMiddleware"
+        ]
+    },
+    {
+        "version": "template",
+        "controller": "template",
+        "action": "getUser",
+        "methods": [
+            "get"
+        ],
+        "name": "api.template.template.getUser",
+        "uri": "template/template/getUser",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "template",
+        "controller": "template",
+        "action": "createUser",
+        "methods": [
+            "post"
+        ],
+        "name": "api.template.template.createUser",
+        "uri": "template/template/createUser",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "headerAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.headerAction",
+        "uri": "extended/extended/headerAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "securityAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.securityAction",
+        "uri": "extended/extended/securityAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "deprecatedAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.deprecatedAction",
+        "uri": "extended/extended/deprecatedAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "multiResponseAction",
+        "methods": [
+            "get"
+        ],
+        "name": "api.extended.extended.multiResponseAction",
+        "uri": "extended/extended/multiResponseAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "nestedInputAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.nestedInputAction",
+        "uri": "extended/extended/nestedInputAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "formatAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.formatAction",
+        "uri": "extended/extended/formatAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "enumAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.enumAction",
+        "uri": "extended/extended/enumAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "modelRefAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.modelRefAction",
+        "uri": "extended/extended/modelRefAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "defaultExampleAction",
+        "methods": [
+            "get"
+        ],
+        "name": "api.extended.extended.defaultExampleAction",
+        "uri": "extended/extended/defaultExampleAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "fileUploadAction",
+        "methods": [
+            "post"
+        ],
+        "name": "api.extended.extended.fileUploadAction",
+        "uri": "extended/extended/fileUploadAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "extended",
+        "controller": "extended",
+        "action": "optionalOutputAction",
+        "methods": [
+            "get"
+        ],
+        "name": "api.extended.extended.optionalOutputAction",
+        "uri": "extended/extended/optionalOutputAction",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "deprecated-alias",
+        "controller": "open",
+        "action": "ping",
+        "methods": [
+            "get"
+        ],
+        "name": "api.deprecated-alias.open.ping",
+        "uri": "deprecated-alias/open/ping",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "users",
+        "action": "create",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.users.create",
+        "uri": "context/users/create",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "users",
+        "action": "update",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.users.update",
+        "uri": "context/users/update",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "users",
+        "action": "search",
+        "methods": [
+            "get"
+        ],
+        "name": "api.context.users.search",
+        "uri": "context/users/search",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "users",
+        "action": "show",
+        "methods": [
+            "get"
+        ],
+        "name": "api.context.users.show",
+        "uri": "context/users/show",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "users",
+        "action": "legacy",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.users.legacy",
+        "uri": "context/users/legacy",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "users",
+        "action": "scalars",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.users.scalars",
+        "uri": "context/users/scalars",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "posts",
+        "action": "create",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.posts.create",
+        "uri": "context/posts/create",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "posts",
+        "action": "update",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.posts.update",
+        "uri": "context/posts/update",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "posts",
+        "action": "search",
+        "methods": [
+            "get"
+        ],
+        "name": "api.context.posts.search",
+        "uri": "context/posts/search",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "posts",
+        "action": "show",
+        "methods": [
+            "get"
+        ],
+        "name": "api.context.posts.show",
+        "uri": "context/posts/show",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "posts",
+        "action": "legacy",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.posts.legacy",
+        "uri": "context/posts/legacy",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "context",
+        "controller": "posts",
+        "action": "scalars",
+        "methods": [
+            "post"
+        ],
+        "name": "api.context.posts.scalars",
+        "uri": "context/posts/scalars",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "envelope",
+        "controller": "agreement",
+        "action": "available",
+        "methods": [
+            "get"
+        ],
+        "name": "api.envelope.agreement.available",
+        "uri": "envelope/agreement/available",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "envelope",
+        "controller": "agreement",
+        "action": "fields",
+        "methods": [
+            "get"
+        ],
+        "name": "api.envelope.agreement.fields",
+        "uri": "envelope/agreement/fields",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "envelope",
+        "controller": "agreement",
+        "action": "create",
+        "methods": [
+            "post"
+        ],
+        "name": "api.envelope.agreement.create",
+        "uri": "envelope/agreement/create",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "envelope",
+        "controller": "agreement",
+        "action": "plain",
+        "methods": [
+            "get"
+        ],
+        "name": "api.envelope.agreement.plain",
+        "uri": "envelope/agreement/plain",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "custom-envelope",
+        "controller": "agreement",
+        "action": "available",
+        "methods": [
+            "get"
+        ],
+        "name": "api.custom-envelope.agreement.available",
+        "uri": "custom-envelope/agreement/available",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "custom-envelope",
+        "controller": "agreement",
+        "action": "fields",
+        "methods": [
+            "get"
+        ],
+        "name": "api.custom-envelope.agreement.fields",
+        "uri": "custom-envelope/agreement/fields",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "custom-envelope",
+        "controller": "agreement",
+        "action": "create",
+        "methods": [
+            "post"
+        ],
+        "name": "api.custom-envelope.agreement.create",
+        "uri": "custom-envelope/agreement/create",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "custom-envelope",
+        "controller": "agreement",
+        "action": "plain",
+        "methods": [
+            "get"
+        ],
+        "name": "api.custom-envelope.agreement.plain",
+        "uri": "custom-envelope/agreement/plain",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "multi-method",
+        "controller": "open",
+        "action": "ping",
+        "methods": [
+            "get",
+            "post"
+        ],
+        "name": "api.multi-method.open.ping",
+        "uri": "multi-method/open/ping",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "nested",
+        "controller": "nested",
+        "action": "save",
+        "methods": [
+            "post"
+        ],
+        "name": "api.nested.nested.save",
+        "uri": "nested/nested/save",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "nested",
+        "controller": "nested",
+        "action": "show",
+        "methods": [
+            "get"
+        ],
+        "name": "api.nested.nested.show",
+        "uri": "nested/nested/show",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "shorthand",
+        "controller": "order",
+        "action": "create",
+        "methods": [
+            "post"
+        ],
+        "name": "api.shorthand.order.create",
+        "uri": "shorthand/order/create",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "fine",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.fine",
+        "uri": "lint-broken/broken/fine",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "unknownType",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.unknownType",
+        "uri": "lint-broken/broken/unknownType",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "orphanNesting",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.orphanNesting",
+        "uri": "lint-broken/broken/orphanNesting",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "nestingTypeMismatch",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.nestingTypeMismatch",
+        "uri": "lint-broken/broken/nestingTypeMismatch",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "danglingRefs",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.danglingRefs",
+        "uri": "lint-broken/broken/danglingRefs",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "malformed",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.malformed",
+        "uri": "lint-broken/broken/malformed",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "duplicatesAndStrays",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.duplicatesAndStrays",
+        "uri": "lint-broken/broken/duplicatesAndStrays",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "callableMissing",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.callableMissing",
+        "uri": "lint-broken/broken/callableMissing",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "duplicateResponses",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.duplicateResponses",
+        "uri": "lint-broken/broken/duplicateResponses",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "renamed",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.renamed",
+        "uri": "lint-broken/broken/renamed",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "protectedTarget",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.protectedTarget",
+        "uri": "lint-broken/broken/protectedTarget",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "badVerb",
+        "methods": [
+            "fetch"
+        ],
+        "name": "api.lint-broken.broken.badVerb",
+        "uri": "lint-broken/broken/badVerb",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "ghostMiddleware",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.ghostMiddleware",
+        "uri": "lint-broken/broken/ghostMiddleware",
+        "middleware": [
+            "Tests\\Fixtures\\Linter\\NoSuchMiddleware"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "ghostSecurity",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.ghostSecurity",
+        "uri": "lint-broken/broken/ghostSecurity",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "broken",
+        "action": "parameterisedMiddleware",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.broken.parameterisedMiddleware",
+        "uri": "lint-broken/broken/parameterisedMiddleware",
+        "middleware": [
+            "Tests\\Fixtures\\Linter\\PassingMiddleware:some.permission"
+        ],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "missing",
+        "action": "whatever",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.missing.whatever",
+        "uri": "lint-broken/missing/whatever",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-broken",
+        "controller": "noControllerKey",
+        "action": "whatever",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-broken.noControllerKey.whatever",
+        "uri": "lint-broken/noControllerKey/whatever",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "validatesLiteral",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-undeclared-input.things.validatesLiteral",
+        "uri": "lint-undeclared-input/things/validatesLiteral",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "validatesRuntime",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-undeclared-input.things.validatesRuntime",
+        "uri": "lint-undeclared-input/things/validatesRuntime",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "validatorFacade",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-undeclared-input.things.validatorFacade",
+        "uri": "lint-undeclared-input/things/validatorFacade",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "validatorHelper",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-undeclared-input.things.validatorHelper",
+        "uri": "lint-undeclared-input/things/validatorHelper",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "formRequest",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-undeclared-input.things.formRequest",
+        "uri": "lint-undeclared-input/things/formRequest",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "declared",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-undeclared-input.things.declared",
+        "uri": "lint-undeclared-input/things/declared",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "declaredDynamically",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-undeclared-input.things.declaredDynamically",
+        "uri": "lint-undeclared-input/things/declaredDynamically",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "takesNothing",
+        "methods": [
+            "get"
+        ],
+        "name": "api.lint-undeclared-input.things.takesNothing",
+        "uri": "lint-undeclared-input/things/takesNothing",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-undeclared-input",
+        "controller": "things",
+        "action": "onlyMentionsInComment",
+        "methods": [
+            "get"
+        ],
+        "name": "api.lint-undeclared-input.things.onlyMentionsInComment",
+        "uri": "lint-undeclared-input/things/onlyMentionsInComment",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "lint-warning-only",
+        "controller": "soft",
+        "action": "unknownType",
+        "methods": [
+            "post"
+        ],
+        "name": "api.lint-warning-only.soft.unknownType",
+        "uri": "lint-warning-only/soft/unknownType",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1",
+        "controller": "a",
+        "action": "a",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.a.a",
+        "uri": "example-v1/a/a",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1",
+        "controller": "a",
+        "action": "b",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.a.b",
+        "uri": "example-v1/a/b",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1",
+        "controller": "a",
+        "action": "c",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.a.c",
+        "uri": "example-v1/a/c",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.1",
+        "controller": "a",
+        "action": "b",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.1.a.b",
+        "uri": "example-v1.1/a/b",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.1",
+        "controller": "a",
+        "action": "c",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.1.a.c",
+        "uri": "example-v1.1/a/c",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.1",
+        "controller": "b",
+        "action": "b",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.1.b.b",
+        "uri": "example-v1.1/b/b",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.2",
+        "controller": "a",
+        "action": "a",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.2.a.a",
+        "uri": "example-v1.2/a/a",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.2",
+        "controller": "a",
+        "action": "b",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.2.a.b",
+        "uri": "example-v1.2/a/b",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.2",
+        "controller": "a",
+        "action": "c",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.2.a.c",
+        "uri": "example-v1.2/a/c",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.2",
+        "controller": "b",
+        "action": "b",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.2.b.b",
+        "uri": "example-v1.2/b/b",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v1.2",
+        "controller": "b",
+        "action": "c",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v1.2.b.c",
+        "uri": "example-v1.2/b/c",
+        "middleware": [],
+        "exclude-middleware": []
+    },
+    {
+        "version": "example-v2",
+        "controller": "d",
+        "action": "d",
+        "methods": [
+            "post"
+        ],
+        "name": "api.example-v2.d.d",
+        "uri": "example-v2/d/d",
+        "middleware": [],
+        "exclude-middleware": []
+    }
+]

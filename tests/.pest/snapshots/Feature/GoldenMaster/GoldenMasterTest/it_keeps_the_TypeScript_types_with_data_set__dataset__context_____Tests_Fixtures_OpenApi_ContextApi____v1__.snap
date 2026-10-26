@@ -1,0 +1,143 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface Error {
+  success?: boolean;
+  errorKey?: string;
+  message?: string;
+}
+
+export interface Success {
+  success?: boolean;
+  /** Response payload */
+  payload?: Record<string, unknown>;
+}
+
+export interface UsersCreateInput {
+  /** @format email */
+  email: string;
+  age?: number;
+}
+
+export interface UsersCreateOutput {
+  id: number;
+  /** @format email */
+  email?: string;
+  age?: number;
+}
+
+export interface UsersUpdateInput {
+  /** Identifier */
+  id: number;
+  /** @format email */
+  email?: string;
+  age?: number;
+}
+
+export interface UsersUpdateOutput {
+}
+
+export interface UsersSearchInput {
+  /** Page */
+  page?: number;
+  /** @format email */
+  email?: string;
+  age?: number;
+}
+
+export interface UsersSearchOutput {
+}
+
+export interface UsersShowInput {
+  /** Identifier */
+  id: number;
+}
+
+export interface UsersShowOutput {
+  /** Identifier */
+  id: number;
+  /** From users */
+  email: string;
+  /** From users */
+  age: string;
+}
+
+export interface UsersLegacyInput {
+  /** Name */
+  name: string;
+  /** Count */
+  count?: number;
+}
+
+export interface UsersLegacyOutput {
+}
+
+export interface UsersScalarsInput {
+  /** v1|users|scalars|post|spicy|default|scalars */
+  marker: string;
+}
+
+export interface UsersScalarsOutput {
+}
+
+export interface PostsCreateInput {
+  title: string;
+  status: 'draft' | 'published';
+}
+
+export interface PostsCreateOutput {
+  id: number;
+  title?: string;
+  status?: 'draft' | 'published';
+}
+
+export interface PostsUpdateInput {
+  /** Identifier */
+  id: number;
+  title?: string;
+  status?: 'draft' | 'published';
+}
+
+export interface PostsUpdateOutput {
+}
+
+export interface PostsSearchInput {
+  /** Page */
+  page?: number;
+  title?: string;
+  status?: 'draft' | 'published';
+}
+
+export interface PostsSearchOutput {
+}
+
+export interface PostsShowInput {
+  /** Identifier */
+  id: number;
+}
+
+export interface PostsShowOutput {
+  /** Identifier */
+  id: number;
+  /** From posts */
+  title: string;
+  /** From posts */
+  status: string;
+}
+
+export interface PostsLegacyInput {
+  /** Name */
+  name: string;
+  /** Count */
+  count?: number;
+}
+
+export interface PostsLegacyOutput {
+}
+
+export interface PostsScalarsInput {
+  /** v1|posts|scalars|post|spicy|default|scalars */
+  marker: string;
+}
+
+export interface PostsScalarsOutput {
+}

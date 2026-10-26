@@ -1,0 +1,812 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Context API\nOne generic controller serving several entities, each with its own fields",
+            "description": "",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/users/create": {
+                "post": {
+                    "summary": "Create an entity",
+                    "description": "",
+                    "tags": [
+                        "users"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "maxLength": 255
+                                            },
+                                            "age": {
+                                                "type": "integer",
+                                                "minimum": 0,
+                                                "nullable": true
+                                            }
+                                        },
+                                        "x-tag": "output",
+                                        "required": [
+                                            "id"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "maxLength": 255
+                                        },
+                                        "age": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "required": [
+                                        "email"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "users_create"
+                }
+            },
+            "/v1/users/update": {
+                "post": {
+                    "summary": "Update an entity",
+                    "description": "",
+                    "tags": [
+                        "users"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Identifier"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "maxLength": 255
+                                        },
+                                        "age": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "required": [
+                                        "id"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "users_update"
+                }
+            },
+            "/v1/users/search": {
+                "get": {
+                    "summary": "Search entities",
+                    "description": "",
+                    "tags": [
+                        "users"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "page",
+                            "in": "query",
+                            "description": "Page",
+                            "required": false,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        },
+                        {
+                            "name": "email",
+                            "in": "query",
+                            "description": "",
+                            "required": false,
+                            "schema": {
+                                "type": "string",
+                                "format": "email",
+                                "maxLength": 255
+                            }
+                        },
+                        {
+                            "name": "age",
+                            "in": "query",
+                            "description": "",
+                            "required": false,
+                            "schema": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "nullable": true
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "users_search"
+                }
+            },
+            "/v1/users/show": {
+                "get": {
+                    "summary": "Show an entity",
+                    "description": "",
+                    "tags": [
+                        "users"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "in": "query",
+                            "description": "Identifier",
+                            "required": true,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "name": "id",
+                                                "description": "Identifier"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "name": "email",
+                                                "description": "From users"
+                                            },
+                                            "age": {
+                                                "type": "string",
+                                                "name": "age",
+                                                "description": "From users"
+                                            }
+                                        },
+                                        "required": [
+                                            "id",
+                                            "email",
+                                            "age"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "users_show"
+                }
+            },
+            "/v1/users/legacy": {
+                "post": {
+                    "summary": "The historical form: no context, a list of lines",
+                    "description": "",
+                    "tags": [
+                        "users"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "description": "Count"
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "users_legacy"
+                }
+            },
+            "/v1/users/scalars": {
+                "post": {
+                    "summary": "Scalars by name rather than the object",
+                    "description": "",
+                    "tags": [
+                        "users"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "marker": {
+                                            "type": "string",
+                                            "description": "v1|users|scalars|post|spicy|default|scalars"
+                                        }
+                                    },
+                                    "required": [
+                                        "marker"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "users_scalars"
+                }
+            },
+            "/v1/posts/create": {
+                "post": {
+                    "summary": "Create an entity",
+                    "description": "",
+                    "tags": [
+                        "posts"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "title": {
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "draft",
+                                                    "published"
+                                                ]
+                                            }
+                                        },
+                                        "x-tag": "output",
+                                        "required": [
+                                            "id"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "draft",
+                                                "published"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "title",
+                                        "status"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "posts_create"
+                }
+            },
+            "/v1/posts/update": {
+                "post": {
+                    "summary": "Update an entity",
+                    "description": "",
+                    "tags": [
+                        "posts"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Identifier"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "draft",
+                                                "published"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "id"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "posts_update"
+                }
+            },
+            "/v1/posts/search": {
+                "get": {
+                    "summary": "Search entities",
+                    "description": "",
+                    "tags": [
+                        "posts"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "page",
+                            "in": "query",
+                            "description": "Page",
+                            "required": false,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        },
+                        {
+                            "name": "title",
+                            "in": "query",
+                            "description": "",
+                            "required": false,
+                            "schema": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "name": "status",
+                            "in": "query",
+                            "description": "",
+                            "required": false,
+                            "schema": {
+                                "type": "string",
+                                "enum": [
+                                    "draft",
+                                    "published"
+                                ]
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "posts_search"
+                }
+            },
+            "/v1/posts/show": {
+                "get": {
+                    "summary": "Show an entity",
+                    "description": "",
+                    "tags": [
+                        "posts"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "in": "query",
+                            "description": "Identifier",
+                            "required": true,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "name": "id",
+                                                "description": "Identifier"
+                                            },
+                                            "title": {
+                                                "type": "string",
+                                                "name": "title",
+                                                "description": "From posts"
+                                            },
+                                            "status": {
+                                                "type": "string",
+                                                "name": "status",
+                                                "description": "From posts"
+                                            }
+                                        },
+                                        "required": [
+                                            "id",
+                                            "title",
+                                            "status"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "posts_show"
+                }
+            },
+            "/v1/posts/legacy": {
+                "post": {
+                    "summary": "The historical form: no context, a list of lines",
+                    "description": "",
+                    "tags": [
+                        "posts"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "description": "Count"
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "posts_legacy"
+                }
+            },
+            "/v1/posts/scalars": {
+                "post": {
+                    "summary": "Scalars by name rather than the object",
+                    "description": "",
+                    "tags": [
+                        "posts"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "marker": {
+                                            "type": "string",
+                                            "description": "v1|posts|scalars|post|spicy|default|scalars"
+                                        }
+                                    },
+                                    "required": [
+                                        "marker"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "posts_scalars"
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "Error": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "errorKey": {
+                            "type": "string"
+                        },
+                        "message": {
+                            "type": "string"
+                        }
+                    },
+                    "required": []
+                },
+                "Success": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "payload": {
+                            "type": "object",
+                            "description": "Response payload"
+                        }
+                    },
+                    "required": []
+                }
+            }
+        }
+    }
+}

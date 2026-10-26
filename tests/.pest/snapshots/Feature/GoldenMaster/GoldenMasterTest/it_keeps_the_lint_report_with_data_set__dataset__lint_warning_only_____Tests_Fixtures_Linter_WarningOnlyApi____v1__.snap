@@ -1,0 +1,9 @@
+[
+    {
+        "severity": "warning",
+        "rule": "tag.unknown-type",
+        "where": "v1 · soft.unknownType",
+        "message": "@input $when: the type `datetime` is unknown and becomes `string`.",
+        "hint": "Known types: string, file, number, integer, boolean, array, object."
+    }
+]

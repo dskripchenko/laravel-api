@@ -1,0 +1,4 @@
+{
+    "throws": "ReflectionException",
+    "message": "Method Tests\\Fixtures\\Linter\\BrokenController::noSuchMethod() does not exist"
+}

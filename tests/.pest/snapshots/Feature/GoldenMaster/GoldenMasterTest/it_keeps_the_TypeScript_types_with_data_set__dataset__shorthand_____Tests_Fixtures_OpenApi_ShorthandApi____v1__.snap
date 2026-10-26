@@ -1,0 +1,65 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface OrderResponse {
+  id: number;
+  status: string;
+  total?: number;
+  /** @format date-time */
+  created_at?: string;
+  /** @format email */
+  email: string;
+}
+
+export interface OrderError {
+  message: string;
+  code?: number;
+}
+
+export interface MixedTemplate {
+  id: number;
+  name: string;
+  score?: number;
+}
+
+export interface OrderWithRef {
+  id: number;
+  error?: OrderError;
+  items?: OrderItem[];
+}
+
+export interface OrderItem {
+  product_id: number;
+  quantity?: number;
+  price?: number;
+}
+
+export interface NestedResult {
+  success: boolean;
+  payload: { url?: string; uuid: string; client?: { email?: string; phone?: string } };
+  phones?: string[];
+  lines: { sku: string; qty?: number }[];
+  error: OrderError;
+  items: OrderItem[];
+  explicit: { code: number; tags?: string[]; ref?: OrderError };
+  /** Contact @support if unsure */
+  note?: string;
+}
+
+export interface Error {
+  success?: boolean;
+  errorKey?: string;
+  message?: string;
+}
+
+export interface Success {
+  success?: boolean;
+  /** Response payload */
+  payload?: Record<string, unknown>;
+}
+
+export interface OrderCreateInput {
+  /** Product ID */
+  product_id: number;
+  /** Quantity */
+  quantity: number;
+}

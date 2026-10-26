@@ -1,0 +1,50 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface UserResponse {
+  id: number;
+  name: string;
+  email?: string;
+}
+
+export interface DescribedResponse {
+  /** Record identifier */
+  id: number;
+  /** @format email — Contact email */
+  email?: string;
+  plain?: string;
+  /** Everyone involved */
+  users?: UserResponse[];
+}
+
+export interface Error {
+  success?: boolean;
+  errorKey?: string;
+  message?: string;
+}
+
+export interface Success {
+  success?: boolean;
+  /** Response payload */
+  payload?: Record<string, unknown>;
+}
+
+export interface TemplateGetUserInput {
+  /** User ID */
+  id: number;
+}
+
+export type TemplateGetUserOutput = UserResponse;
+
+export interface TemplateCreateUserInput {
+  /** User name */
+  name: string;
+  /** User email */
+  email: string;
+}
+
+export interface TemplateCreateUserOutput {
+  /** Created user ID */
+  id: number;
+  /** User name */
+  name: string;
+}

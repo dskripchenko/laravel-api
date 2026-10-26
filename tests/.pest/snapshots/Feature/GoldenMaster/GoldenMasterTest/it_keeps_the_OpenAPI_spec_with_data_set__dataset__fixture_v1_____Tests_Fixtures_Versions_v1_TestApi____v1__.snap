@@ -1,0 +1,355 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Test API v1",
+            "description": "Test API description",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/item/list": {
+                "get": {
+                    "summary": "List items\nReturns paginated list",
+                    "description": "",
+                    "tags": [
+                        "item"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "token",
+                            "in": "query",
+                            "description": "Auth token",
+                            "required": true,
+                            "schema": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "name": "page",
+                            "in": "query",
+                            "description": "Page number",
+                            "required": false,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        },
+                        {
+                            "name": "perPage",
+                            "in": "query",
+                            "description": "Items per page",
+                            "required": false,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "items": {
+                                                "type": "array",
+                                                "name": "items",
+                                                "description": "Items list"
+                                            },
+                                            "total": {
+                                                "type": "integer",
+                                                "name": "total",
+                                                "description": "Total count"
+                                            }
+                                        },
+                                        "required": [
+                                            "items",
+                                            "total"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "item_list"
+                }
+            },
+            "/v1/item/show": {
+                "get": {
+                    "summary": "Show item\nReturns single item by ID",
+                    "description": "",
+                    "tags": [
+                        "item"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "token",
+                            "in": "query",
+                            "description": "Auth token",
+                            "required": true,
+                            "schema": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "name": "id",
+                            "in": "query",
+                            "description": "Item ID",
+                            "required": true,
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "name": "id",
+                                                "description": "Item ID"
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "name": "name",
+                                                "description": "Item name"
+                                            }
+                                        },
+                                        "required": [
+                                            "id",
+                                            "name"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "item_show"
+                }
+            },
+            "/v1/item/create": {
+                "post": {
+                    "summary": "Create item\nCreates a new item",
+                    "description": "",
+                    "tags": [
+                        "item"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "name": "id",
+                                                "description": "Created item ID"
+                                            }
+                                        },
+                                        "required": [
+                                            "id"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "description": "Auth token"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Item name"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "description": "Item description"
+                                        }
+                                    },
+                                    "required": [
+                                        "token",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "item_create"
+                }
+            },
+            "/v1/item/update": {
+                "post": {
+                    "summary": "Update item\nUpdates an existing item",
+                    "description": "",
+                    "tags": [
+                        "item"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "name": "id",
+                                                "description": "Updated item ID"
+                                            }
+                                        },
+                                        "required": [
+                                            "id"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "description": "Auth token"
+                                        },
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Item ID"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Item name"
+                                        }
+                                    },
+                                    "required": [
+                                        "token",
+                                        "id",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "item_update"
+                }
+            },
+            "/v1/item/remove": {
+                "post": {
+                    "summary": "Delete item\nDeletes an item",
+                    "description": "",
+                    "tags": [
+                        "item"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "deleted": {
+                                                "type": "boolean",
+                                                "name": "deleted",
+                                                "description": "Deletion status"
+                                            }
+                                        },
+                                        "required": [
+                                            "deleted"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "description": "Auth token"
+                                        },
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Item ID"
+                                        }
+                                    },
+                                    "required": [
+                                        "token",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "item_remove"
+                }
+            },
+            "/v1/open/ping": {
+                "get": {
+                    "summary": "Ping\nHealth check endpoint.",
+                    "description": "Details: ItemController::list()\nDocs: status page (https://example.test/health)",
+                    "tags": [
+                        "open"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "pong": {
+                                                "type": "string",
+                                                "name": "pong",
+                                                "description": "Pong response"
+                                            }
+                                        },
+                                        "required": [
+                                            "pong"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "open_ping"
+                }
+            }
+        }
+    }
+}

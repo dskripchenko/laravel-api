@@ -1,0 +1,51 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Legacy alias API\nA deprecated alias: the same controllers, marked deprecated at the version level.",
+            "description": "",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/open/ping": {
+                "get": {
+                    "summary": "Ping\nHealth check endpoint.",
+                    "description": "Details: ItemController::list()\nDocs: status page (https://example.test/health)",
+                    "tags": [
+                        "open"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "pong": {
+                                                "type": "string",
+                                                "name": "pong",
+                                                "description": "Pong response"
+                                            }
+                                        },
+                                        "required": [
+                                            "pong"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "open_ping",
+                    "deprecated": true
+                }
+            }
+        }
+    }
+}
