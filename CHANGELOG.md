@@ -53,6 +53,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   string. The OpenAPI generator used to fail on it; it now falls back to the
   action key, the same way the dispatcher does.
 
+- **`php artisan api:cache` / `api:clear`.** `api:cache` freezes the API map —
+  the prepared methods of every version and the route definitions — into
+  `bootstrap/cache/laravel-api.php`, and builds the OpenAPI spec of every
+  version where `/api/doc` reads it. A spec that cannot be built, or a map
+  holding values a PHP file cannot carry (closures, objects), fails the
+  command and nothing is written. On an API of ~2,400 actions the route
+  definitions took ~13 ms a request; from the cache, with OPcache, nothing
+  measurable. `optimize:clear` runs `api:clear`; `optimize` does not run
+  `api:cache`, which freezes `getMethods()` and has to be asked for.
+- `BaseApi::flushPreparedMethods()`.
+
+### Changed
+
+- With `route:cache` on, `ApiServiceProvider::makeApiRoutes()` registers only
+  the middleware group and skips the routes: they come from the route cache,
+  and building them again on every request was thrown away.
+- Controller and action keys are looked up literally. A key with a dot in it
+  was read as a dot path by the dispatcher and the middleware cascade.
+
 ### Fixed
 
 - An empty tag (`@input` with nothing after it) no longer fails the spec with
@@ -78,11 +97,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `$cachedRawTemplatesByClass` are unused; they go in 7.0. Use
   `OperationDocParser::flush()` and `SchemaRegistry::flush()` to reset the
   caches.
-
-### Changed
-
-- Controller and action keys are looked up literally. A key with a dot in it
-  was read as a dot path by the dispatcher and the middleware cascade.
 
 ## [6.0.2] — 2026-10-26
 

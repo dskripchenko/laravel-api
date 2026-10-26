@@ -4,6 +4,7 @@ namespace Dskripchenko\LaravelApi\Components;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Facades\ApiRequest;
+use Dskripchenko\LaravelApi\Services\ApiCache;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -134,6 +135,12 @@ class BaseModule
      */
     public function getRouteDefinitions(): array
     {
+        // `php artisan api:cache` froze the map: take it as it was.
+        $cached = ApiCache::routeDefinitions(static::class);
+        if ($cached !== null) {
+            return $cached;
+        }
+
         $definitions = [];
         $prefix = $this->getApiPrefix();
         $uriPattern = $this->getApiUriPattern();

@@ -2,6 +2,8 @@
 
 namespace Dskripchenko\LaravelApi\Providers;
 
+use Dskripchenko\LaravelApi\Console\Commands\ApiCache as ApiCacheCommand;
+use Dskripchenko\LaravelApi\Console\Commands\ApiClear;
 use Dskripchenko\LaravelApi\Console\Commands\ApiDocAssets;
 use Dskripchenko\LaravelApi\Console\Commands\ApiDocClear;
 use Dskripchenko\LaravelApi\Console\Commands\ApiExport;
@@ -75,6 +77,8 @@ class ApiServiceProvider extends ServiceProvider
                 ApiDocClear::class,
                 ApiDocAssets::class,
                 ApiLint::class,
+                ApiCacheCommand::class,
+                ApiClear::class,
             ]
         );
 
@@ -84,6 +88,11 @@ class ApiServiceProvider extends ServiceProvider
         // cleanup into `optimize:clear`.
         if (method_exists($this, 'optimizes')) {
             $this->optimizes(clear: 'api:doc-clear', key: 'laravel-api-doc');
+
+            // Only the clearing: `api:cache` freezes getMethods(), and an API
+            // whose map changes at runtime must not get that from `optimize`
+            // without asking for it.
+            $this->optimizes(clear: 'api:clear', key: 'laravel-api');
         }
 
         parent::register();
@@ -120,6 +129,13 @@ class ApiServiceProvider extends ServiceProvider
         /** @var Router $router */
         $router = app(Router::class);
         $router->middlewareGroup($middlewareGroupName, ApiModule::getApiMiddleware());
+
+        // With `route:cache` the routes come from the cache file, and building
+        // them again would be thrown away. The group above is not part of that
+        // file: the cached routes refer to it by name.
+        if ($this->app->routesAreCached()) {
+            return;
+        }
 
         Route::group([
             'prefix' => ApiModule::getApiPrefix(),
