@@ -33,6 +33,7 @@ Build versioned APIs with automatic OpenAPI documentation generated from PHP doc
 - [OpenAPI 3.0 Documentation](#openapi-30-documentation)
 - [CRUD Scaffolding](#crud-scaffolding)
 - [Testing](#testing)
+- [JSON-RPC 2.0](#json-rpc-20)
 - [MCP server](#mcp-server)
 - [Configuration](#configuration)
 - [Error Handling](#error-handling)
@@ -769,6 +770,30 @@ It reads the route map and the docblocks with the same parser the OpenAPI
 generator uses, and also reports an action that validates its input without
 declaring any (`input.undeclared`). Full list of rules:
 [docs/linting.md](docs/en/linting.md).
+
+## JSON-RPC 2.0
+
+Every API version can be served over JSON-RPC 2.0 at `POST /{prefix}/rpc/{version}`:
+
+```php
+'jsonrpc' => ['enabled' => true, 'versions' => ['v2'], 'middleware' => ['auth:sanctum']],
+```
+
+```bash
+curl -s https://shop.test/api/rpc/v2 -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"user.show","params":{"id":7}}'
+# {"jsonrpc":"2.0","result":{"id":"7","name":"…"},"id":1}
+```
+
+Each action is a method named `controller.action`, called with its input as
+by-name params, through the same router, middleware and validation as an HTTP
+request. The payload is the `result`; a failed action is an `error` —
+`-32602` for a validation failure (status 422), `-32000` otherwise — with the
+status and the payload (`errorKey` and all) in `data`. Batches and
+notifications work as the specification says. `rpc.discover` answers with an
+[OpenRPC](https://open-rpc.org) document of the version. Leave an action or a
+controller out with `'jsonrpc' => false` in `getMethods()`.
 
 ## MCP server
 

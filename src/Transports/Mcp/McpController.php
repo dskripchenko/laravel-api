@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Dskripchenko\LaravelApi\Transports\Mcp;
 
-use Dskripchenko\LaravelApi\Components\BaseApi;
-use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Runtime\Dispatcher;
+use Dskripchenko\LaravelApi\Transports\ServedVersions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -74,24 +73,13 @@ class McpController
     }
 
     /**
-     * The versions served: `laravel-api.mcp.versions`, or every version the
-     * documentation lists when that is empty.
+     * The versions served — {@see ServedVersions}.
      *
      * @return array<string, class-string>
      */
     public static function servedVersions(): array
     {
-        $all = ApiModule::getApiVersionList();
-        $chosen = (array) config('laravel-api.mcp.versions', []);
-
-        $versions = $chosen === []
-            ? array_diff_key($all, array_flip((array) config('laravel-api.hidden_versions', [])))
-            : array_intersect_key($all, array_flip($chosen));
-
-        return array_filter(
-            $versions,
-            static fn ($apiClass): bool => is_string($apiClass) && is_subclass_of($apiClass, BaseApi::class)
-        );
+        return ServedVersions::of('mcp');
     }
 
     /**

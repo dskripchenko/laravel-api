@@ -36,6 +36,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the tool lists (cache format 2: files written by 6.1 are ignored and rebuilt
   by the next `api:cache`); a call finds its action through the route map
   without describing the others.
+- **JSON-RPC 2.0.** With `laravel-api.jsonrpc.enabled`, every served version
+  answers JSON-RPC 2.0 at `POST /{prefix}/rpc/{version}`: methods named
+  `controller.action`, by-name params, through `Runtime\Dispatcher` like MCP.
+  The payload is the `result`; a failed action is an `error` — `-32602` for a
+  validation failure (status 422), `-32000` otherwise — with the status and the
+  payload in `data`. Batches and notifications as the specification says (204
+  when nothing is answered). `rpc.discover` answers with an OpenRPC 1.3.2
+  document of the version, checked against `@open-rpc/schema-utils-js` for
+  every fixture API and the example. `'jsonrpc' => false` in `getMethods()`
+  leaves an action or a controller out; `jsonrpc.versions`, `jsonrpc.path`,
+  `jsonrpc.middleware` configure it.
+- `Transports\ServedVersions`, `Transports\NamedOperations` (the `controller.action`
+  index shared by MCP and JSON-RPC), `Operations\Schema\JsonSchemas::encodable()`
+  (empty `properties` / `$defs` written as `{}`).
 
 ### Changed
 

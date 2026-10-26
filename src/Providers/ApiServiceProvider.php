@@ -16,6 +16,7 @@ use Dskripchenko\LaravelApi\Exceptions\Handler;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Components\BaseModule;
 use Dskripchenko\LaravelApi\Requests\BaseApiRequest;
+use Dskripchenko\LaravelApi\Transports\JsonRpc\JsonRpcController;
 use Dskripchenko\LaravelApi\Transports\Mcp\McpController;
 use Exception;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -142,6 +143,24 @@ class ApiServiceProvider extends ServiceProvider
             ->middleware((array) config('laravel-api.mcp.middleware', []));
     }
 
+    /**
+     * The JSON-RPC endpoint, when `laravel-api.jsonrpc.enabled` is on — inside
+     * the API prefix, ahead of the catch-all route.
+     */
+    public static function registerJsonRpcRoutes(): void
+    {
+        if (!config('laravel-api.jsonrpc.enabled', false)) {
+            return;
+        }
+
+        $path = trim((string) config('laravel-api.jsonrpc.path', 'rpc'), '/');
+
+        Route::post("{$path}/{version}", static function (string $version) {
+            return app()->call(JsonRpcController::class . '@handle', ['version' => $version]);
+        })->name('api-jsonrpc')
+            ->middleware((array) config('laravel-api.jsonrpc.middleware', []));
+    }
+
     public function makeApiRoutes()
     {
         $middlewareGroupName = "api-middleware-group";
@@ -170,6 +189,7 @@ class ApiServiceProvider extends ServiceProvider
                 ->middleware(ApiModule::getDocMiddleware());
 
             static::registerMcpRoutes();
+            static::registerJsonRpcRoutes();
 
             $routeDefinitions = ApiModule::getRouteDefinitions();
             foreach ($routeDefinitions as $definition) {
