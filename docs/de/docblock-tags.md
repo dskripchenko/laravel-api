@@ -110,7 +110,7 @@ Erzeugt:
 @input @OrderCreateRequest
 ```
 
-Erzeugt `$ref: '#/components/schemas/OrderCreateRequest'` im requestBody. Das Modell muss in `getOpenApiTemplates()` definiert sein.
+Erzeugt `$ref: '#/components/schemas/OrderCreateRequest'` im requestBody. Das Modell muss in `getSchemaTemplates()` definiert sein.
 
 ### Liste von Skalaren
 
@@ -316,10 +316,10 @@ Wendet ein Sicherheitsschema auf die Operation an.
 @security BearerAuth
 ```
 
-Das Schema muss in `getOpenApiSecurityDefinitions()` der Api-Klasse definiert sein:
+Das Schema muss in `getSecuritySchemes()` der Api-Klasse definiert sein:
 
 ```php
-public static function getOpenApiSecurityDefinitions(): array {
+public static function getSecuritySchemes(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -384,7 +384,7 @@ Setzt einen Beispielwert fuer einen Parameter.
 
 ## Kurzschreibweise fuer Templates
 
-Bei der Definition von Templates in `getOpenApiTemplates()` kann eine Kurzschreibweise als String anstelle von ausfuehrlichen Arrays verwendet werden:
+Bei der Definition von Templates in `getSchemaTemplates()` kann eine Kurzschreibweise als String anstelle von ausfuehrlichen Arrays verwendet werden:
 
 | Syntax | Bedeutung | Aequivalentes Array |
 |--------|---------|------------------|
@@ -403,7 +403,7 @@ Bei der Definition von Templates in `getOpenApiTemplates()` kann eine Kurzschrei
 ### Beispiel
 
 ```php
-public static function getOpenApiTemplates(): array {
+public static function getSchemaTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

@@ -37,6 +37,33 @@ abstract class BaseApi implements ApiInterface
     }
 
     /**
+     * The templates under their name before 6.1 — {@see getSchemaTemplates()}.
+     *
+     * @return array
+     */
+    public static function getOpenApiTemplates(): array
+    {
+        return static::getOpenApiTemplatesTrait();
+    }
+
+    /**
+     * The security schemes under their name before 6.1 — {@see getSecuritySchemes()}.
+     *
+     * @return array
+     */
+    public static function getOpenApiSecurityDefinitions(): array
+    {
+        return static::getOpenApiSecurityDefinitionsTrait();
+    }
+
+    /**
+     * The templates schemas refer to as `@Name` — the same thing as
+     * getOpenApiTemplates(), under a name that is not about OpenAPI: the
+     * templates describe payloads whatever carries them.
+     *
+     * Override either one. The package reads this one, which answers with
+     * getOpenApiTemplates() unless it is overridden itself.
+     *
      * [
      *      'User' => [
      *              'id' => [
@@ -55,29 +82,6 @@ abstract class BaseApi implements ApiInterface
      *          ]
      *      ]
      * ];
-     *
-     * @return array
-     */
-    public static function getOpenApiTemplates(): array
-    {
-        return static::getOpenApiTemplatesTrait();
-    }
-
-    /**
-     * @return array
-     */
-    public static function getOpenApiSecurityDefinitions(): array
-    {
-        return static::getOpenApiSecurityDefinitionsTrait();
-    }
-
-    /**
-     * The templates schemas refer to as `@Name` — the same thing as
-     * getOpenApiTemplates(), under a name that is not about OpenAPI: the
-     * templates describe payloads whatever carries them.
-     *
-     * Override either one. The package reads this one, which answers with
-     * getOpenApiTemplates() unless it is overridden itself.
      *
      * @return array
      */

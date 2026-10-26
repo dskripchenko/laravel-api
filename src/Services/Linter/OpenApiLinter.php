@@ -483,7 +483,7 @@ final class OpenApiLinter
                     'security.unknown-scheme',
                     $where,
                     "The action asks for the security scheme `{$name}`, which is not defined.",
-                    'Add it to getOpenApiSecurityDefinitions() on the Api class.'
+                    'Add it to getSecuritySchemes() on the Api class.'
                 );
             }
         }
@@ -572,7 +572,7 @@ final class OpenApiLinter
                             'tag.unknown-template',
                             $where,
                             "@{$tagName} refers to the template `{$parts['model']}`, which is not defined.",
-                            'Add it to getOpenApiTemplates(), or the spec gets a $ref pointing nowhere.'
+                            'Add it to getSchemaTemplates(), or the spec gets a $ref pointing nowhere.'
                         );
                     }
 
@@ -744,7 +744,7 @@ final class OpenApiLinter
                     'response.unknown-template',
                     $where,
                     "@response {$code} {{$template}} refers to a template that is not defined.",
-                    'Add it to getOpenApiTemplates() on the Api class.'
+                    'Add it to getSchemaTemplates() on the Api class.'
                 );
             }
         }
@@ -766,7 +766,7 @@ final class OpenApiLinter
                 'security.unknown-scheme',
                 $where,
                 "@security {$name} — no such scheme is defined.",
-                'Add it to getOpenApiSecurityDefinitions() on the Api class.'
+                'Add it to getSecuritySchemes() on the Api class.'
             );
         }
     }

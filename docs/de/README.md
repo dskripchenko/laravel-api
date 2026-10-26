@@ -366,7 +366,7 @@ Wiederverwendbare Schemas aktivieren über `components/schemas`:
 class Api extends BaseApi {
     public static $useResponseTemplates = true;
 
-    public static function getOpenApiTemplates(): array {
+    public static function getSchemaTemplates(): array {
         return [
             'OrderResponse' => [
                 'id'         => 'integer!',            // Pflichtfeld Integer
@@ -380,7 +380,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getOpenApiSecurityDefinitions(): array {
+    public static function getSecuritySchemes(): array {
         return [
             'BearerAuth' => ['type' => 'apiKey', 'name' => 'Authorization', 'in' => 'header'],
         ];
@@ -388,7 +388,7 @@ class Api extends BaseApi {
 }
 ```
 
-**Neutrale Namen.** `getSchemaTemplates()` und `getSecuritySchemes()` sind dieselben Hooks unter Namen, die nicht an OpenAPI hängen — Templates beschreiben Payloads, egal wodurch sie übertragen werden. Überschreiben Sie einen der beiden Namen; das Paket liest den neutralen, der ohne eigene Überschreibung den alten Hook beantwortet. Die Beispiele hier bleiben bei den alten Namen, bis das IDE-Plugin die neutralen ebenfalls liest.
+**Namen vor 6.1.** `getOpenApiTemplates()` und `getOpenApiSecurityDefinitions()` funktionieren weiter: Es sind dieselben Hooks unter ihren früheren Namen. Überschreiben Sie einen der beiden Namen; das Paket liest `getSchemaTemplates()` / `getSecuritySchemes()`, die ohne eigene Überschreibung die früheren beantworten. Das IDE-Plugin liest ab 1.1.0 beide Namen.
 
 **Shorthand-Syntax:** `type` — optional, `type!` — Pflicht, `type(format)` — mit Format, `@Model` — Referenz, `@Model[]` — Array von Referenzen. Das Array-Format (`['type' => '...', 'required' => true]`) wird ebenfalls unterstützt.
 
@@ -801,7 +801,7 @@ das veröffentlicht JetBrains für Community nicht.
   ohne `required` → optionales Feld, `in:a,b` → Aufzählung.
 - Markiert ein `@response`-Template oder ein `@security`-Schema, das niemand
   deklariert hat, und bietet an, das Template zu deklarieren — inklusive
-  `getOpenApiTemplates()`, wenn die Klasse keines hat.
+  `getSchemaTemplates()`, wenn die Klasse keines hat.
 - Macht den stillen 404 rot: eine Action, die auf eine fehlende, nicht
   öffentliche oder statische Methode zeigt, ist ein Fehler beim Tippen, mit einem
   Quick-Fix, der die Methode nach dem Vorbild der Nachbarn schreibt.
@@ -936,7 +936,7 @@ das veröffentlicht JetBrains für Community nicht.
 
 | Klasse | Methoden |
 |-------|---------|
-| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getSchemaTemplates()`, `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
 | `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 

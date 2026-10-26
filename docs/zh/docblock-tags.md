@@ -110,7 +110,7 @@
 @input @OrderCreateRequest
 ```
 
-在 requestBody 中生成 `$ref: '#/components/schemas/OrderCreateRequest'`。该模型必须在 `getOpenApiTemplates()` 中定义。
+在 requestBody 中生成 `$ref: '#/components/schemas/OrderCreateRequest'`。该模型必须在 `getSchemaTemplates()` 中定义。
 
 ### 标量列表
 
@@ -309,10 +309,10 @@ schema，合并到其他 `@output` 行之上。`@output {Template}` 行仍然优
 @security BearerAuth
 ```
 
-该方案必须在 Api 类的 `getOpenApiSecurityDefinitions()` 中定义：
+该方案必须在 Api 类的 `getSecuritySchemes()` 中定义：
 
 ```php
-public static function getOpenApiSecurityDefinitions(): array {
+public static function getSecuritySchemes(): array {
     return [
         'BearerAuth' => [
             'type' => 'apiKey',
@@ -377,7 +377,7 @@ public static function getOpenApiSecurityDefinitions(): array {
 
 ## 模板简写语法
 
-在 `getOpenApiTemplates()` 中定义模板时，可以使用简写字符串表示法代替冗长的数组：
+在 `getSchemaTemplates()` 中定义模板时，可以使用简写字符串表示法代替冗长的数组：
 
 | 语法 | 含义 | 等效数组 |
 |--------|---------|------------------|
@@ -396,7 +396,7 @@ public static function getOpenApiSecurityDefinitions(): array {
 ### 示例
 
 ```php
-public static function getOpenApiTemplates(): array {
+public static function getSchemaTemplates(): array {
     return [
         'OrderResponse' => [
             'id'         => 'integer!',

@@ -32,28 +32,28 @@
         "rule": "tag.unknown-template",
         "where": "v1 · broken.danglingRefs",
         "message": "@input refers to the template `MissingRequest`, which is not defined.",
-        "hint": "Add it to getOpenApiTemplates(), or the spec gets a $ref pointing nowhere."
+        "hint": "Add it to getSchemaTemplates(), or the spec gets a $ref pointing nowhere."
     },
     {
         "severity": "error",
         "rule": "tag.unknown-template",
         "where": "v1 · broken.danglingRefs",
         "message": "@output refers to the template `MissingModel`, which is not defined.",
-        "hint": "Add it to getOpenApiTemplates(), or the spec gets a $ref pointing nowhere."
+        "hint": "Add it to getSchemaTemplates(), or the spec gets a $ref pointing nowhere."
     },
     {
         "severity": "error",
         "rule": "response.unknown-template",
         "where": "v1 · broken.danglingRefs",
         "message": "@response 404 {MissingTemplate} refers to a template that is not defined.",
-        "hint": "Add it to getOpenApiTemplates() on the Api class."
+        "hint": "Add it to getSchemaTemplates() on the Api class."
     },
     {
         "severity": "error",
         "rule": "security.unknown-scheme",
         "where": "v1 · broken.danglingRefs",
         "message": "@security MissingScheme — no such scheme is defined.",
-        "hint": "Add it to getOpenApiSecurityDefinitions() on the Api class."
+        "hint": "Add it to getSecuritySchemes() on the Api class."
     },
     {
         "severity": "error",
@@ -151,7 +151,7 @@
         "rule": "security.unknown-scheme",
         "where": "v1 · broken.ghostSecurity",
         "message": "The action asks for the security scheme `GhostScheme`, which is not defined.",
-        "hint": "Add it to getOpenApiSecurityDefinitions() on the Api class."
+        "hint": "Add it to getSecuritySchemes() on the Api class."
     },
     {
         "severity": "warning",

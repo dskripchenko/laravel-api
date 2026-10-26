@@ -365,7 +365,7 @@ Schema, который попадает в спецификацию как ес�
 class Api extends BaseApi {
     public static $useResponseTemplates = true;
 
-    public static function getOpenApiTemplates(): array {
+    public static function getSchemaTemplates(): array {
         return [
             'OrderResponse' => [
                 'id'         => 'integer!',            // обязательное целое
@@ -379,7 +379,7 @@ class Api extends BaseApi {
         ];
     }
 
-    public static function getOpenApiSecurityDefinitions(): array {
+    public static function getSecuritySchemes(): array {
         return [
             'BearerAuth' => ['type' => 'apiKey', 'name' => 'Authorization', 'in' => 'header'],
         ];
@@ -387,7 +387,7 @@ class Api extends BaseApi {
 }
 ```
 
-**Нейтральные имена.** `getSchemaTemplates()` и `getSecuritySchemes()` — те же хуки под именами, не привязанными к OpenAPI: шаблоны описывают payload, чем бы он ни передавался. Переопределяйте любое из имён; пакет читает нейтральное, а оно, если не переопределено, отвечает старым хуком. Примеры здесь остаются на старых именах, пока их не начнёт читать [IDE-плагин](#поддержка-ide).
+**Имена до 6.1.** `getOpenApiTemplates()` и `getOpenApiSecurityDefinitions()` продолжают работать: это те же хуки под прежними именами. Переопределяйте любое из имён; пакет читает `getSchemaTemplates()` / `getSecuritySchemes()`, а они, если не переопределены, отвечают прежними. [IDE-плагин](#поддержка-ide) читает оба имени начиная с 1.1.0.
 
 **Shorthand-синтаксис:** `type` — необязательное, `type!` — обязательное, `type(format)` — с форматом, `@Model` — ссылка, `@Model[]` — массив ссылок. Также поддерживается формат массивов (`['type' => '...', 'required' => true]`).
 
@@ -810,7 +810,7 @@ PhpStorm или IntelliJ IDEA Ultimate с плагином PHP. IDEA Community �
   из него: `email` → `string(email)`, правило без `required` → необязательное
   поле, `in:a,b` → перечисление.
 - Отмечает шаблон `@response` или схему `@security`, которых никто не объявлял,
-  и предлагает объявить шаблон — заведя `getOpenApiTemplates()`, если метода нет.
+  и предлагает объявить шаблон — заведя `getSchemaTemplates()`, если метода нет.
 - Делает молчаливую 404 красной: действие, указывающее на отсутствующий,
   непубличный или статический метод, — ошибка прямо при наборе, с быстрым
   исправлением, которое пишет метод по образцу соседей.
@@ -944,7 +944,7 @@ PhpStorm или IntelliJ IDEA Ultimate с плагином PHP. IDEA Community �
 
 | Класс | Методы |
 |-------|---------|
-| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getSchemaTemplates()`, `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
 | `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 

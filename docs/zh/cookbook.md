@@ -374,7 +374,7 @@ class Api extends BaseApi
 {
     public static $useResponseTemplates = true;
 
-    public static function getOpenApiTemplates(): array
+    public static function getSchemaTemplates(): array
     {
         return [
             'UserResponse' => [
@@ -389,7 +389,7 @@ class Api extends BaseApi
         ];
     }
 
-    public static function getOpenApiSecurityDefinitions(): array
+    public static function getSecuritySchemes(): array
     {
         return [
             'BearerAuth' => [
@@ -556,7 +556,7 @@ export interface UserShowOutput {
 | `$ref` | 接口名称 |
 | `enum` | `'a' \| 'b' \| 'c'` |
 
-`getOpenApiTemplates()` 中的组件 schema 会生成为命名接口。每个操作会生成 `{Controller}{Action}Input` 和 `{Controller}{Action}Output` 类型。
+`getSchemaTemplates()` 中的组件 schema 会生成为命名接口。每个操作会生成 `{Controller}{Action}Input` 和 `{Controller}{Action}Output` 类型。
 
 ---
 
