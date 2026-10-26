@@ -18,9 +18,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   through it now, instead of walking getMethods() each in its own way. The
   generated spec, routes, types, exports and lint report are unchanged
   (golden-master snapshots).
+- **`OperationDocParser`** (`Dskripchenko\LaravelApi\Operations\Doc`). Reads an
+  action's docblock once into an `OperationDoc`: the sanitized summary and
+  description, the tag lines (`DocLine` — body, origin, and its syntactic form:
+  field, `@Model`, `{Template}`, `[method]`, empty, malformed), `@security`,
+  `@deprecated`, `@default`/`@example`. The lines of `@input` and `@header`
+  include the middleware's, ahead of the method's own. The OpenAPI generator and
+  the linter both read docblocks through it now; the spec, types, exports and
+  lint report of the fixtures and the example are unchanged.
 - Lint rule **`action.invalid-method-name`**: an `action` key that is not a
   string. The OpenAPI generator used to fail on it; it now falls back to the
   action key, the same way the dispatcher does.
+
+### Fixed
+
+- An empty tag (`@input` with nothing after it) no longer fails the spec with
+  `Call to a member function render() on null`; it is skipped, and the linter
+  still reports it as `tag.empty`.
+- A middleware group holding an alias (`throttle:api`) no longer fails the spec
+  with a `ReflectionException`; the aliases are skipped when the group's
+  `@input`/`@header` are collected.
+- The linter reads `@input` from middleware groups too, as the generator does:
+  a `@default` for an input a grouped middleware declares is no longer reported
+  as `default.unknown-variable`.
+
+### Deprecated
+
+- `OpenApiTrait::$docBlockFactory` and `OpenApiTrait::$middlewareInputTagCache`
+  are unused; they go in 7.0. Use `OperationDocParser::flush()` to reset the
+  parser's cache.
 
 ### Changed
 

@@ -38,6 +38,8 @@ HTTP Request → ApiServiceProvider (route registration)
 
 **OperationRegistry** (`src/Operations/`) is the one reader of `getPreparedMethods()`: it turns every enabled action into an `Operation` (keys, controller class/method, HTTP methods, flags, options, middleware). `BaseApi::make()`, `BaseModule::getRouteDefinitions()`, `OpenApiTrait::getOpenApiPaths()` and `OpenApiLinter` all go through it — don't walk `getMethods()` by hand elsewhere. `BaseApi::operations($version)` returns it; `OperationRegistry::flush()` clears its memo.
 
+**OperationDocParser** (`src/Operations/Doc/`) is the one reader of action docblocks: `OperationDocParser::parse($docComment, $middleware)` → `OperationDoc` (sanitized summary/description, `DocLine`s per tag with their syntactic `kind()`/`parts()`, security, deprecated, defaults/examples). `@input`/`@header` lines include the middleware's (classes and groups) ahead of the method's. Both `OpenApiTrait` and `OpenApiLinter` go through it — don't call `DocBlockFactory` elsewhere.
+
 Golden-master snapshots (`tests/Feature/GoldenMaster`, stored in `tests/.pest/snapshots`) pin the spec, TS types, exports, lint report and routes of every fixture API and the example. A snapshot changes only on purpose; regenerate with `vendor/bin/pest --update-snapshots`.
 
 ### Extension points
@@ -271,6 +273,7 @@ src/
 ├── Interfaces/        CrudServiceInterface, ApiInterface
 ├── Middlewares/       ApiMiddleware, RequestIdMiddleware
 ├── Operations/        OperationRegistry, Operation, ControllerDefinition
+│   └── Doc/           OperationDocParser, OperationDoc, DocLine
 ├── Providers/         ApiServiceProvider, BaseServiceProvider
 ├── Requests/          BaseApiRequest, CrudSearchRequest
 ├── Resources/         BaseJsonResource, BaseJsonResourceCollection

@@ -6,11 +6,12 @@ namespace Dskripchenko\LaravelApi\Services\Linter;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Operations\ControllerDefinition;
+use Dskripchenko\LaravelApi\Operations\Doc\DocLine;
+use Dskripchenko\LaravelApi\Operations\Doc\OperationDoc;
+use Dskripchenko\LaravelApi\Operations\Doc\OperationDocParser;
 use Dskripchenko\LaravelApi\Operations\OperationRegistry;
 use Dskripchenko\LaravelApi\Services\OpenApi\DocPatterns;
 use Illuminate\Support\Arr;
-use phpDocumentor\Reflection\DocBlock;
-use phpDocumentor\Reflection\DocBlockFactory;
 
 /**
  * Checks the route map and the docblock markup for the mistakes that otherwise
@@ -31,8 +32,6 @@ final class OpenApiLinter
 {
     /** @var LintIssue[] */
     private array $issues = [];
-
-    private ?DocBlockFactory $docBlockFactory = null;
 
     /**
      * Whether to report public controller methods that no action points at.
@@ -239,10 +238,10 @@ final class OpenApiLinter
         $this->lintActionSecurity($where, (array) Arr::get($actionOptions, 'security', []), $securitySchemes);
 
         $middlewareList = $apiClass::getMiddlewareByControllerAndActionKey($controllerKey, $actionKey);
-        $docBlock = $this->docBlock($method->getDocComment());
+        $doc = OperationDocParser::parse($method->getDocComment(), $middlewareList);
 
-        $this->lintTags($where, $docBlock, $reflection, $templates, $securitySchemes, $middlewareList, $apiClass);
-        $this->lintUndeclaredInput($where, $docBlock, $method);
+        $this->lintTags($where, $doc, $reflection, $templates, $securitySchemes);
+        $this->lintUndeclaredInput($where, $doc, $method);
     }
 
     /**
@@ -259,9 +258,9 @@ final class OpenApiLinter
      * Only the method's own @input tags count: the ones middleware contribute
      * describe the middleware's input, not the fields this method checks.
      */
-    private function lintUndeclaredInput(string $where, DocBlock $docBlock, \ReflectionMethod $method): void
+    private function lintUndeclaredInput(string $where, OperationDoc $doc, \ReflectionMethod $method): void
     {
-        if ($docBlock->getTagsByName('input') !== []) {
+        if (self::ownLines($doc, 'input') !== []) {
             return;
         }
 
@@ -433,25 +432,21 @@ final class OpenApiLinter
      * @param  \ReflectionClass<object>  $reflection
      * @param  string[]  $templates
      * @param  string[]  $securitySchemes
-     * @param  array<int, string>  $middlewareList
-     * @param  class-string  $apiClass
      */
     private function lintTags(
         string $where,
-        DocBlock $docBlock,
+        OperationDoc $doc,
         \ReflectionClass $reflection,
         array $templates,
-        array $securitySchemes,
-        array $middlewareList,
-        string $apiClass
+        array $securitySchemes
     ): void {
-        $inputVariables = $this->lintParameterTags($where, $docBlock, 'input', $reflection, $templates);
-        $this->lintParameterTags($where, $docBlock, 'output', $reflection, $templates);
-        $this->lintParameterTags($where, $docBlock, 'header', $reflection, $templates);
+        $inputVariables = $this->lintParameterTags($where, $doc, 'input', $reflection, $templates);
+        $this->lintParameterTags($where, $doc, 'output', $reflection, $templates);
+        $this->lintParameterTags($where, $doc, 'header', $reflection, $templates);
 
-        $this->lintResponseTags($where, $docBlock, $templates);
-        $this->lintSecurityTags($where, $docBlock, $securitySchemes);
-        $this->lintDefaultExampleTags($where, $docBlock, $inputVariables, $middlewareList);
+        $this->lintResponseTags($where, $doc, $templates);
+        $this->lintSecurityTags($where, $doc, $securitySchemes);
+        $this->lintDefaultExampleTags($where, $doc, $inputVariables);
     }
 
     /**
@@ -463,7 +458,7 @@ final class OpenApiLinter
      */
     private function lintParameterTags(
         string $where,
-        DocBlock $docBlock,
+        OperationDoc $doc,
         string $tagName,
         \ReflectionClass $reflection,
         array $templates
@@ -471,109 +466,106 @@ final class OpenApiLinter
         $variables = [];
         $declaredTypes = [];
 
-        foreach ($docBlock->getTagsByName($tagName) as $tag) {
-            $body = trim((string) $tag);
+        // The middleware's own lines are its own business: they are linted
+        // nowhere, and reported here they would repeat on every action.
+        foreach (self::ownLines($doc, $tagName) as $line) {
+            $body = trim($line->body);
+            $parts = $line->parts();
 
-            if ($body === '') {
-                $this->issues[] = LintIssue::warning(
-                    'tag.empty',
-                    $where,
-                    "An empty @{$tagName} tag.",
-                );
-
-                continue;
-            }
-
-            // `[methodName]` — inputs or outputs assembled at runtime.
-            if (preg_match(DocPatterns::inputsCallable(), $body, $callable)) {
-                if ($tagName !== 'input' && $tagName !== 'output') {
+            switch ($line->kind()) {
+                case DocLine::EMPTY:
                     $this->issues[] = LintIssue::warning(
-                        'tag.callable-misplaced',
+                        'tag.empty',
                         $where,
-                        "@{$tagName} does not support the [method] form; only @input and @output do.",
+                        "An empty @{$tagName} tag.",
                     );
 
-                    continue;
-                }
+                    continue 2;
 
-                if (! $reflection->hasMethod($callable['callable'])) {
-                    $this->issues[] = LintIssue::error(
-                        'tag.callable-missing',
-                        $where,
-                        "@{$tagName} [{$callable['callable']}] refers to a method the controller does not have.",
-                    );
-                }
+                // `[methodName]` — inputs or outputs assembled at runtime.
+                case DocLine::CALLABLE:
+                    if ($tagName !== 'input' && $tagName !== 'output') {
+                        $this->issues[] = LintIssue::warning(
+                            'tag.callable-misplaced',
+                            $where,
+                            "@{$tagName} does not support the [method] form; only @input and @output do.",
+                        );
 
-                continue;
-            }
+                        continue 2;
+                    }
 
-            // `@Model`, `@Model[]` — a reference to a template.
-            if (str_starts_with($body, '@')) {
-                if (preg_match(DocPatterns::modelRef(), $body, $ref)) {
-                    if (! in_array($ref['model'], $templates, true)) {
+                    if (! $reflection->hasMethod($parts['callable'])) {
+                        $this->issues[] = LintIssue::error(
+                            'tag.callable-missing',
+                            $where,
+                            "@{$tagName} [{$parts['callable']}] refers to a method the controller does not have.",
+                        );
+                    }
+
+                    continue 2;
+
+                // `@Model`, `@Model[]` — a reference to a template.
+                case DocLine::MODEL_REF:
+                    if (! in_array($parts['model'], $templates, true)) {
                         $this->issues[] = LintIssue::error(
                             'tag.unknown-template',
                             $where,
-                            "@{$tagName} refers to the template `{$ref['model']}`, which is not defined.",
+                            "@{$tagName} refers to the template `{$parts['model']}`, which is not defined.",
                             'Add it to getOpenApiTemplates(), or the spec gets a $ref pointing nowhere.'
                         );
                     }
 
-                    if (($ref['variable'] ?? '') !== '') {
-                        $variables[] = $ref['variable'];
+                    if ($line->variable() !== null) {
+                        $variables[] = $line->variable();
                     }
 
-                    continue;
-                }
+                    continue 2;
 
-                $this->issues[] = LintIssue::error(
-                    'tag.malformed',
-                    $where,
-                    "@{$tagName} {$body} — the model reference does not parse.",
-                    'Expected @Model, @Model[] or @Model $variable.'
-                );
-
-                continue;
-            }
-
-            // `{Template}` — only @output carries this form.
-            if (str_starts_with($body, '{')) {
-                if ($tagName !== 'output') {
-                    $this->issues[] = LintIssue::warning(
-                        'tag.template-misplaced',
-                        $where,
-                        "@{$tagName} does not support the {Template} form; use @response or @output.",
-                    );
-
-                    continue;
-                }
-
-                if (preg_match(DocPatterns::inputOutputTemplate(), $body, $tpl)
-                    && ! in_array($tpl['template'], $templates, true)
-                ) {
+                case DocLine::MALFORMED_MODEL_REF:
                     $this->issues[] = LintIssue::error(
-                        'tag.unknown-template',
+                        'tag.malformed',
                         $where,
-                        "@output {{$tpl['template']}} refers to a template that is not defined.",
+                        "@{$tagName} {$body} — the model reference does not parse.",
+                        'Expected @Model, @Model[] or @Model $variable.'
                     );
-                }
 
-                continue;
+                    continue 2;
+
+                // `{Template}` — only @output carries this form.
+                case DocLine::TEMPLATE:
+                    if ($tagName !== 'output') {
+                        $this->issues[] = LintIssue::warning(
+                            'tag.template-misplaced',
+                            $where,
+                            "@{$tagName} does not support the {Template} form; use @response or @output.",
+                        );
+
+                        continue 2;
+                    }
+
+                    if (isset($parts['template']) && ! in_array($parts['template'], $templates, true)) {
+                        $this->issues[] = LintIssue::error(
+                            'tag.unknown-template',
+                            $where,
+                            "@output {{$parts['template']}} refers to a template that is not defined.",
+                        );
+                    }
+
+                    continue 2;
+
+                case DocLine::MALFORMED:
+                    $this->issues[] = LintIssue::error(
+                        'tag.malformed',
+                        $where,
+                        "@{$tagName} {$body} — does not parse, and the generator drops it silently.",
+                        'Expected: type ?$name Description.'
+                    );
+
+                    continue 2;
             }
 
-            if (! preg_match(DocPatterns::inputOutput(), $body, $parsed)) {
-                $this->issues[] = LintIssue::error(
-                    'tag.malformed',
-                    $where,
-                    "@{$tagName} {$body} — does not parse, and the generator drops it silently.",
-                    'Expected: type ?$name Description.'
-                );
-
-                continue;
-            }
-
-            $type = $parsed['type'];
-            $variable = $parsed['variable'];
+            $type = $parts['type'];
+            $variable = $parts['variable'];
 
             if ($type !== '' && ! in_array($type, DocPatterns::availableDataTypes(), true)) {
                 $this->issues[] = LintIssue::warning(
@@ -646,12 +638,12 @@ final class OpenApiLinter
     /**
      * @param  string[]  $templates
      */
-    private function lintResponseTags(string $where, DocBlock $docBlock, array $templates): void
+    private function lintResponseTags(string $where, OperationDoc $doc, array $templates): void
     {
         $seenCodes = [];
 
-        foreach ($docBlock->getTagsByName('response') as $tag) {
-            $body = trim((string) $tag);
+        foreach ($doc->responses() as $line) {
+            $body = trim($line->body);
 
             if (! preg_match(DocPatterns::response(), $body, $parsed)) {
                 $this->issues[] = LintIssue::error(
@@ -700,10 +692,10 @@ final class OpenApiLinter
     /**
      * @param  string[]  $securitySchemes
      */
-    private function lintSecurityTags(string $where, DocBlock $docBlock, array $securitySchemes): void
+    private function lintSecurityTags(string $where, OperationDoc $doc, array $securitySchemes): void
     {
-        foreach ($docBlock->getTagsByName('security') as $tag) {
-            $name = trim((string) $tag);
+        foreach ($doc->lines('security') as $line) {
+            $name = trim($line->body);
 
             if ($name === '' || in_array($name, $securitySchemes, true)) {
                 continue;
@@ -720,21 +712,21 @@ final class OpenApiLinter
 
     /**
      * @param  string[]  $inputVariables
-     * @param  array<int, string>  $middlewareList
      */
-    private function lintDefaultExampleTags(
-        string $where,
-        DocBlock $docBlock,
-        array $inputVariables,
-        array $middlewareList
-    ): void {
+    private function lintDefaultExampleTags(string $where, OperationDoc $doc, array $inputVariables): void
+    {
         // A middleware may contribute inputs of its own, and @default for one
         // of those is legitimate. Collect them before accusing anyone.
-        $known = array_merge($inputVariables, $this->middlewareInputVariables($middlewareList));
+        $known = $inputVariables;
+        foreach ($doc->inputs() as $line) {
+            if (! $line->isOwn() && $line->variable() !== null) {
+                $known[] = $line->variable();
+            }
+        }
 
         foreach (['default', 'example'] as $tagName) {
-            foreach ($docBlock->getTagsByName($tagName) as $tag) {
-                $body = trim((string) $tag);
+            foreach ($doc->lines($tagName) as $line) {
+                $body = trim($line->body);
 
                 if (! preg_match(DocPatterns::defaultExample(), $body, $parsed)) {
                     $this->issues[] = LintIssue::error(
@@ -759,38 +751,13 @@ final class OpenApiLinter
     }
 
     /**
-     * @param  array<int, string>  $middlewareList
-     * @return string[]
+     * The lines the method declares itself, without its middleware's.
+     *
+     * @return DocLine[]
      */
-    private function middlewareInputVariables(array $middlewareList): array
+    private static function ownLines(OperationDoc $doc, string $tag): array
     {
-        $variables = [];
-
-        foreach ($middlewareList as $middleware) {
-            if (! is_string($middleware) || ! class_exists($middleware)) {
-                continue;
-            }
-
-            $reflection = new \ReflectionClass($middleware);
-
-            foreach (['run', 'handle'] as $candidate) {
-                if (! $reflection->hasMethod($candidate)) {
-                    continue;
-                }
-
-                $docBlock = $this->docBlock($reflection->getMethod($candidate)->getDocComment());
-
-                foreach ($docBlock->getTagsByName('input') as $tag) {
-                    if (preg_match(DocPatterns::inputOutput(), trim((string) $tag), $parsed)) {
-                        $variables[] = $parsed['variable'];
-                    }
-                }
-
-                break;
-            }
-        }
-
-        return $variables;
+        return array_values(array_filter($doc->lines($tag), static fn (DocLine $line): bool => $line->isOwn()));
     }
 
     /**
@@ -950,15 +917,4 @@ final class OpenApiLinter
         )));
     }
 
-    /**
-     * @param  string|false|null  $comment
-     */
-    private function docBlock($comment): DocBlock
-    {
-        if ($this->docBlockFactory === null) {
-            $this->docBlockFactory = DocBlockFactory::createInstance();
-        }
-
-        return $this->docBlockFactory->create($comment ?: ' ');
-    }
 }

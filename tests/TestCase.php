@@ -46,6 +46,7 @@ abstract class TestCase extends BaseTestCase
         $ref->setValue(null, []);
 
         \Dskripchenko\LaravelApi\Operations\OperationRegistry::flush();
+        \Dskripchenko\LaravelApi\Operations\Doc\OperationDocParser::flush();
 
         // Reset BaseApiRequest::$_instance
         $ref = new \ReflectionProperty(BaseApiRequest::class, '_instance');
