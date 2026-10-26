@@ -97,6 +97,25 @@ Gruppe zu unterscheiden, geht nicht ohne die ganze Anwendung hochzufahren.
 Von Middleware beigesteuerte Eingaben werden berücksichtigt: ein `@default` für
 eine dort deklarierte Variable ist legitim und wird nicht gemeldet.
 
+### Was `[method]` zurückgibt
+
+`@input [method]` und `@output [method]` sind erst nach dem Aufruf bekannt, also
+ruft der Linter sie auf — wie `/api/doc` und `api:cache` — und meldet, was die
+Spezifikation stillschweigend weglassen würde oder woran sie scheitert. Eine
+Action mit mehreren HTTP-Methoden wird pro Methode beschrieben; ein gemeinsamer
+Befund wird einmal gemeldet.
+
+| Regel | Stufe | Bedeutung |
+|---|---|---|
+| `operation.describe-failed` | Fehler | Die Beschreibung der Action wirft eine Ausnahme — meist eine `[method]`, die fehlschlägt oder deren Parameter der Container nicht auflösen kann. `/api/doc` und `api:cache` scheitern genauso |
+| `callable.not-array` | Fehler | Die `[method]` hat kein Array zurückgegeben; das Ergebnis wird ignoriert |
+| `callable.non-string` | Fehler | Ein Element der zurückgegebenen Liste ist kein String und wird ignoriert |
+| `callable.malformed-line` | Fehler | Eine zurückgegebene Zeile lässt sich für ihren Tag nicht parsen (auch `@output @Model` ohne `$field`) und wird verworfen |
+| `callable.unknown-template` | Fehler | Ein zurückgegebenes `@Model` oder `{Template}` nennt ein nicht definiertes Template, oder `$useResponseTemplates` ist aus |
+
+Eine `[method]`, die der Controller nicht hat, wird als `tag.callable-missing`
+gemeldet und nicht aufgerufen.
+
 ### Fehlende Auszeichnung
 
 | Regel | Schwere | Bedeutung |

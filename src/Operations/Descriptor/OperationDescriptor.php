@@ -24,6 +24,7 @@ final class OperationDescriptor
      * @param  array[]  $headers  `@header` fields: name, description, required, type.
      * @param  OutputDeclaration|null  $output  The success payload; null when `@response` lists the answers instead.
      * @param  ResponseDeclaration[]  $responses  `@response` lines, in order.
+     * @param  DescriptorNote[]  $notes  What had to be left out of it — what the `[method]` lines returned and the spec cannot use.
      */
     public function __construct(
         public readonly Operation $operation,
@@ -37,6 +38,7 @@ final class OperationDescriptor
         public readonly array $headers,
         public readonly ?OutputDeclaration $output,
         public readonly array $responses,
+        public readonly array $notes = [],
     ) {
     }
 

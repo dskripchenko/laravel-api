@@ -89,6 +89,20 @@ php artisan api:lint
 由中间件提供的输入会被计入：为其中声明的变量写 `@default` 是合法的，不会被
 报告。
 
+### `[method]` 的返回值
+
+`@input [method]` 和 `@output [method]` 只有在调用后才能知道，因此检查器会像 `/api/doc` 和 `api:cache` 一样调用它们，并报告规范会悄悄丢弃的内容或导致规范无法构建的问题。服务多个 HTTP 方法的操作会按方法分别描述；它们共有的问题只报告一次。
+
+| 规则 | 级别 | 含义 |
+|---|---|---|
+| `operation.describe-failed` | 错误 | 描述该操作时抛出异常——通常是 `[method]` 失败，或容器无法解析其参数。`/api/doc` 和 `api:cache` 会以同样方式失败 |
+| `callable.not-array` | 错误 | `[method]` 返回的不是数组，结果被忽略 |
+| `callable.non-string` | 错误 | 返回列表中的某个元素不是字符串，被忽略 |
+| `callable.malformed-line` | 错误 | 返回的某行无法按其标签解析（包括没有 `$field` 的 `@output @Model`），被丢弃 |
+| `callable.unknown-template` | 错误 | 返回的 `@Model` 或 `{Template}` 引用了未定义的模板，或 `$useResponseTemplates` 已关闭 |
+
+控制器中不存在的 `[method]` 会报告为 `tag.callable-missing`，且不会被调用。
+
 ### 缺失的标记
 
 | 规则 | 级别 | 含义 |

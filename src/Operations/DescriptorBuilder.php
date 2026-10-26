@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dskripchenko\LaravelApi\Operations;
 
+use Dskripchenko\LaravelApi\Operations\Descriptor\DescriptorNote;
 use Dskripchenko\LaravelApi\Operations\Descriptor\InputDeclaration;
 use Dskripchenko\LaravelApi\Operations\Descriptor\OperationDescriptor;
 use Dskripchenko\LaravelApi\Operations\Descriptor\OutputDeclaration;
@@ -28,6 +29,12 @@ use Illuminate\Support\Arr;
  */
 final class DescriptorBuilder
 {
+    /** @var DescriptorNote[] What the descriptor being built had to leave out. */
+    private array $notes = [];
+
+    /** @var array<int, string> The lines a `[method]` returned (by object id) → that method. */
+    private array $returnedBy = [];
+
     public function __construct(private readonly SchemaRegistry $schemas)
     {
     }
@@ -73,6 +80,9 @@ final class DescriptorBuilder
                 $operationId,
             );
 
+            $this->notes = [];
+            $this->returnedBy = [];
+
             $input = $this->input($doc, $operation->controllerClass, $defaultsAndExamples, $context);
             $headers = $this->headers($doc);
             $responses = $this->responses($doc);
@@ -92,6 +102,7 @@ final class DescriptorBuilder
                 $headers,
                 $output,
                 $responses,
+                $this->notes,
             );
         }
 
@@ -108,14 +119,14 @@ final class DescriptorBuilder
             $candidates = [$line];
 
             if ($line->kind() === DocLine::CALLABLE) {
-                $result = self::callSchemaMethod($class, $line->parts()['callable'], $context);
+                $result = $this->callSchemaMethod($class, $line->parts()['callable'], $context);
 
                 if (FieldSchemas::isObjectSchema($result)) {
                     $schemas[] = $result;
                     continue;
                 }
 
-                $candidates = self::linesOf($result, 'input');
+                $candidates = $this->linesOf($result, 'input', $line->parts()['callable']);
             }
 
             foreach ($candidates as $candidate) {
@@ -125,12 +136,16 @@ final class DescriptorBuilder
                     $model = $candidate->parts()['model'];
                     if ($this->schemas->enabled() && $this->schemas->has($model)) {
                         $refs[] = $model;
+                    } else {
+                        $this->noteUnresolved($candidate, $model);
                     }
                     continue;
                 }
 
                 if ($kind === DocLine::FIELD) {
                     $lines[] = $candidate->parts();
+                } else {
+                    $this->noteMalformed($candidate);
                 }
             }
         }
@@ -190,12 +205,12 @@ final class DescriptorBuilder
 
         foreach ($doc->outputs() as $line) {
             if ($line->kind() === DocLine::CALLABLE) {
-                $result = self::callSchemaMethod($class, $line->parts()['callable'], $context);
+                $result = $this->callSchemaMethod($class, $line->parts()['callable'], $context);
 
                 if (FieldSchemas::isObjectSchema($result)) {
                     $explicitSchemas[] = $result;
                 } else {
-                    array_push($lines, ...self::linesOf($result, 'output'));
+                    array_push($lines, ...$this->linesOf($result, 'output', $line->parts()['callable']));
                 }
 
                 continue;
@@ -268,12 +283,24 @@ final class DescriptorBuilder
                     continue;
                 }
 
+                // Resolving, and naming no field: `@output @Model` without
+                // `$field` has nowhere to go.
+                if ($templates && $this->schemas->has($modelName)) {
+                    $this->noteMalformed($line);
+                } else {
+                    $this->noteUnresolved($line, $modelName);
+                }
+
                 // A reference that does not resolve still names a field: it
                 // is documented as one of an unknown type, which is a string.
                 if (!preg_match(DocPatterns::inputOutput(), trim($line->body), $parts)) {
                     continue;
                 }
+            } elseif ($kind === DocLine::TEMPLATE) {
+                $this->noteUnresolved($line, (string) ($parts['template'] ?? ''));
+                continue;
             } elseif ($kind !== DocLine::FIELD) {
+                $this->noteMalformed($line);
                 continue;
             }
 
@@ -366,11 +393,20 @@ final class DescriptorBuilder
      *
      * @return array A list of `type ?$name Description` lines, or an object schema.
      */
-    private static function callSchemaMethod(string $class, string $method, OperationContext $context): array
+    private function callSchemaMethod(string $class, string $method, OperationContext $context): array
     {
         $result = app()->call("{$class}@{$method}", $context->callParameters());
 
-        return is_array($result) ? $result : [];
+        if (!is_array($result)) {
+            $this->notes[] = new DescriptorNote(
+                'callable.not-array',
+                "[{$method}] returned " . get_debug_type($result) . ', and it is ignored: it has to return docblock lines or an object schema.'
+            );
+
+            return [];
+        }
+
+        return $result;
     }
 
     /**
@@ -378,15 +414,55 @@ final class DescriptorBuilder
      *
      * @return DocLine[]
      */
-    private static function linesOf(array $result, string $tag): array
+    private function linesOf(array $result, string $tag, string $method): array
     {
         $lines = [];
-        foreach ($result as $value) {
-            if (is_string($value)) {
-                $lines[] = new DocLine($tag, $value);
+        foreach ($result as $key => $value) {
+            if (!is_string($value)) {
+                $this->notes[] = new DescriptorNote(
+                    'callable.non-string',
+                    "[{$method}] returned " . get_debug_type($value) . " at [{$key}], and it is ignored: the lines have to be strings."
+                );
+                continue;
             }
+
+            $line = new DocLine($tag, $value);
+            $this->returnedBy[spl_object_id($line)] = $method;
+            $lines[] = $line;
         }
 
         return $lines;
+    }
+
+    /** A line a `[method]` returned that is none of the forms its tag takes. */
+    private function noteMalformed(DocLine $line): void
+    {
+        $method = $this->returnedBy[spl_object_id($line)] ?? null;
+        if ($method === null) {
+            return;
+        }
+
+        $this->notes[] = new DescriptorNote(
+            'callable.malformed-line',
+            "[{$method}] returned `{$line->body}` for @{$line->tag}, which does not parse, and it is dropped.",
+        );
+    }
+
+    /** A template a line a `[method]` returned refers to, and which does not resolve. */
+    private function noteUnresolved(DocLine $line, string $template): void
+    {
+        $method = $this->returnedBy[spl_object_id($line)] ?? null;
+        if ($method === null) {
+            return;
+        }
+
+        $why = $this->schemas->enabled()
+            ? 'which is not defined'
+            : 'and $useResponseTemplates is off';
+
+        $this->notes[] = new DescriptorNote(
+            'callable.unknown-template',
+            "[{$method}] returned `{$line->body}` for @{$line->tag}: it refers to the template `{$template}`, {$why}.",
+        );
     }
 }
