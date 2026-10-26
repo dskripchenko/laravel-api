@@ -5,13 +5,41 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [6.1.0] — 2026-10-26
+
+The API is now read through one model of its operations: `getMethods()` in one
+place, the docblocks in another, and one descriptor per operation that the
+router, the OpenAPI document and the linter all share. The generated specs,
+routes, types and exports of the test fixtures and the bundled example are
+byte-for-byte what 6.0.2 produced (pinned by golden-master snapshots). On top of
+it: `api:cache` for production, a linter that sees what `[method]` returns, and
+neutral names for the template and security hooks. No public API was removed.
+
+### Upgrading from 6.0
+
+Nothing has to change. Worth knowing:
+
+1. **`api:lint` may report new errors.** It now calls `@input [method]` /
+   `@output [method]` the way `/api/doc` does, and reports what they return that
+   the spec silently dropped (`callable.*`), and an action whose description
+   throws (`operation.describe-failed`). A CI step running `api:lint` can fail
+   on code that passed before — on problems that were already there.
+2. **Two edge readings of the markup changed** (see Fixed): `{Template}` on
+   `@output` counts only as the whole line, and input lines the linter calls
+   malformed are no longer documented as string fields.
+3. **`api:cache` is opt-in.** `optimize` does not run it; `optimize:clear`
+   removes it. Do not use it for an API whose `getMethods()` depends on the
+   request or on data.
+4. Test suites that reset `BaseApi::$preparedMethods` by reflection keep
+   working; `BaseApi::flushPreparedMethods()` is the way now, along with
+   `OperationRegistry::flush()`, `OperationDocParser::flush()`,
+   `SchemaRegistry::flush()` and `ApiCache::flush()`.
 
 ### Added
 
 - **`OperationRegistry`** (`Dskripchenko\LaravelApi\Operations`). The actions of
   an API class, read once from its prepared methods into `Operation` objects:
-  keys, controller class and method, HTTP methods, route name, `deprecated`,
+  keys, controller class and method, HTTP methods, custom route name, `deprecated`,
   `security`, the options as written, and the middleware cascade.
   `BaseApi::operations(string $version = '')` returns it. The dispatcher, the
   route registration, the OpenAPI generator and the linter all read actions
@@ -52,7 +80,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lint rule **`action.invalid-method-name`**: an `action` key that is not a
   string. The OpenAPI generator used to fail on it; it now falls back to the
   action key, the same way the dispatcher does.
-
 - **`php artisan api:cache` / `api:clear`.** `api:cache` freezes the API map —
   the prepared methods of every version and the route definitions — into
   `bootstrap/cache/laravel-api.php`, and builds the OpenAPI spec of every
