@@ -33,6 +33,7 @@ Build versioned APIs with automatic OpenAPI documentation generated from PHP doc
 - [OpenAPI 3.0 Documentation](#openapi-30-documentation)
 - [CRUD Scaffolding](#crud-scaffolding)
 - [Testing](#testing)
+- [MCP server](#mcp-server)
 - [Configuration](#configuration)
 - [Error Handling](#error-handling)
 - [IDE support](#ide-support)
@@ -768,6 +769,41 @@ It reads the route map and the docblocks with the same parser the OpenAPI
 generator uses, and also reports an action that validates its input without
 declaring any (`input.undeclared`). Full list of rules:
 [docs/linting.md](docs/en/linting.md).
+
+## MCP server
+
+Every API version can be an [MCP](https://modelcontextprotocol.io) server, so
+agents call the API as tools:
+
+```php
+// config/laravel-api.php
+'mcp' => [
+    'enabled' => true,                     // LARAVEL_API_MCP
+    'versions' => ['v2'],                  // empty: every version not in hidden_versions
+    'middleware' => ['auth:sanctum'],      // on the MCP endpoint itself
+    'allowed_origins' => [],               // browser origins besides the app's own
+],
+```
+
+```bash
+claude mcp add --transport http shop https://shop.test/api/mcp/v2 \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+Each action is a tool named `controller.action` (`user.show`), described by
+its docblock: the summary is the title, the `@input` lines are the input
+schema (templates travel under `$defs`), GET actions are marked read-only. A
+tool call goes through the same router, middleware cascade and validation as an
+HTTP request, as the caller of the MCP request — its headers, the
+`Authorization` above included, are passed on — and returns the action's
+`payload` (`isError` when `success` is false). Leave an action or a controller
+out with `'mcp' => false` in `getMethods()`.
+
+The endpoint is `POST /{prefix}/mcp/{version}` (Streamable HTTP, JSON answers,
+no sessions); a browser `Origin` other than the application's own is refused.
+`api:cache` caches the tool lists too. Not offered: resources, prompts,
+streaming, file uploads, and `outputSchema` — a docblock's `@output` is not
+trusted to be exact enough for a client that validates against it.
 
 ## Production
 

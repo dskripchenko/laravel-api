@@ -668,6 +668,41 @@ php artisan api:lint --unrouted # плюс публичные методы, на
 также сообщает о действии, которое валидирует вход, но ничего не объявляет
 (`input.undeclared`). Полный список правил: [linting.md](linting.md).
 
+## MCP-сервер
+
+Каждая версия API может быть [MCP](https://modelcontextprotocol.io)-сервером —
+агенты вызывают API как инструменты:
+
+```php
+// config/laravel-api.php
+'mcp' => [
+    'enabled' => true,                     // LARAVEL_API_MCP
+    'versions' => ['v2'],                  // empty: every version not in hidden_versions
+    'middleware' => ['auth:sanctum'],      // on the MCP endpoint itself
+    'allowed_origins' => [],               // browser origins besides the app's own
+],
+```
+
+```bash
+claude mcp add --transport http shop https://shop.test/api/mcp/v2 \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+Каждый action — инструмент с именем `controller.action` (`user.show`),
+описанный своим докблоком: заголовок — summary, входная схема — строки
+`@input` (шаблоны едут в `$defs`), GET-действия помечены как только для чтения.
+Вызов инструмента идёт через тот же роутер, каскад middleware и валидацию, что и
+HTTP-запрос, от имени того, кто вызвал MCP-эндпоинт — его заголовки, включая
+`Authorization`, передаются, — и возвращает `payload` действия (`isError`, если
+`success` ложен). Исключить action или контроллер — `'mcp' => false` в
+`getMethods()`.
+
+Эндпоинт — `POST /{prefix}/mcp/{version}` (Streamable HTTP, ответы JSON, без
+сессий); браузерный `Origin`, отличный от собственного, отклоняется. `api:cache`
+кеширует и списки инструментов. Не поддерживаются: resources, prompts,
+стриминг, загрузка файлов и `outputSchema` — `@output` докблока не считается
+настолько точным, чтобы клиент мог по нему валидировать.
+
 ## Продакшен
 
 ```bash

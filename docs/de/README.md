@@ -680,6 +680,42 @@ OpenAPI-Generator und meldet außerdem eine Aktion, die ihre Eingaben validiert,
 ohne welche zu deklarieren (`input.undeclared`). Vollständige Regelliste:
 [linting.md](linting.md).
 
+## MCP-Server
+
+Jede API-Version kann ein [MCP](https://modelcontextprotocol.io)-Server sein,
+sodass Agenten die API als Tools aufrufen:
+
+```php
+// config/laravel-api.php
+'mcp' => [
+    'enabled' => true,                     // LARAVEL_API_MCP
+    'versions' => ['v2'],                  // empty: every version not in hidden_versions
+    'middleware' => ['auth:sanctum'],      // on the MCP endpoint itself
+    'allowed_origins' => [],               // browser origins besides the app's own
+],
+```
+
+```bash
+claude mcp add --transport http shop https://shop.test/api/mcp/v2 \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+Jede Action ist ein Tool namens `controller.action` (`user.show`), beschrieben
+durch ihren Docblock: die Summary ist der Titel, die `@input`-Zeilen sind das
+Eingabeschema (Templates reisen unter `$defs`), GET-Actions sind als
+schreibgeschützt markiert. Ein Tool-Aufruf läuft durch denselben Router,
+dieselbe Middleware-Kaskade und Validierung wie eine HTTP-Anfrage, als
+derjenige, der den MCP-Endpunkt aufruft — seine Header, `Authorization`
+eingeschlossen, werden weitergereicht — und liefert den `payload` der Action
+(`isError`, wenn `success` false ist). Eine Action oder ein Controller wird mit
+`'mcp' => false` in `getMethods()` ausgenommen.
+
+Der Endpunkt ist `POST /{prefix}/mcp/{version}` (Streamable HTTP,
+JSON-Antworten, keine Sessions); ein Browser-`Origin` außer dem eigenen wird
+abgelehnt. `api:cache` cacht auch die Tool-Listen. Nicht angeboten: Resources,
+Prompts, Streaming, Datei-Uploads und `outputSchema` — das `@output` eines
+Docblocks gilt nicht als genau genug für einen Client, der dagegen validiert.
+
 ## API-Export
 
 API-Spezifikation in verschiedenen Formaten exportieren:

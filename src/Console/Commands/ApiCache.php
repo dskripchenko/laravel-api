@@ -81,6 +81,13 @@ class ApiCache extends Command
             $specs === [] ? '' : sprintf('; %d OpenAPI spec(s) built', count($specs))
         ));
 
+        if ($data['mcp'] !== []) {
+            $this->info(sprintf(
+                'MCP tools cached for %s.',
+                implode(', ', array_map(static fn ($v, $e) => "{$v} (" . count($e['tools']) . ')', array_keys($data['mcp']), $data['mcp']))
+            ));
+        }
+
         return self::SUCCESS;
     }
 }
