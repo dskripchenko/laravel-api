@@ -233,6 +233,7 @@ V2自动继承V1中的`list`、`show`、`create`、`update`，同时覆盖控制
     'list',                              // 简单：方法名 = 操作键
     'show' => 'getById',                 // 别名：show → 调用getById()
     'disabled' => false,                 // 禁用操作（404）
+    'restored' => true,                  // 重新启用早期版本禁用的操作；方法名 = 操作键
     'create' => [
         'action' => 'store',             // 显式方法名
         'method' => ['post'],            // 允许的HTTP方法（默认：['post']）

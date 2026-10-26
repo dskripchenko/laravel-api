@@ -332,19 +332,21 @@ RAW_STR;
     public static function getPreparedMethods(): array
     {
         if (!isset(static::$preparedMethods[static::class])) {
-            static::$preparedMethods[static::class] = [];
-
             $parents = array_values(class_parents(static::class));
             $nonStaticParents = array_diff($parents, [self::class]);
             $nonStaticParents = array_reverse($nonStaticParents);
 
+            // Accumulated locally, not in the cache: merging the parents into
+            // the cache itself handed every version prepared later the
+            // controllers of every hierarchy prepared before it.
+            $prepared = [];
             foreach ($nonStaticParents as $className) {
                 if (is_subclass_of($className, self::class)) {
-                    static::$preparedMethods = array_merge_deep(static::$preparedMethods, $className::getNormalizedMethods());
+                    $prepared = array_merge_deep($prepared, $className::getNormalizedMethods());
                 }
             }
 
-            static::$preparedMethods[static::class] = array_merge_deep(static::$preparedMethods, static::getNormalizedMethods());
+            static::$preparedMethods[static::class] = array_merge_deep($prepared, static::getNormalizedMethods());
         }
         return static::$preparedMethods[static::class];
     }
@@ -375,6 +377,12 @@ RAW_STR;
                     }
                     Arr::pull($methods, "controllers.{$controllerKey}.actions.{$key}");
                     continue;
+                }
+
+                // `true` re-enables an action an earlier version disabled; the
+                // method is named as the key, as for a plain list entry.
+                if ($value === true) {
+                    $value = $key;
                 }
 
                 Arr::set($methods, "controllers.{$controllerKey}.actions.{$key}.action", $value);

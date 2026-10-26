@@ -238,6 +238,7 @@ V2 automatically inherits `list`, `show`, `create`, `update` from V1, while over
     'list',                              // simple: method name = action key
     'show' => 'getById',                 // alias: show → calls getById()
     'disabled' => false,                 // disabled action (404)
+    'restored' => true,                  // re-enable an action an earlier version disabled; method = action key
     'create' => [
         'action' => 'store',             // explicit method name
         'method' => ['post'],            // allowed HTTP methods (default: ['post'])
