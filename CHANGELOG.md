@@ -63,6 +63,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   measurable. `optimize:clear` runs `api:clear`; `optimize` does not run
   `api:cache`, which freezes `getMethods()` and has to be asked for.
 - `BaseApi::flushPreparedMethods()`.
+- **The linter checks what `[method]` returns.** It describes every action the
+  way the spec does — calling `@input [method]` / `@output [method]` — and
+  reports what used to be dropped without a word: `callable.not-array`,
+  `callable.non-string`, `callable.malformed-line`, `callable.unknown-template`;
+  and `operation.describe-failed` for an action whose description throws, which
+  failed `/api/doc` and `api:cache` while the linter said nothing. The findings
+  come from `OperationDescriptor::$notes` (`DescriptorNote`), which the builder
+  fills when it leaves something out.
 
 ### Changed
 

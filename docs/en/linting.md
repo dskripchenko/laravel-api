@@ -94,6 +94,25 @@ heard of is not possible without booting the whole application.
 Inputs contributed by middleware are taken into account: a `@default` for a
 variable one of them declares is legitimate and is not reported.
 
+### What `[method]` returns
+
+`@input [method]` and `@output [method]` are only known once they are called, so
+the linter calls them — as `/api/doc` and `api:cache` do — and reports what the
+spec would leave out without a word, or what makes it fail. An action serving
+several HTTP methods is described once per method; a finding they share is
+reported once.
+
+| Rule | Severity | What it means |
+|---|---|---|
+| `operation.describe-failed` | error | Describing the action throws — usually a `[method]` that fails, or whose parameters the container cannot resolve. `/api/doc` and `api:cache` fail the same way |
+| `callable.not-array` | error | The `[method]` returned something other than an array, and it is ignored |
+| `callable.non-string` | error | An element of the returned list is not a string, and it is ignored |
+| `callable.malformed-line` | error | A returned line does not parse for its tag (an `@output @Model` without `$field` included), and it is dropped |
+| `callable.unknown-template` | error | A returned `@Model` or `{Template}` names a template that is not defined, or `$useResponseTemplates` is off |
+
+A `[method]` the controller does not have is reported as `tag.callable-missing`
+and is not called.
+
 ### Missing markup
 
 | Rule | Severity | What it means |

@@ -6,6 +6,7 @@ namespace Dskripchenko\LaravelApi\Services\Linter;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
 use Dskripchenko\LaravelApi\Operations\ControllerDefinition;
+use Dskripchenko\LaravelApi\Operations\DescriptorBuilder;
 use Dskripchenko\LaravelApi\Operations\Doc\DocLine;
 use Dskripchenko\LaravelApi\Operations\Doc\OperationDoc;
 use Dskripchenko\LaravelApi\Operations\Doc\OperationDocParser;
@@ -242,6 +243,66 @@ final class OpenApiLinter
 
         $this->lintTags($where, $doc, $reflection, $templates, $securitySchemes);
         $this->lintUndeclaredInput($where, $doc, $method);
+        $this->lintDescriptors($where, $version, $apiClass, $controllerKey, $actionKey, $doc, $reflection);
+    }
+
+    /**
+     * What a `[method]` returns is known only once it is called — which is
+     * what the spec does, so the linter does it too, and reports what the spec
+     * would quietly leave out, or what makes it fail.
+     *
+     * @param  class-string  $apiClass
+     * @param  \ReflectionClass<object>  $reflection
+     */
+    private function lintDescriptors(
+        string $where,
+        string $version,
+        string $apiClass,
+        string $controllerKey,
+        string $actionKey,
+        OperationDoc $doc,
+        \ReflectionClass $reflection
+    ): void {
+        foreach (array_merge(self::ownLines($doc, 'input'), self::ownLines($doc, 'output')) as $line) {
+            // Reported already, as tag.callable-missing; calling it would only fail again.
+            if ($line->kind() === DocLine::CALLABLE && ! $reflection->hasMethod($line->parts()['callable'])) {
+                return;
+            }
+        }
+
+        $operation = OperationRegistry::for($apiClass, $version)->find($controllerKey, $actionKey);
+        if ($operation === null) {
+            return;
+        }
+
+        try {
+            $descriptors = DescriptorBuilder::for($apiClass)->build($operation);
+        } catch (\Throwable $e) {
+            $this->issues[] = LintIssue::error(
+                'operation.describe-failed',
+                $where,
+                'Describing the action fails — /api/doc and api:cache fail the same way: '
+                    . get_class($e) . ': ' . $e->getMessage(),
+                'Usually a [method] that throws, or one whose parameters the container cannot resolve.'
+            );
+
+            return;
+        }
+
+        // One descriptor per HTTP method: what the [method] got wrong for
+        // every one of them is said once.
+        $seen = [];
+        foreach ($descriptors as $descriptor) {
+            foreach ($descriptor->notes as $note) {
+                $key = "{$note->rule}\0{$note->message}";
+                if (isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+
+                $this->issues[] = LintIssue::error($note->rule, $where, $note->message);
+            }
+        }
     }
 
     /**
