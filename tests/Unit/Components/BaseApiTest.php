@@ -110,7 +110,7 @@ it('re-enables with true an action an earlier version disabled', function () {
     $methods = callPrivateStaticMethod($api, 'getPreparedMethods');
     expect($methods['controllers']['a']['actions']['a'])->toBe(['action' => 'a']);
 
-    expect(callPrivateStaticMethod($api, 'getPreparedAction', ['a', 'a']))
+    expect($api::operations()->find('a', 'a')->callable())
         ->toBe(\Dskripchenko\LaravelApiExample\Versions\v1_1\Controllers\AController::class . '@a');
 
     expect(array_keys($api::getOpenApiConfig('v1.2')['paths']))->toContain('/v1.2/a/a');

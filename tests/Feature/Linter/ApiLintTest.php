@@ -291,3 +291,25 @@ it('accepts the [method] form on @output', function () {
 
     expect($issues)->toBe([]);
 });
+
+it('reports an action key that does not name a method', function () {
+    $api = new class extends \Dskripchenko\LaravelApi\Components\BaseApi {
+        public static function getMethods(): array
+        {
+            return [
+                'controllers' => [
+                    'open' => [
+                        'controller' => \Tests\Fixtures\Versions\v1\Controllers\OpenController::class,
+                        'actions' => ['ping' => ['action' => 42]],
+                    ],
+                ],
+            ];
+        }
+    };
+
+    $issues = issuesOfRule((new OpenApiLinter())->lintVersionList(['v1' => get_class($api)]), 'action.invalid-method-name');
+
+    expect($issues)->toHaveCount(1);
+    expect($issues[0]->where)->toBe('v1 · open.ping');
+    expect($issues[0]->message)->toContain('int');
+});

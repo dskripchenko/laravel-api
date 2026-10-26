@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Dskripchenko\LaravelApi\Services\Linter;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Operations\ControllerDefinition;
+use Dskripchenko\LaravelApi\Operations\OperationRegistry;
 use Dskripchenko\LaravelApi\Services\OpenApi\DocPatterns;
 use Illuminate\Support\Arr;
 use phpDocumentor\Reflection\DocBlock;
@@ -100,18 +102,16 @@ final class OpenApiLinter
             return;
         }
 
-        $methods = $apiClass::getPreparedMethods();
         $templates = $this->templateNames($apiClass);
         $securitySchemes = array_keys((array) $apiClass::getOpenApiSecurityDefinitions());
 
         $this->lintTemplates($version, $apiClass, $templates);
 
-        foreach (Arr::get($methods, 'controllers', []) as $controllerKey => $options) {
+        foreach (OperationRegistry::for($apiClass, $version)->controllers() as $definition) {
             $this->lintController(
                 $version,
                 $apiClass,
-                (string) $controllerKey,
-                (array) $options,
+                $definition,
                 $templates,
                 $securitySchemes
             );
@@ -120,20 +120,18 @@ final class OpenApiLinter
 
     /**
      * @param  class-string  $apiClass
-     * @param  array<string, mixed>  $options
      * @param  string[]  $templates
      * @param  string[]  $securitySchemes
      */
     private function lintController(
         string $version,
         string $apiClass,
-        string $controllerKey,
-        array $options,
+        ControllerDefinition $definition,
         array $templates,
         array $securitySchemes
     ): void {
-        $where = "{$version} · {$controllerKey}";
-        $controllerClass = Arr::get($options, 'controller');
+        $where = "{$version} · {$definition->key}";
+        $controllerClass = $definition->class;
 
         if (! is_string($controllerClass) || $controllerClass === '') {
             $this->issues[] = LintIssue::error(
@@ -159,30 +157,18 @@ final class OpenApiLinter
         $reflection = new \ReflectionClass($controllerClass);
         $routedMethods = [];
 
-        $this->lintMiddlewareList($where, 'controller', (array) Arr::get($options, 'middleware', []));
+        $this->lintMiddlewareList($where, 'controller', (array) Arr::get($definition->options, 'middleware', []));
 
-        foreach ((array) Arr::get($options, 'actions', []) as $key => $value) {
-            // `false` disables an action inherited from an earlier version —
-            // it is an instruction, not an endpoint.
-            if ($value === false) {
-                continue;
-            }
-
-            $actionKey = is_numeric($key) ? $value : $key;
-            if (! is_string($actionKey)) {
-                continue;
-            }
-
-            $methodName = $this->resolveMethodName($actionKey, $value);
-            $routedMethods[] = $methodName;
+        foreach ($definition->operations as $operation) {
+            $routedMethods[] = $operation->controllerMethod;
 
             $this->lintAction(
                 $version,
                 $apiClass,
-                $controllerKey,
-                $actionKey,
-                $methodName,
-                is_array($value) ? $value : [],
+                $operation->controllerKey,
+                $operation->actionKey,
+                $operation->controllerMethod,
+                $operation->options,
                 $reflection,
                 $templates,
                 $securitySchemes
@@ -192,26 +178,6 @@ final class OpenApiLinter
         if ($this->checkUnroutedMethods) {
             $this->lintUnroutedMethods($where, $reflection, $routedMethods);
         }
-    }
-
-    /**
-     * The generator's own rule for turning an action entry into a method name:
-     * a string value is an alias, an array may carry `action`, otherwise the
-     * key is the name.
-     *
-     * @param  mixed  $value
-     */
-    private function resolveMethodName(string $actionKey, $value): string
-    {
-        if (is_string($value)) {
-            return $value;
-        }
-
-        if (is_array($value) && isset($value['action']) && is_string($value['action'])) {
-            return $value['action'];
-        }
-
-        return $actionKey;
     }
 
     /**
@@ -233,6 +199,15 @@ final class OpenApiLinter
         array $securitySchemes
     ): void {
         $where = "{$version} · {$controllerKey}.{$actionKey}";
+
+        if (array_key_exists('action', $actionOptions) && ! is_string($actionOptions['action'])) {
+            $this->issues[] = LintIssue::error(
+                'action.invalid-method-name',
+                $where,
+                'The `action` key has to name a method, and it is ' . get_debug_type($actionOptions['action']) . '.',
+                "The action falls back to {$reflection->getName()}::{$actionKey}(). Name the method, or drop the key."
+            );
+        }
 
         if (! $reflection->hasMethod($methodName)) {
             $this->issues[] = LintIssue::error(

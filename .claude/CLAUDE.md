@@ -36,6 +36,10 @@ HTTP Request → ApiServiceProvider (route registration)
 3. **BaseModule** resolves API version class via `getApiVersionList()` (version string → BaseApi subclass)
 4. **BaseApi::make()** finds controller+action from `getMethods()`, resolves middleware cascade, calls action via `app()->call()`
 
+**OperationRegistry** (`src/Operations/`) is the one reader of `getPreparedMethods()`: it turns every enabled action into an `Operation` (keys, controller class/method, HTTP methods, flags, options, middleware). `BaseApi::make()`, `BaseModule::getRouteDefinitions()`, `OpenApiTrait::getOpenApiPaths()` and `OpenApiLinter` all go through it — don't walk `getMethods()` by hand elsewhere. `BaseApi::operations($version)` returns it; `OperationRegistry::flush()` clears its memo.
+
+Golden-master snapshots (`tests/Feature/GoldenMaster`, stored in `tests/.pest/snapshots`) pin the spec, TS types, exports, lint report and routes of every fixture API and the example. A snapshot changes only on purpose; regenerate with `vendor/bin/pest --update-snapshots`.
+
 ### Extension points
 
 To use the package:
@@ -266,6 +270,7 @@ src/
 ├── Facades/           ApiRequest, ApiModule, ApiErrorHandler
 ├── Interfaces/        CrudServiceInterface, ApiInterface
 ├── Middlewares/       ApiMiddleware, RequestIdMiddleware
+├── Operations/        OperationRegistry, Operation, ControllerDefinition
 ├── Providers/         ApiServiceProvider, BaseServiceProvider
 ├── Requests/          BaseApiRequest, CrudSearchRequest
 ├── Resources/         BaseJsonResource, BaseJsonResourceCollection

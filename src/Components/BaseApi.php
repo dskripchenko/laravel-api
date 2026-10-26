@@ -5,6 +5,7 @@ namespace Dskripchenko\LaravelApi\Components;
 use Dskripchenko\LaravelApi\Facades\ApiRequest;
 use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Interfaces\ApiInterface;
+use Dskripchenko\LaravelApi\Operations\OperationRegistry;
 use Dskripchenko\LaravelApi\Traits\OpenApiTrait;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -74,26 +75,35 @@ abstract class BaseApi implements ApiInterface
      */
     final public static function make(): Response
     {
-        $controllerKey = ApiRequest::getApiControllerKey();
-        $actionKey     = ApiRequest::getApiActionKey();
-        $methods       = static::getPreparedMethods();
-
-        $action = static::resolveAction($methods, $controllerKey, $actionKey);
-        if (!$action) {
+        $operation = static::operations()->find(
+            ApiRequest::getApiControllerKey(),
+            ApiRequest::getApiActionKey()
+        );
+        if (!$operation || !$operation->isCallable()) {
             throw new NotFoundHttpException('The requested method was not found!');
         }
 
-        $requestMethod    = ApiRequest::method();
-        $availableMethods = static::resolveAvailableMethods($methods, $controllerKey, $actionKey);
-        if (!in_array($requestMethod, $availableMethods, true)) {
-            $supportedMethods = implode(',', $availableMethods);
+        $requestMethod = ApiRequest::method();
+        if (!$operation->allowsHttpMethod($requestMethod)) {
+            $supportedMethods = implode(',', $operation->httpMethods);
             $errorMessage = <<<RAW_STR
 The '{$requestMethod}' method is not supported for this route. Supported method: '{$supportedMethods}'.
 RAW_STR;
             throw new NotFoundHttpException($errorMessage);
         }
 
-        return static::callAction($action);
+        return static::callAction($operation->callable());
+    }
+
+    /**
+     * The operations this class declares, read from its prepared methods.
+     *
+     * @param string $version The version the operations are asked for, when the caller knows it.
+     * @return OperationRegistry
+     */
+    public static function operations(string $version = ''): OperationRegistry
+    {
+        return OperationRegistry::for(static::class, $version);
     }
 
     /**
@@ -145,21 +155,6 @@ RAW_STR;
 
 
     /**
-     * @param $controllerKey
-     * @param $actionKey
-     *
-     * @return array|string[]
-     */
-    private static function getAvailableMethod($controllerKey = null, $actionKey = null): array
-    {
-        return static::resolveAvailableMethods(
-            static::getPreparedMethods(),
-            $controllerKey ?: ApiRequest::getApiControllerKey(),
-            $actionKey ?: ApiRequest::getApiActionKey()
-        );
-    }
-
-    /**
      * @param string $controller
      * @param string $action
      *
@@ -167,90 +162,12 @@ RAW_STR;
      */
     public static function getActionMethod(string $controller, string $action): string
     {
-        $methods = static::getAvailableMethod($controller, $action);
-
-        return Arr::first($methods, null, 'post');
-    }
-
-    /**
-     * @param array $methods
-     * @param string|null $controllerKey
-     * @param string|null $actionKey
-     * @return array
-     */
-    private static function resolveAvailableMethods(array $methods, ?string $controllerKey, ?string $actionKey): array
-    {
-        $availableMethods = Arr::get(
-            $methods,
-            "controllers.{$controllerKey}.actions.{$actionKey}.method",
-            ['post']
+        $operation = static::operations()->find(
+            $controller ?: ApiRequest::getApiControllerKey(),
+            $action ?: ApiRequest::getApiActionKey()
         );
 
-        if (!$availableMethods) {
-            return ['post'];
-        }
-
-        if (!is_array($availableMethods)) {
-            return [$availableMethods];
-        }
-
-        return $availableMethods;
-    }
-
-    /**
-     * @param array $methods
-     * @param $controllerKey
-     * @param $actionKey
-     * @return bool|string
-     */
-    private static function resolveAction(array $methods, $controllerKey, $actionKey)
-    {
-        $controller = Arr::get(
-            $methods,
-            "controllers.{$controllerKey}.controller",
-            false
-        );
-
-        if (!$controller) {
-            return false;
-        }
-
-        $actions =  Arr::get($methods, "controllers.{$controllerKey}.actions", []);
-
-        if (!isset($actions[$actionKey]) && !in_array($actionKey, $actions, true)) {
-            return false;
-        }
-
-        if (isset($actions[$actionKey]) && $actions[$actionKey] === false) {
-            return false;
-        }
-
-        if (isset($actions[$actionKey])) {
-            if (is_string($actions[$actionKey])) {
-                $actionKey = $actions[$actionKey];
-            } elseif (
-                is_array($actions[$actionKey])
-                && isset($actions[$actionKey]['action'])
-            ) {
-                $actionKey = $actions[$actionKey]['action'];
-            }
-        }
-
-        if (!method_exists($controller, $actionKey)) {
-            return false;
-        }
-
-        return "{$controller}@{$actionKey}";
-    }
-
-    /**
-     * @param $controllerKey
-     * @param $actionKey
-     * @return bool|string
-     */
-    private static function getPreparedAction($controllerKey, $actionKey)
-    {
-        return static::resolveAction(static::getPreparedMethods(), $controllerKey, $actionKey);
+        return $operation ? Arr::first($operation->httpMethods, null, 'post') : 'post';
     }
 
     /**
@@ -271,7 +188,8 @@ RAW_STR;
         $controllerKey,
         $actionKey
     ): array {
-        if (!static::getPreparedAction($controllerKey, $actionKey)) {
+        $operation = static::operations()->find($controllerKey, $actionKey);
+        if (!$operation || !$operation->isCallable()) {
             return [];
         }
 

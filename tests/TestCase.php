@@ -45,6 +45,8 @@ abstract class TestCase extends BaseTestCase
         $ref = new \ReflectionProperty(BaseApi::class, 'preparedMethods');
         $ref->setValue(null, []);
 
+        \Dskripchenko\LaravelApi\Operations\OperationRegistry::flush();
+
         // Reset BaseApiRequest::$_instance
         $ref = new \ReflectionProperty(BaseApiRequest::class, '_instance');
         $ref->setValue(null, null);
