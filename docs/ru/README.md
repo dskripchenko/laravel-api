@@ -179,6 +179,28 @@ docblocks     ──► OperationDocParser ─► OperationDoc       tag lines, 
 решает `OpenApiRenderer`. Модель живёт в `src/Operations/`;
 `php artisan api:cache` замораживает карту для продакшена (см. «Продакшен»).
 
+### Вызов action'а без HTTP
+
+```php
+use Dskripchenko\LaravelApi\Runtime\ApiInvocation;
+use Dskripchenko\LaravelApi\Runtime\Dispatcher;
+
+$result = app(Dispatcher::class)->dispatch(
+    new ApiInvocation('v1', 'user', 'create', ['name' => 'Ann'])
+);
+
+$result->success;     // true
+$result->payload;     // ['id' => 1, 'name' => 'Ann']
+$result->errorKey();  // null, or 'auth_error', 'validation_error', …
+```
+
+Вызов идёт через роутер так же, как запрос на URL action'а, — каскад
+middleware, валидация, `auth()`, `ApiRequest`, — а ответ читается из того же
+конверта `{success, payload}`, что получает HTTP-клиент. Он выполняется внутри
+текущего запроса от имени того же вызывающего (заголовки и cookies передаются),
+и после вызова этот запрос возвращается на место. Вход для GET уходит
+query-строкой, для остального — JSON-телом. На этом строятся не-HTTP транспорты.
+
 ### Формат ответа
 
 Каждый ответ обёрнут в стандартный конверт:
