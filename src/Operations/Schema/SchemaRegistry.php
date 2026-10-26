@@ -7,7 +7,7 @@ namespace Dskripchenko\LaravelApi\Operations\Schema;
 /**
  * The templates of an API class, and the envelope its responses travel in.
  *
- * getOpenApiTemplates() unfolded from the shorthand, with the two templates
+ * getSchemaTemplates() unfolded from the shorthand, with the two templates
  * the package always provides — `Error` and `Success` — merged in, and
  * `$responseEnvelope` read as a schema. Built once per class.
  */
@@ -62,7 +62,7 @@ final class SchemaRegistry
         }
 
         $templates = [];
-        foreach ((array) $this->apiClass::getOpenApiTemplates() as $name => $fields) {
+        foreach ((array) $this->apiClass::getSchemaTemplates() as $name => $fields) {
             $templates[(string) $name] = Shorthand::fields(is_array($fields) ? $fields : [], true);
         }
 

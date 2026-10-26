@@ -157,6 +157,29 @@ HTTP Request
                       └─ JsonResponse {success: true, payload: {...}}
 ```
 
+### Operationsmodell
+
+Routing, Dokumentation und Linter lesen die API über ein Modell:
+
+```
+getMethods()  ──► OperationRegistry ──► Operation          keys, controller@method, HTTP methods, middleware
+docblocks     ──► OperationDocParser ─► OperationDoc       tag lines, also from middleware
+                  DescriptorBuilder ──► OperationDescriptor input / output schemas, security, notes
+                        │
+        ┌───────────────┼──────────────────┐
+  OpenApiRenderer   OpenApiLinter     BaseApi::make() (dispatch, via the registry)
+        │
+  /api/doc, api:export, api:generate-types
+```
+
+`getMethods()` wird an einer Stelle gelesen (`OperationRegistry`), die Docblocks
+an einer anderen (`OperationDocParser`); `DescriptorBuilder` macht daraus einen
+`OperationDescriptor` pro HTTP-Methode — Ein- und Ausgabe als
+transportunabhängiges JSON Schema, dazu wie die Eingabe deklariert wurde. Wie
+das über HTTP geht, entscheidet `OpenApiRenderer`. Das Modell liegt in
+`src/Operations/`; `php artisan api:cache` friert die Tabelle für die Produktion
+ein.
+
 ### Antwortformat
 
 Jede Antwort ist in einer Standard-Umhüllung eingebunden:
@@ -182,10 +205,11 @@ src/
 ├── Facades/        ApiRequest, ApiModule, ApiErrorHandler
 ├── Interfaces/     CrudServiceInterface, ApiInterface
 ├── Middlewares/    ApiMiddleware, RequestIdMiddleware
+├── Operations/     OperationRegistry, DescriptorBuilder; Doc/, Descriptor/, Schema/
 ├── Providers/      ApiServiceProvider, BaseServiceProvider
 ├── Requests/       BaseApiRequest, CrudSearchRequest
 ├── Resources/      BaseJsonResource, BaseJsonResourceCollection
-├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator
+├── Services/       ApiResponseHelper, CrudService, OpenApiTypeScriptGenerator, ApiCache, OpenApi/ (OpenApiRenderer), Linter/, Export/
 └── Traits/         OpenApiTrait, Testing/MakesHttpApiRequests
 ```
 
@@ -363,6 +387,8 @@ class Api extends BaseApi {
     }
 }
 ```
+
+**Neutrale Namen.** `getSchemaTemplates()` und `getSecuritySchemes()` sind dieselben Hooks unter Namen, die nicht an OpenAPI hängen — Templates beschreiben Payloads, egal wodurch sie übertragen werden. Überschreiben Sie einen der beiden Namen; das Paket liest den neutralen, der ohne eigene Überschreibung den alten Hook beantwortet. Die Beispiele hier bleiben bei den alten Namen, bis das IDE-Plugin die neutralen ebenfalls liest.
 
 **Shorthand-Syntax:** `type` — optional, `type!` — Pflicht, `type(format)` — mit Format, `@Model` — Referenz, `@Model[]` — Array von Referenzen. Das Array-Format (`['type' => '...', 'required' => true]`) wird ebenfalls unterstützt.
 
@@ -910,7 +936,7 @@ das veröffentlicht JetBrains für Community nicht.
 
 | Klasse | Methoden |
 |-------|---------|
-| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()`, `getOpenApiSecurityDefinitions()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
+| `BaseApi` | `getMethods()`, `make()`, `getOpenApiTemplates()` / `getSchemaTemplates()`, `getOpenApiSecurityDefinitions()` / `getSecuritySchemes()`, `operations()`, `beforeCallAction()`, `afterCallAction()`, `getMiddleware()` |
 | `BaseModule` | `getApi($version)`, `makeApi()`, `getApiVersionList()`, `getApiPrefix()`, `getApiUriPattern()`, `getAvailableApiMethods()` |
 | `Meta` | `string()`, `integer()`, `number()`, `boolean()`, `hidden()`, `select()`, `file()`, `action()`, `crud()`, `getOpenApiInputs()`, `getColumnKeys()` |
 

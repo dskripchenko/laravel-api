@@ -72,6 +72,36 @@ abstract class BaseApi implements ApiInterface
     }
 
     /**
+     * The templates schemas refer to as `@Name` — the same thing as
+     * getOpenApiTemplates(), under a name that is not about OpenAPI: the
+     * templates describe payloads whatever carries them.
+     *
+     * Override either one. The package reads this one, which answers with
+     * getOpenApiTemplates() unless it is overridden itself.
+     *
+     * @return array
+     */
+    public static function getSchemaTemplates(): array
+    {
+        return static::getOpenApiTemplates();
+    }
+
+    /**
+     * The security schemes `@security` and the `security` key name — the same
+     * thing as getOpenApiSecurityDefinitions(), under a name that is not about
+     * OpenAPI.
+     *
+     * Override either one. The package reads this one, which answers with
+     * getOpenApiSecurityDefinitions() unless it is overridden itself.
+     *
+     * @return array
+     */
+    public static function getSecuritySchemes(): array
+    {
+        return static::getOpenApiSecurityDefinitions();
+    }
+
+    /**
      * @return mixed
      */
     final public static function make(): Response

@@ -68,7 +68,7 @@ final class OpenApiRenderer
             $components['schemas'] = $this->schemas->all();
         }
 
-        $securityDefinitions = $this->apiClass::getOpenApiSecurityDefinitions();
+        $securityDefinitions = $this->apiClass::getSecuritySchemes();
         if (!empty($securityDefinitions)) {
             $components['securitySchemes'] = $securityDefinitions;
         }
