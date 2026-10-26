@@ -280,8 +280,7 @@
                         "message": {
                             "type": "string"
                         }
-                    },
-                    "required": []
+                    }
                 },
                 "Success": {
                     "type": "object",
@@ -293,8 +292,7 @@
                             "type": "object",
                             "description": "Response payload"
                         }
-                    },
-                    "required": []
+                    }
                 }
             }
         }

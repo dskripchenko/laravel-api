@@ -73,12 +73,10 @@
                                         "properties": {
                                             "id": {
                                                 "type": "integer",
-                                                "name": "id",
                                                 "description": "Created user ID"
                                             },
                                             "name": {
                                                 "type": "string",
-                                                "name": "name",
                                                 "description": "User name"
                                             }
                                         },
@@ -188,8 +186,7 @@
                         "message": {
                             "type": "string"
                         }
-                    },
-                    "required": []
+                    }
                 },
                 "Success": {
                     "type": "object",
@@ -201,8 +198,7 @@
                             "type": "object",
                             "description": "Response payload"
                         }
-                    },
-                    "required": []
+                    }
                 }
             }
         }

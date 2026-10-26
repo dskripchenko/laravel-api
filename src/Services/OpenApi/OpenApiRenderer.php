@@ -77,7 +77,25 @@ final class OpenApiRenderer
             $config['components'] = $components;
         }
 
-        return $config;
+        return self::withoutEmptyRequired($config);
+    }
+
+    /**
+     * OpenAPI 3.0 takes its schemas from JSON Schema draft 4, where `required`
+     * needs at least one name: an empty list makes the spec invalid. The
+     * templates keep one for merging; the document goes out without it.
+     */
+    private static function withoutEmptyRequired(array $node): array
+    {
+        foreach ($node as $key => $value) {
+            if ($key === 'required' && $value === []) {
+                unset($node[$key]);
+            } elseif (is_array($value)) {
+                $node[$key] = self::withoutEmptyRequired($value);
+            }
+        }
+
+        return $node;
     }
 
     /**

@@ -96,12 +96,10 @@
                                                 "properties": {
                                                     "url": {
                                                         "type": "string",
-                                                        "name": "url",
                                                         "description": "Where to go next"
                                                     },
                                                     "comment": {
                                                         "type": "string",
-                                                        "name": "comment",
                                                         "description": "Free text"
                                                     }
                                                 },
@@ -244,7 +242,7 @@
                                             },
                                             "data": {
                                                 "type": "object",
-                                                "properties": []
+                                                "properties": {}
                                             },
                                             "meta": {
                                                 "$ref": "#/components/schemas/Meta"

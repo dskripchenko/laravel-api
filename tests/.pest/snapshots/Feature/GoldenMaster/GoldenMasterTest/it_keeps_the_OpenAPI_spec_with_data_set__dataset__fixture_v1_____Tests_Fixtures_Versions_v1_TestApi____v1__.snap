@@ -58,12 +58,10 @@
                                         "properties": {
                                             "items": {
                                                 "type": "array",
-                                                "name": "items",
                                                 "description": "Items list"
                                             },
                                             "total": {
                                                 "type": "integer",
-                                                "name": "total",
                                                 "description": "Total count"
                                             }
                                         },
@@ -116,12 +114,10 @@
                                         "properties": {
                                             "id": {
                                                 "type": "integer",
-                                                "name": "id",
                                                 "description": "Item ID"
                                             },
                                             "name": {
                                                 "type": "string",
-                                                "name": "name",
                                                 "description": "Item name"
                                             }
                                         },
@@ -155,7 +151,6 @@
                                         "properties": {
                                             "id": {
                                                 "type": "integer",
-                                                "name": "id",
                                                 "description": "Created item ID"
                                             }
                                         },
@@ -216,7 +211,6 @@
                                         "properties": {
                                             "id": {
                                                 "type": "integer",
-                                                "name": "id",
                                                 "description": "Updated item ID"
                                             }
                                         },
@@ -278,7 +272,6 @@
                                         "properties": {
                                             "deleted": {
                                                 "type": "boolean",
-                                                "name": "deleted",
                                                 "description": "Deletion status"
                                             }
                                         },
@@ -335,7 +328,6 @@
                                         "properties": {
                                             "pong": {
                                                 "type": "string",
-                                                "name": "pong",
                                                 "description": "Pong response"
                                             }
                                         },
