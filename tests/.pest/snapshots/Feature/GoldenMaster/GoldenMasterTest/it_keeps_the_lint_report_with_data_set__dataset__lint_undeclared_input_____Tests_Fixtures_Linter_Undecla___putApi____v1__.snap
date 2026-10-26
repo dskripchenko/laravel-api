@@ -1,0 +1,44 @@
+[
+    {
+        "severity": "warning",
+        "rule": "input.undeclared",
+        "where": "v1 · things.validatesLiteral",
+        "message": "Tests\\Fixtures\\Linter\\UndeclaredInputController::validatesLiteral() validates its input (validate()) and declares no @input.",
+        "hint": "Describe the fields with @input tags — or with @input [method] when they are only known at runtime."
+    },
+    {
+        "severity": "warning",
+        "rule": "input.undeclared",
+        "where": "v1 · things.validatesRuntime",
+        "message": "Tests\\Fixtures\\Linter\\UndeclaredInputController::validatesRuntime() validates its input (validate()) and declares no @input.",
+        "hint": "Describe the fields with @input tags — or with @input [method] when they are only known at runtime."
+    },
+    {
+        "severity": "warning",
+        "rule": "input.undeclared",
+        "where": "v1 · things.validatorFacade",
+        "message": "Tests\\Fixtures\\Linter\\UndeclaredInputController::validatorFacade() validates its input (Validator::make()) and declares no @input.",
+        "hint": "Describe the fields with @input tags — or with @input [method] when they are only known at runtime."
+    },
+    {
+        "severity": "warning",
+        "rule": "input.undeclared",
+        "where": "v1 · things.validatorHelper",
+        "message": "Tests\\Fixtures\\Linter\\UndeclaredInputController::validatorHelper() validates its input (validator()) and declares no @input.",
+        "hint": "Describe the fields with @input tags — or with @input [method] when they are only known at runtime."
+    },
+    {
+        "severity": "warning",
+        "rule": "input.undeclared",
+        "where": "v1 · things.formRequest",
+        "message": "Tests\\Fixtures\\Linter\\UndeclaredInputController::formRequest() validates its input (a FormRequest parameter) and declares no @input.",
+        "hint": "Describe the fields with @input tags — or with @input [method] when they are only known at runtime."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · things",
+        "message": "UndeclaredInputController::dynamicFields() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    }
+]

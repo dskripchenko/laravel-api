@@ -1,0 +1,400 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Custom envelope API\nThe same endpoints under an envelope of the application's own shape",
+            "description": "",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/agreement/available": {
+                "get": {
+                    "summary": "Is prolongation available",
+                    "description": "",
+                    "tags": [
+                        "agreement"
+                    ],
+                    "parameters": [
+                        {
+                            "name": "uuid",
+                            "in": "query",
+                            "description": "Agreement",
+                            "required": true,
+                            "schema": {
+                                "type": "string"
+                            }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ok": {
+                                                "type": "boolean",
+                                                "description": "Whether the call succeeded"
+                                            },
+                                            "data": {
+                                                "$ref": "#/components/schemas/ProlongationAvailable"
+                                            },
+                                            "meta": {
+                                                "$ref": "#/components/schemas/Meta"
+                                            }
+                                        },
+                                        "required": [
+                                            "ok",
+                                            "data"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "agreement_available"
+                }
+            },
+            "/v1/agreement/fields": {
+                "get": {
+                    "summary": "Fields, the flat way",
+                    "description": "",
+                    "tags": [
+                        "agreement"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ok": {
+                                                "type": "boolean",
+                                                "description": "Whether the call succeeded"
+                                            },
+                                            "data": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "url": {
+                                                        "type": "string",
+                                                        "name": "url",
+                                                        "description": "Where to go next"
+                                                    },
+                                                    "comment": {
+                                                        "type": "string",
+                                                        "name": "comment",
+                                                        "description": "Free text"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "url"
+                                                ]
+                                            },
+                                            "meta": {
+                                                "$ref": "#/components/schemas/Meta"
+                                            }
+                                        },
+                                        "required": [
+                                            "ok",
+                                            "data"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "agreement_fields"
+                }
+            },
+            "/v1/agreement/create": {
+                "post": {
+                    "summary": "Create with explicit responses",
+                    "description": "",
+                    "tags": [
+                        "agreement"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "201": {
+                            "description": "ProlongationAvailable",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ok": {
+                                                "type": "boolean",
+                                                "description": "Whether the call succeeded"
+                                            },
+                                            "data": {
+                                                "$ref": "#/components/schemas/ProlongationAvailable"
+                                            },
+                                            "meta": {
+                                                "$ref": "#/components/schemas/Meta"
+                                            }
+                                        },
+                                        "required": [
+                                            "ok",
+                                            "data"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "422": {
+                            "description": "ValidationError",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ok": {
+                                                "type": "boolean",
+                                                "description": "Whether the call succeeded"
+                                            },
+                                            "data": {
+                                                "$ref": "#/components/schemas/ValidationError"
+                                            },
+                                            "meta": {
+                                                "$ref": "#/components/schemas/Meta"
+                                            }
+                                        },
+                                        "required": [
+                                            "ok",
+                                            "data"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "404": {
+                            "description": "Not found"
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "uuid": {
+                                            "type": "string",
+                                            "description": "Agreement"
+                                        }
+                                    },
+                                    "required": [
+                                        "uuid"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "agreement_create"
+                }
+            },
+            "/v1/agreement/plain": {
+                "get": {
+                    "summary": "Nothing documented",
+                    "description": "",
+                    "tags": [
+                        "agreement"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ok": {
+                                                "type": "boolean",
+                                                "description": "Whether the call succeeded"
+                                            },
+                                            "data": {
+                                                "type": "object",
+                                                "properties": []
+                                            },
+                                            "meta": {
+                                                "$ref": "#/components/schemas/Meta"
+                                            }
+                                        },
+                                        "required": [
+                                            "ok",
+                                            "data"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "default": {
+                            "description": "Error response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Error"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "agreement_plain"
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "ProlongationAvailable": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "type": "string"
+                        },
+                        "uuid": {
+                            "type": "string"
+                        },
+                        "clientEmail": {
+                            "type": "string",
+                            "format": "email"
+                        },
+                        "clientPhone": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "uuid"
+                    ]
+                },
+                "ValidationError": {
+                    "type": "object",
+                    "properties": {
+                        "errorKey": {
+                            "type": "string"
+                        },
+                        "message": {
+                            "type": "string"
+                        },
+                        "errors": {
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "errorKey",
+                        "message"
+                    ]
+                },
+                "LegacyResult": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "payload": {
+                            "$ref": "#/components/schemas/ProlongationAvailable"
+                        }
+                    },
+                    "required": [
+                        "success"
+                    ]
+                },
+                "Meta": {
+                    "type": "object",
+                    "properties": {
+                        "requestId": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    "required": [
+                        "requestId"
+                    ]
+                },
+                "Error": {
+                    "type": "object",
+                    "properties": {
+                        "ok": {
+                            "type": "boolean",
+                            "description": "Whether the call succeeded"
+                        },
+                        "data": {
+                            "type": "object",
+                            "properties": {
+                                "errorKey": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "trace": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "errorKey",
+                                "message"
+                            ]
+                        },
+                        "meta": {
+                            "$ref": "#/components/schemas/Meta"
+                        }
+                    },
+                    "required": [
+                        "ok",
+                        "data"
+                    ]
+                },
+                "Success": {
+                    "type": "object",
+                    "properties": {
+                        "ok": {
+                            "type": "boolean",
+                            "description": "Whether the call succeeded"
+                        },
+                        "data": {
+                            "type": "object",
+                            "description": "Response payload"
+                        },
+                        "meta": {
+                            "$ref": "#/components/schemas/Meta"
+                        }
+                    },
+                    "required": [
+                        "ok",
+                        "data"
+                    ]
+                }
+            }
+        }
+    }
+}

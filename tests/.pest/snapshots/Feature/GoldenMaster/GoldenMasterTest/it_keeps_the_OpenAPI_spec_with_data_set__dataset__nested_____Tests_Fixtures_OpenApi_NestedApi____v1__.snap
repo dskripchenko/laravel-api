@@ -1,0 +1,142 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Nested API\nDot- and bracket-notation corner cases",
+            "description": "",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/nested/save": {
+                "post": {
+                    "summary": "Save a layout",
+                    "description": "",
+                    "tags": [
+                        "nested"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string",
+                                            "description": "Layout key"
+                                        },
+                                        "widgets": {
+                                            "type": "array",
+                                            "description": "Widgets, declared after their fields",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "slug": {
+                                                        "type": "string",
+                                                        "description": "Widget slug"
+                                                    },
+                                                    "size": {
+                                                        "type": "integer",
+                                                        "description": "Columns"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "slug"
+                                                ]
+                                            }
+                                        },
+                                        "abilities": {
+                                            "type": "array",
+                                            "description": "Abilities",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "key",
+                                        "widgets"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "nested_save"
+                }
+            },
+            "/v1/nested/show": {
+                "get": {
+                    "summary": "Show a record",
+                    "description": "",
+                    "tags": [
+                        "nested"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "description": "Identifier"
+                                            },
+                                            "note": {
+                                                "type": "string",
+                                                "description": "Note"
+                                            },
+                                            "owner": {
+                                                "type": "object",
+                                                "description": "Owner",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "Owner name"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "description": "Owner email"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "id",
+                                            "owner"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "nested_show"
+                }
+            }
+        }
+    }
+}

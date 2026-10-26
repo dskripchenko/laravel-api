@@ -1,0 +1,22 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface NestedSaveInput {
+  /** Layout key */
+  key: string;
+  /** Widgets, declared after their fields */
+  widgets: { slug: string; size?: number }[];
+  /** Abilities */
+  abilities?: string[];
+}
+
+export interface NestedSaveOutput {
+}
+
+export interface NestedShowOutput {
+  /** Identifier */
+  id: number;
+  /** Note */
+  note?: string;
+  /** Owner */
+  owner: { name: string; email?: string };
+}

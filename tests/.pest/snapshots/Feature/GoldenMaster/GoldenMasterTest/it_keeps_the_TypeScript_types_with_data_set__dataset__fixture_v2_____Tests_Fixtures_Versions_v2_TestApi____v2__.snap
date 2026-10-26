@@ -1,0 +1,78 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface ItemListInput {
+  /** Auth token */
+  token: string;
+  /** Page number */
+  page?: number;
+  /** Items per page */
+  perPage?: number;
+}
+
+export interface ItemListOutput {
+  /** Items list */
+  items: string[];
+  /** Total count */
+  total: number;
+}
+
+export interface ItemShowInput {
+  /** Auth token */
+  token: string;
+  /** Item ID */
+  id: number;
+}
+
+export interface ItemShowOutput {
+  /** Item ID */
+  id: number;
+  /** Item name */
+  name: string;
+  /** API version */
+  version: string;
+}
+
+export interface ItemCreateInput {
+  /** Auth token */
+  token: string;
+  /** Item name */
+  name: string;
+  /** Item description */
+  description?: string;
+}
+
+export interface ItemCreateOutput {
+  /** Created item ID */
+  id: number;
+}
+
+export interface ItemUpdateInput {
+  /** Auth token */
+  token: string;
+  /** Item ID */
+  id: number;
+  /** Item name */
+  name: string;
+}
+
+export interface ItemUpdateOutput {
+  /** Updated item ID */
+  id: number;
+}
+
+export interface ItemSearchInput {
+  /** Auth token */
+  token: string;
+  /** Search query */
+  query?: string;
+}
+
+export interface ItemSearchOutput {
+  /** Search results */
+  results: string[];
+}
+
+export interface OpenPingOutput {
+  /** Pong response */
+  pong: string;
+}

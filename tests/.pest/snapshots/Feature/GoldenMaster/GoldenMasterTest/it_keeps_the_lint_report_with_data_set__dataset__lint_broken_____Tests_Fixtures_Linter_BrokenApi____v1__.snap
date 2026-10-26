@@ -1,0 +1,177 @@
+[
+    {
+        "severity": "error",
+        "rule": "template.unknown-ref",
+        "where": "v1 · template RefersToNothing",
+        "message": "The field `child` refers to the template `AbsentTemplate`, which is not defined.",
+        "hint": null
+    },
+    {
+        "severity": "warning",
+        "rule": "tag.unknown-type",
+        "where": "v1 · broken.unknownType",
+        "message": "@input $when: the type `datetime` is unknown and becomes `string`.",
+        "hint": "Known types: string, file, number, integer, boolean, array, object."
+    },
+    {
+        "severity": "warning",
+        "rule": "tag.orphan-nesting",
+        "where": "v1 · broken.orphanNesting",
+        "message": "@input $address.city is nested under $address, which is never declared.",
+        "hint": "Declare the parent: @input object $address …"
+    },
+    {
+        "severity": "warning",
+        "rule": "tag.nesting-type-mismatch",
+        "where": "v1 · broken.nestingTypeMismatch",
+        "message": "@input $tags[].id needs $tags to be `array`, and it is declared `string`.",
+        "hint": null
+    },
+    {
+        "severity": "error",
+        "rule": "tag.unknown-template",
+        "where": "v1 · broken.danglingRefs",
+        "message": "@input refers to the template `MissingRequest`, which is not defined.",
+        "hint": "Add it to getOpenApiTemplates(), or the spec gets a $ref pointing nowhere."
+    },
+    {
+        "severity": "error",
+        "rule": "tag.unknown-template",
+        "where": "v1 · broken.danglingRefs",
+        "message": "@output refers to the template `MissingModel`, which is not defined.",
+        "hint": "Add it to getOpenApiTemplates(), or the spec gets a $ref pointing nowhere."
+    },
+    {
+        "severity": "error",
+        "rule": "response.unknown-template",
+        "where": "v1 · broken.danglingRefs",
+        "message": "@response 404 {MissingTemplate} refers to a template that is not defined.",
+        "hint": "Add it to getOpenApiTemplates() on the Api class."
+    },
+    {
+        "severity": "error",
+        "rule": "security.unknown-scheme",
+        "where": "v1 · broken.danglingRefs",
+        "message": "@security MissingScheme — no such scheme is defined.",
+        "hint": "Add it to getOpenApiSecurityDefinitions() on the Api class."
+    },
+    {
+        "severity": "error",
+        "rule": "tag.malformed",
+        "where": "v1 · broken.malformed",
+        "message": "@input string missingDollar Description — does not parse, and the generator drops it silently.",
+        "hint": "Expected: type ?$name Description."
+    },
+    {
+        "severity": "error",
+        "rule": "response.malformed",
+        "where": "v1 · broken.malformed",
+        "message": "@response nope Something — does not parse.",
+        "hint": "Expected: @response 200 {Template} or @response 404 Description."
+    },
+    {
+        "severity": "error",
+        "rule": "default.malformed",
+        "where": "v1 · broken.malformed",
+        "message": "@default noDollar 1 — does not parse.",
+        "hint": "Expected: @default $variable value."
+    },
+    {
+        "severity": "warning",
+        "rule": "tag.duplicate-variable",
+        "where": "v1 · broken.duplicatesAndStrays",
+        "message": "@input $title is declared twice; the last one wins.",
+        "hint": null
+    },
+    {
+        "severity": "warning",
+        "rule": "default.unknown-variable",
+        "where": "v1 · broken.duplicatesAndStrays",
+        "message": "@default $absent — there is no @input for that variable, so the value is ignored.",
+        "hint": null
+    },
+    {
+        "severity": "warning",
+        "rule": "example.unknown-variable",
+        "where": "v1 · broken.duplicatesAndStrays",
+        "message": "@example $absent — there is no @input for that variable, so the value is ignored.",
+        "hint": null
+    },
+    {
+        "severity": "error",
+        "rule": "tag.callable-missing",
+        "where": "v1 · broken.callableMissing",
+        "message": "@input [noSuchMethod] refers to a method the controller does not have.",
+        "hint": null
+    },
+    {
+        "severity": "warning",
+        "rule": "response.duplicate-code",
+        "where": "v1 · broken.duplicateResponses",
+        "message": "@response 200 is declared twice; the last one wins.",
+        "hint": null
+    },
+    {
+        "severity": "error",
+        "rule": "response.impossible-code",
+        "where": "v1 · broken.duplicateResponses",
+        "message": "@response 999 — not an HTTP status code.",
+        "hint": null
+    },
+    {
+        "severity": "error",
+        "rule": "action.missing-method",
+        "where": "v1 · broken.renamed",
+        "message": "The action points at Tests\\Fixtures\\Linter\\BrokenController::methodThatWentAway(), and there is no such method.",
+        "hint": "At runtime this answers 404 — the same 404 as a wrong URL, which is why it goes unnoticed."
+    },
+    {
+        "severity": "error",
+        "rule": "action.unreachable-method",
+        "where": "v1 · broken.protectedTarget",
+        "message": "Tests\\Fixtures\\Linter\\BrokenController::hidden() cannot serve an action: it has to be a public non-static method.",
+        "hint": null
+    },
+    {
+        "severity": "error",
+        "rule": "action.unknown-http-method",
+        "where": "v1 · broken.badVerb",
+        "message": "`fetch` is not among the HTTP methods this application routes.",
+        "hint": "Available: get, post, put, patch, delete (laravel-api.available_methods)."
+    },
+    {
+        "severity": "error",
+        "rule": "middleware.missing-class",
+        "where": "v1 · broken.ghostMiddleware",
+        "message": "The action middleware Tests\\Fixtures\\Linter\\NoSuchMiddleware does not exist.",
+        "hint": null
+    },
+    {
+        "severity": "error",
+        "rule": "security.unknown-scheme",
+        "where": "v1 · broken.ghostSecurity",
+        "message": "The action asks for the security scheme `GhostScheme`, which is not defined.",
+        "hint": "Add it to getOpenApiSecurityDefinitions() on the Api class."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · broken",
+        "message": "BrokenController::neverRouted() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "error",
+        "rule": "controller.missing-class",
+        "where": "v1 · missing",
+        "message": "The map points at Tests\\Fixtures\\Linter\\NoSuchController, and there is no such class.",
+        "hint": null
+    },
+    {
+        "severity": "error",
+        "rule": "controller.missing-key",
+        "where": "v1 · noControllerKey",
+        "message": "The controller entry has no `controller` key.",
+        "hint": "Add 'controller' => SomeController::class."
+    }
+]

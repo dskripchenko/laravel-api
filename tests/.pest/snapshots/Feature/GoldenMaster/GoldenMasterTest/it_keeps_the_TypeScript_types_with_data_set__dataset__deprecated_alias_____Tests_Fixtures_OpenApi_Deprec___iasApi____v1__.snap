@@ -1,0 +1,6 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface OpenPingOutput {
+  /** Pong response */
+  pong: string;
+}

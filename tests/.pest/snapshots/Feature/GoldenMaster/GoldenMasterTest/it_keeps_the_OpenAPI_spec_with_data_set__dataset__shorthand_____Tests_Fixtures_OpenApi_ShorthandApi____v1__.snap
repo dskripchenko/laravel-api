@@ -1,0 +1,302 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Shorthand API\nAPI with shorthand template syntax",
+            "description": "",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/order/create": {
+                "post": {
+                    "summary": "Create order",
+                    "description": "",
+                    "tags": [
+                        "order"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "201": {
+                            "description": "OrderResponse",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/OrderResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "422": {
+                            "description": "OrderError",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/OrderError"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "product_id": {
+                                            "type": "integer",
+                                            "description": "Product ID"
+                                        },
+                                        "quantity": {
+                                            "type": "integer",
+                                            "description": "Quantity"
+                                        }
+                                    },
+                                    "required": [
+                                        "product_id",
+                                        "quantity"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "order_create"
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "OrderResponse": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "total": {
+                            "type": "number"
+                        },
+                        "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "email": {
+                            "type": "string",
+                            "format": "email"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "status",
+                        "email"
+                    ]
+                },
+                "OrderError": {
+                    "type": "object",
+                    "properties": {
+                        "message": {
+                            "type": "string"
+                        },
+                        "code": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "message"
+                    ]
+                },
+                "MixedTemplate": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "score": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "name"
+                    ]
+                },
+                "OrderWithRef": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "error": {
+                            "$ref": "#/components/schemas/OrderError"
+                        },
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/OrderItem"
+                            }
+                        }
+                    },
+                    "required": [
+                        "id"
+                    ]
+                },
+                "OrderItem": {
+                    "type": "object",
+                    "properties": {
+                        "product_id": {
+                            "type": "integer"
+                        },
+                        "quantity": {
+                            "type": "integer"
+                        },
+                        "price": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "product_id"
+                    ]
+                },
+                "NestedResult": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "payload": {
+                            "type": "object",
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "description": "Where to go next"
+                                },
+                                "uuid": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "client": {
+                                    "type": "object",
+                                    "properties": {
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email"
+                                        },
+                                        "phone": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "uuid"
+                            ]
+                        },
+                        "phones": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "lines": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "sku": {
+                                        "type": "string"
+                                    },
+                                    "qty": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "required": [
+                                    "sku"
+                                ]
+                            }
+                        },
+                        "error": {
+                            "$ref": "#/components/schemas/OrderError"
+                        },
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/OrderItem"
+                            }
+                        },
+                        "explicit": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "integer"
+                                },
+                                "tags": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "ref": {
+                                    "$ref": "#/components/schemas/OrderError"
+                                }
+                            },
+                            "required": [
+                                "code"
+                            ]
+                        },
+                        "note": {
+                            "type": "string",
+                            "description": "Contact @support if unsure"
+                        }
+                    },
+                    "required": [
+                        "success",
+                        "payload",
+                        "lines",
+                        "error",
+                        "items",
+                        "explicit"
+                    ]
+                },
+                "Error": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "errorKey": {
+                            "type": "string"
+                        },
+                        "message": {
+                            "type": "string"
+                        }
+                    },
+                    "required": []
+                },
+                "Success": {
+                    "type": "object",
+                    "properties": {
+                        "success": {
+                            "type": "boolean"
+                        },
+                        "payload": {
+                            "type": "object",
+                            "description": "Response payload"
+                        }
+                    },
+                    "required": []
+                }
+            }
+        }
+    }
+}

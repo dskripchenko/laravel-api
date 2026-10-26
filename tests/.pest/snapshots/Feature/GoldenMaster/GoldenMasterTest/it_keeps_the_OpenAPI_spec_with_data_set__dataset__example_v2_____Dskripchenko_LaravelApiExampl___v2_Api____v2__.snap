@@ -1,0 +1,80 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Class Api",
+            "description": "",
+            "version": "v2"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v2/d/d": {
+                "post": {
+                    "summary": "Method D\nMethod description",
+                    "description": "",
+                    "tags": [
+                        "d"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "method": {
+                                                "type": "string",
+                                                "name": "method",
+                                                "description": "Method"
+                                            },
+                                            "request": {
+                                                "type": "array",
+                                                "name": "request",
+                                                "description": "Request data"
+                                            }
+                                        },
+                                        "required": [
+                                            "method",
+                                            "request"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Id"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "d_d"
+                }
+            }
+        }
+    }
+}

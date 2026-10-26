@@ -1,0 +1,271 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Undeclared Input API",
+            "description": "Actions that validate fields the markup never mentions — and the ones that\nmust not be reported.",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/things/validatesLiteral": {
+                "post": {
+                    "summary": "Validates a literal, declares nothing",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_validatesLiteral"
+                }
+            },
+            "/v1/things/validatesRuntime": {
+                "post": {
+                    "summary": "Validates rules assembled at runtime, declares nothing",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_validatesRuntime"
+                }
+            },
+            "/v1/things/validatorFacade": {
+                "post": {
+                    "summary": "Builds a validator through the facade",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_validatorFacade"
+                }
+            },
+            "/v1/things/validatorHelper": {
+                "post": {
+                    "summary": "Builds a validator through the helper",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_validatorHelper"
+                }
+            },
+            "/v1/things/formRequest": {
+                "post": {
+                    "summary": "Validates through a form request",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_formRequest"
+                }
+            },
+            "/v1/things/declared": {
+                "post": {
+                    "summary": "Validates and says so",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_declared"
+                }
+            },
+            "/v1/things/declaredDynamically": {
+                "post": {
+                    "summary": "Validates and describes the fields at runtime",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_declaredDynamically"
+                }
+            },
+            "/v1/things/takesNothing": {
+                "get": {
+                    "summary": "Takes nothing",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_takesNothing"
+                }
+            },
+            "/v1/things/onlyMentionsInComment": {
+                "get": {
+                    "summary": "Takes nothing either",
+                    "description": "",
+                    "tags": [
+                        "things"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": []
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "things_onlyMentionsInComment"
+                }
+            }
+        }
+    }
+}

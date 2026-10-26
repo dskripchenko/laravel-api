@@ -1,0 +1,206 @@
+{
+    "spec": {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Class Api",
+            "description": "",
+            "version": "v1"
+        },
+        "servers": [
+            {
+                "url": "http://localhost/api"
+            }
+        ],
+        "paths": {
+            "/v1/a/a": {
+                "post": {
+                    "summary": "Method A\nMethod description",
+                    "description": "",
+                    "tags": [
+                        "a"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "method": {
+                                                "type": "string",
+                                                "name": "method",
+                                                "description": "Method"
+                                            },
+                                            "request": {
+                                                "type": "array",
+                                                "name": "request",
+                                                "description": "Request data"
+                                            }
+                                        },
+                                        "required": [
+                                            "method",
+                                            "request"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Id"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "a_a"
+                }
+            },
+            "/v1/a/b": {
+                "post": {
+                    "summary": "Method B\nMethod description",
+                    "description": "",
+                    "tags": [
+                        "a"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "method": {
+                                                "type": "string",
+                                                "name": "method",
+                                                "description": "Method"
+                                            },
+                                            "request": {
+                                                "type": "array",
+                                                "name": "request",
+                                                "description": "Request data"
+                                            }
+                                        },
+                                        "required": [
+                                            "method",
+                                            "request"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Id"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "a_b"
+                }
+            },
+            "/v1/a/c": {
+                "post": {
+                    "summary": "Method C\nMethod description",
+                    "description": "",
+                    "tags": [
+                        "a"
+                    ],
+                    "parameters": [],
+                    "responses": {
+                        "200": {
+                            "description": "Response payload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "method": {
+                                                "type": "string",
+                                                "name": "method",
+                                                "description": "Method"
+                                            },
+                                            "request": {
+                                                "type": "array",
+                                                "name": "request",
+                                                "description": "Request data"
+                                            }
+                                        },
+                                        "required": [
+                                            "method",
+                                            "request"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "description": "Id"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "operationId": "a_c"
+                }
+            }
+        }
+    }
+}

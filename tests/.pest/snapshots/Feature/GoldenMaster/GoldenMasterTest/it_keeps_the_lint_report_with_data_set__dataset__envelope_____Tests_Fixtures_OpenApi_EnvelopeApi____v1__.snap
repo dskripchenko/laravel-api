@@ -1,0 +1,9 @@
+[
+    {
+        "severity": "warning",
+        "rule": "template.envelope-duplicated",
+        "where": "v1 · template LegacyResult",
+        "message": "The template declares the envelope's fields (`success`, `payload`) itself; with $responseEnvelope on it is wrapped again.",
+        "hint": "Describe the payload alone and let $responseEnvelope add the envelope."
+    }
+]

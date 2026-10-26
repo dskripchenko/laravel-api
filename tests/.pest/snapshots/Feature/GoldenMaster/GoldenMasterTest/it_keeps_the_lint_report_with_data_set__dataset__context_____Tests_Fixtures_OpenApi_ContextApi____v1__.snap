@@ -1,0 +1,72 @@
+[
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · users",
+        "message": "ContextController::entityFields() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · users",
+        "message": "ContextController::entityOutput() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · users",
+        "message": "ContextController::entityOutputLines() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · users",
+        "message": "ContextController::legacyLines() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · users",
+        "message": "ContextController::scalarLines() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · posts",
+        "message": "ContextController::entityFields() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · posts",
+        "message": "ContextController::entityOutput() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · posts",
+        "message": "ContextController::entityOutputLines() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · posts",
+        "message": "ContextController::legacyLines() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    },
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v1 · posts",
+        "message": "ContextController::scalarLines() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    }
+]

@@ -1,0 +1,9 @@
+[
+    {
+        "severity": "warning",
+        "rule": "controller.unrouted-method",
+        "where": "v2 · item",
+        "message": "ItemController::delete() is public and no action points at it.",
+        "hint": "Either route it or make it non-public — a public method that is not an endpoint reads like one."
+    }
+]

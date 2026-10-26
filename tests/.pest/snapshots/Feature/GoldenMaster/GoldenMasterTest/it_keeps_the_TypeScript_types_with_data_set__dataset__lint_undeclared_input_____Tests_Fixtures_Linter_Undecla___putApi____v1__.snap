@@ -1,0 +1,38 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface ThingsValidatesLiteralOutput {
+}
+
+export interface ThingsValidatesRuntimeOutput {
+}
+
+export interface ThingsValidatorFacadeOutput {
+}
+
+export interface ThingsValidatorHelperOutput {
+}
+
+export interface ThingsFormRequestOutput {
+}
+
+export interface ThingsDeclaredInput {
+  /** Name */
+  name: string;
+}
+
+export interface ThingsDeclaredOutput {
+}
+
+export interface ThingsDeclaredDynamicallyInput {
+  /** Name */
+  name: string;
+}
+
+export interface ThingsDeclaredDynamicallyOutput {
+}
+
+export interface ThingsTakesNothingOutput {
+}
+
+export interface ThingsOnlyMentionsInCommentOutput {
+}

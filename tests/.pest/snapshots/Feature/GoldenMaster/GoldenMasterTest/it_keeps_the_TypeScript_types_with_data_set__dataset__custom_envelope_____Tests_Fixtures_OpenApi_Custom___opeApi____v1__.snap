@@ -1,0 +1,71 @@
+// Auto-generated from OpenAPI spec. Do not edit manually.
+
+export interface ProlongationAvailable {
+  url?: string;
+  uuid: string;
+  /** @format email */
+  clientEmail?: string;
+  clientPhone?: string;
+}
+
+export interface ValidationError {
+  errorKey: string;
+  message: string;
+  errors?: Record<string, unknown>;
+}
+
+export interface LegacyResult {
+  success: boolean;
+  payload?: ProlongationAvailable;
+}
+
+export interface Meta {
+  /** @format uuid */
+  requestId: string;
+}
+
+export interface Error {
+  /** Whether the call succeeded */
+  ok: boolean;
+  data: { errorKey: string; message: string; trace?: string };
+  meta?: Meta;
+}
+
+export interface Success {
+  /** Whether the call succeeded */
+  ok: boolean;
+  /** Response payload */
+  data: Record<string, unknown>;
+  meta?: Meta;
+}
+
+export interface AgreementAvailableInput {
+  /** Agreement */
+  uuid: string;
+}
+
+export interface AgreementAvailableOutput {
+  /** Whether the call succeeded */
+  ok: boolean;
+  data: ProlongationAvailable;
+  meta?: Meta;
+}
+
+export interface AgreementFieldsOutput {
+  /** Whether the call succeeded */
+  ok: boolean;
+  data: { url: string; comment?: string };
+  meta?: Meta;
+}
+
+export interface AgreementCreateInput {
+  /** Agreement */
+  uuid: string;
+}
+
+export interface AgreementPlainOutput {
+  /** Whether the call succeeded */
+  ok: boolean;
+  data: Record<string, unknown>;
+  meta?: Meta;
+}
