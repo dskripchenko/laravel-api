@@ -104,7 +104,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -199,7 +199,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -246,17 +246,14 @@
                                         "properties": {
                                             "id": {
                                                 "type": "integer",
-                                                "name": "id",
                                                 "description": "Identifier"
                                             },
                                             "email": {
                                                 "type": "string",
-                                                "name": "email",
                                                 "description": "From users"
                                             },
                                             "age": {
                                                 "type": "string",
-                                                "name": "age",
                                                 "description": "From users"
                                             }
                                         },
@@ -298,7 +295,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -355,7 +352,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -486,7 +483,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -581,7 +578,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -628,17 +625,14 @@
                                         "properties": {
                                             "id": {
                                                 "type": "integer",
-                                                "name": "id",
                                                 "description": "Identifier"
                                             },
                                             "title": {
                                                 "type": "string",
-                                                "name": "title",
                                                 "description": "From posts"
                                             },
                                             "status": {
                                                 "type": "string",
-                                                "name": "status",
                                                 "description": "From posts"
                                             }
                                         },
@@ -680,7 +674,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -737,7 +731,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -790,8 +784,7 @@
                         "message": {
                             "type": "string"
                         }
-                    },
-                    "required": []
+                    }
                 },
                 "Success": {
                     "type": "object",
@@ -803,8 +796,7 @@
                             "type": "object",
                             "description": "Response payload"
                         }
-                    },
-                    "required": []
+                    }
                 }
             }
         }

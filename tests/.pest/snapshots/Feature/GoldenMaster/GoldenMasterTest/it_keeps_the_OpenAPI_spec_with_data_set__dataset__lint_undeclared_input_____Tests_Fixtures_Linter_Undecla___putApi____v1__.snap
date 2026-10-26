@@ -27,7 +27,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -51,7 +51,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -75,7 +75,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -99,7 +99,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -123,7 +123,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -147,7 +147,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -190,7 +190,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -233,7 +233,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }
@@ -257,7 +257,7 @@
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
-                                        "properties": []
+                                        "properties": {}
                                     }
                                 }
                             }

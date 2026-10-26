@@ -182,7 +182,7 @@ it('describes the output payload without the envelope', function () {
     expect($descriptor->output->description)->toBe('Response payload');
     expect($descriptor->output->schema)->toBe([
         'type' => 'object',
-        'properties' => ['id' => ['type' => 'integer', 'name' => 'id', 'description' => 'Id']],
+        'properties' => ['id' => ['type' => 'integer', 'description' => 'Id']],
         'required' => ['id'],
     ]);
 });

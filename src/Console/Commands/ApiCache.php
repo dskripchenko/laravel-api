@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dskripchenko\LaravelApi\Console\Commands;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;
+use Dskripchenko\LaravelApi\Operations\Schema\JsonSchemas;
 use Dskripchenko\LaravelApi\Operations\OperationRegistry;
 use Dskripchenko\LaravelApi\Services\ApiCache as Cache;
 use Illuminate\Console\Command;
@@ -69,7 +70,7 @@ class ApiCache extends Command
 
         $folder = (string) config('laravel-api.openapi_path', 'public/openapi');
         foreach ($specs as $version => $spec) {
-            Storage::put("{$folder}/{$version}.json", (string) json_encode($spec));
+            Storage::put("{$folder}/{$version}.json", (string) json_encode(JsonSchemas::encodable($spec)));
         }
 
         Cache::write($data);

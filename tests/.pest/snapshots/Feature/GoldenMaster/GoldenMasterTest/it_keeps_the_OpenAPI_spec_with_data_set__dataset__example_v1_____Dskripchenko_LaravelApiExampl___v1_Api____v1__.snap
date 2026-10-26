@@ -30,12 +30,10 @@
                                         "properties": {
                                             "method": {
                                                 "type": "string",
-                                                "name": "method",
                                                 "description": "Method"
                                             },
                                             "request": {
                                                 "type": "array",
-                                                "name": "request",
                                                 "description": "Request data"
                                             }
                                         },
@@ -93,12 +91,10 @@
                                         "properties": {
                                             "method": {
                                                 "type": "string",
-                                                "name": "method",
                                                 "description": "Method"
                                             },
                                             "request": {
                                                 "type": "array",
-                                                "name": "request",
                                                 "description": "Request data"
                                             }
                                         },
@@ -156,12 +152,10 @@
                                         "properties": {
                                             "method": {
                                                 "type": "string",
-                                                "name": "method",
                                                 "description": "Method"
                                             },
                                             "request": {
                                                 "type": "array",
-                                                "name": "request",
                                                 "description": "Request data"
                                             }
                                         },

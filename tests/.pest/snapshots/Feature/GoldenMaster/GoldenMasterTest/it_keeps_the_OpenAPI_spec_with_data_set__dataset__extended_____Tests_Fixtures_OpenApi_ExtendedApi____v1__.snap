@@ -49,7 +49,6 @@
                                         "properties": {
                                             "result": {
                                                 "type": "string",
-                                                "name": "result",
                                                 "description": "Result"
                                             }
                                         },
@@ -111,7 +110,6 @@
                                         "properties": {
                                             "result": {
                                                 "type": "string",
-                                                "name": "result",
                                                 "description": "Result"
                                             }
                                         },
@@ -178,7 +176,6 @@
                                         "properties": {
                                             "result": {
                                                 "type": "string",
-                                                "name": "result",
                                                 "description": "Result"
                                             }
                                         },
@@ -390,13 +387,11 @@
                                         "properties": {
                                             "createdAt": {
                                                 "type": "string",
-                                                "name": "createdAt",
                                                 "description": "Created at",
                                                 "format": "date-time"
                                             },
                                             "count": {
                                                 "type": "integer",
-                                                "name": "count",
                                                 "description": "Count",
                                                 "format": "int32"
                                             }
@@ -467,7 +462,6 @@
                                         "properties": {
                                             "status": {
                                                 "type": "string",
-                                                "name": "status",
                                                 "description": "Current status",
                                                 "enum": [
                                                     "active",
@@ -627,7 +621,6 @@
                                         "properties": {
                                             "items": {
                                                 "type": "array",
-                                                "name": "items",
                                                 "description": "Items"
                                             }
                                         },
@@ -670,7 +663,6 @@
                                         "properties": {
                                             "url": {
                                                 "type": "string",
-                                                "name": "url",
                                                 "description": "File URL"
                                             }
                                         },
@@ -748,22 +740,18 @@
                                         "properties": {
                                             "id": {
                                                 "type": "integer",
-                                                "name": "id",
                                                 "description": "User ID"
                                             },
                                             "name": {
                                                 "type": "string",
-                                                "name": "name",
                                                 "description": "User name"
                                             },
                                             "email": {
                                                 "type": "string",
-                                                "name": "email",
                                                 "description": "User email"
                                             },
                                             "phone": {
                                                 "type": "string",
-                                                "name": "phone",
                                                 "description": "User phone"
                                             }
                                         },
@@ -866,8 +854,7 @@
                         "message": {
                             "type": "string"
                         }
-                    },
-                    "required": []
+                    }
                 },
                 "Success": {
                     "type": "object",
@@ -879,8 +866,7 @@
                             "type": "object",
                             "description": "Response payload"
                         }
-                    },
-                    "required": []
+                    }
                 }
             },
             "securitySchemes": {

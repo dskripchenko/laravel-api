@@ -91,12 +91,10 @@
                                                 "properties": {
                                                     "url": {
                                                         "type": "string",
-                                                        "name": "url",
                                                         "description": "Where to go next"
                                                     },
                                                     "comment": {
                                                         "type": "string",
-                                                        "name": "comment",
                                                         "description": "Free text"
                                                     }
                                                 },
@@ -227,7 +225,7 @@
                                             },
                                             "payload": {
                                                 "type": "object",
-                                                "properties": []
+                                                "properties": {}
                                             }
                                         },
                                         "required": [
@@ -323,8 +321,7 @@
                                 "message": {
                                     "type": "string"
                                 }
-                            },
-                            "required": []
+                            }
                         }
                     },
                     "required": [

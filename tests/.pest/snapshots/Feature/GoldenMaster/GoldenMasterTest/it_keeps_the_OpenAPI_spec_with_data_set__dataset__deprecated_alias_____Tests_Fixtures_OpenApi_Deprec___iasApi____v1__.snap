@@ -30,7 +30,6 @@
                                         "properties": {
                                             "pong": {
                                                 "type": "string",
-                                                "name": "pong",
                                                 "description": "Pong response"
                                             }
                                         },

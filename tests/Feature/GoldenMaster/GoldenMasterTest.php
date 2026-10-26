@@ -72,7 +72,8 @@ function goldenMasterSpec(string $api, string $version): array
 dataset('golden master apis', goldenMasterApis());
 
 it('keeps the OpenAPI spec', function (string $api, string $version) {
-    expect(goldenMasterJson(goldenMasterSpec($api, $version)))->toMatchSnapshot();
+    // As /api/doc serves it: the empty maps of the schemas as JSON objects.
+    expect(goldenMasterJson(\Dskripchenko\LaravelApi\Operations\Schema\JsonSchemas::encodable(goldenMasterSpec($api, $version))))->toMatchSnapshot();
 })->with('golden master apis');
 
 it('keeps the TypeScript types', function (string $api, string $version) {

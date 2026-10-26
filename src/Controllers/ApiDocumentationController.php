@@ -4,6 +4,7 @@ namespace Dskripchenko\LaravelApi\Controllers;
 
 use Dskripchenko\LaravelApi\Components\BaseApi;
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Operations\Schema\JsonSchemas;
 use Dskripchenko\LaravelApi\Services\OpenApi\DocLink;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -145,7 +146,10 @@ class ApiDocumentationController extends Controller
             abort(404);
         }
 
-        return response()->json($this->buildConfig($version, $versionList[$version]));
+        // As JSON, the empty maps of the schemas are objects: PHP has one
+        // empty array for `[]` and `{}`, and `"properties": []` is not valid
+        // OpenAPI.
+        return response()->json(JsonSchemas::encodable($this->buildConfig($version, $versionList[$version])));
     }
 
     /**
@@ -161,7 +165,7 @@ class ApiDocumentationController extends Controller
 
         if (!Storage::exists($filePath) || app()->hasDebugModeEnabled()) {
             $config = $api::getOpenApiConfig($version);
-            Storage::put($filePath, json_encode($config));
+            Storage::put($filePath, json_encode(JsonSchemas::encodable($config)));
 
             return $config;
         }

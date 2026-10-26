@@ -307,9 +307,10 @@ final class DescriptorBuilder
             $descText = Arr::get($parts, 'description', '');
             $enum = FieldSchemas::extractEnum($descText);
 
+            // No `name`: the property's key is its name, and a Schema Object
+            // has no such keyword — validators reject the spec for it.
             $prop = [
                 'type' => FieldSchemas::safeType(Arr::get($parts, 'type', 'string')),
-                'name' => Arr::get($parts, 'variable', ''),
                 'description' => $descText,
                 'required' => Arr::get($parts, 'optional', '') !== '?',
             ];

@@ -58,6 +58,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `getOpenApiSecurityDefinitions()` keep working; the IDE plugin reads both
   names from 1.1.0.
 
+### Fixed
+
+- **The OpenAPI documents validate.** Checked with
+  `@apidevtools/swagger-parser`, 14 of the 17 the fixtures and the example
+  produce were invalid OpenAPI 3.0, for three reasons, each now gone:
+  `"properties": []` — PHP's empty array written as a JSON list where a map is
+  due (an `@output` without fields, envelope payloads) —, `"required": []` —
+  draft 4, which OpenAPI 3.0 builds on, wants at least one name —, and a `name`
+  key the generator left inside the schema of every `@output` field. All 17 now
+  validate. `getOpenApiConfig()` no longer carries the `name` keys and the empty
+  `required` lists; the empty maps become `{}` where the document is written as
+  JSON (`/api/doc/{version}` and the specs `api:cache` builds). The TypeScript
+  types and the exports are unchanged.
+
 ## [6.1.0] — 2026-10-26
 
 The API is now read through one model of its operations: `getMethods()` in one
