@@ -721,6 +721,28 @@ generator uses, and also reports an action that validates its input without
 declaring any (`input.undeclared`). Full list of rules:
 [docs/linting.md](docs/en/linting.md).
 
+## Production
+
+```bash
+php artisan api:cache            # freeze the API map, build the OpenAPI specs
+php artisan api:cache --no-docs  # the map only
+php artisan api:clear            # back to building it on every request
+```
+
+Without it every request rebuilds the route definitions of every version —
+the middleware cascade of each action included; for an API of a couple of
+thousand actions that is about 13 ms a request. `api:cache` writes the map to
+`bootstrap/cache/laravel-api.php` and builds the spec of every version where
+`/api/doc` reads it; a version whose spec cannot be built fails the command,
+and nothing is written. With `route:cache` on, the package no longer registers
+its routes a second time on every request either.
+
+Like `route:cache`, it freezes what `getMethods()` returns when the command
+runs — run it on every deployment, and do not use it for an API whose map
+depends on the request or on data. It needs OPcache, as Laravel's own caches
+do: without it, reading the file costs more than building the map.
+`optimize:clear` runs `api:clear`; `optimize` does not run `api:cache`.
+
 ## API Export
 
 Export your API spec in multiple formats:

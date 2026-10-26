@@ -602,6 +602,18 @@ php artisan api:lint --unrouted # 另外检查没有动作指向的公有方法
 却没有声明任何输入的动作（`input.undeclared`）。完整规则列表：
 [linting.md](linting.md)。
 
+## 生产环境
+
+```bash
+php artisan api:cache            # 冻结 API 映射，构建 OpenAPI 规范
+php artisan api:cache --no-docs  # 仅缓存映射
+php artisan api:clear            # 恢复为每次请求时构建
+```
+
+没有缓存时，每个请求都会重新构建所有版本的路由定义（包括每个操作的中间件级联）；对于几千个操作的 API，每个请求大约需要 13 毫秒。`api:cache` 将映射写入 `bootstrap/cache/laravel-api.php`，并把每个版本的规范构建到 `/api/doc` 读取的位置；如果某个版本的规范无法构建，命令会失败且不写入任何内容。启用 `route:cache` 时，本包也不再在每个请求中重复注册路由。
+
+与 `route:cache` 一样，它会冻结命令运行时 `getMethods()` 的返回值：请在每次部署时运行，并且不要用于映射依赖请求或数据的 API。它需要 OPcache（与 Laravel 自身的缓存相同）：没有 OPcache 时，读取文件比构建映射更慢。`optimize:clear` 会运行 `api:clear`；`optimize` 不会运行 `api:cache`。
+
 ## API 导出
 
 将 API 规范导出为多种格式：

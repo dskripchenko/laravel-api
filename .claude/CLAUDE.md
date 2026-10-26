@@ -17,6 +17,8 @@ vendor/bin/pest --filter="test name"   # Single test
 vendor/bin/pest tests/Unit/            # Directory
 php artisan api:generate-types         # Generate TS interfaces from OpenAPI spec
 php artisan api:export --format=postman    # Export as Postman Collection
+php artisan api:cache                  # Freeze the API map (bootstrap/cache/laravel-api.php) + build specs
+php artisan api:clear                  # Remove the frozen map
 ```
 
 ## Architecture
@@ -41,6 +43,8 @@ HTTP Request → ApiServiceProvider (route registration)
 **OperationDocParser** (`src/Operations/Doc/`) is the one reader of action docblocks: `OperationDocParser::parse($docComment, $middleware)` → `OperationDoc` (sanitized summary/description, `DocLine`s per tag with their syntactic `kind()`/`parts()`, security, deprecated, defaults/examples). `@input`/`@header` lines include the middleware's (classes and groups) ahead of the method's. Both `OpenApiTrait` and `OpenApiLinter` go through it — don't call `DocBlockFactory` elsewhere.
 
 **DescriptorBuilder** (`src/Operations/DescriptorBuilder.php`) turns an `Operation` + its `OperationDoc` into one `OperationDescriptor` per HTTP method (`Operations/Descriptor/`): input (`InputDeclaration` — `schema()` is the transport-neutral JSON Schema; `refs`/`lines`/`schemas`/`isNested()` say how it was declared), headers, output payload (`OutputDeclaration`, no envelope) or `@response` list, security, deprecated, operationId, context. `[method]` callables are invoked here. Schema helpers live in `Operations/Schema/` (`Shorthand`, `SchemaRegistry` — templates + envelope, `FieldSchemas`, `SchemaRef`). **OpenApiRenderer** (`src/Services/OpenApi/OpenApiRenderer.php`) renders descriptors into the OpenAPI document — the HTTP binding lives there (GET flat → query, flat → form, nested/[method]/@Model → JSON body; envelope wrapping; `default` error answer). `OpenApiTrait::getOpenApiConfig()` just delegates; the trait holds only the flags and hooks.
+
+**ApiCache** (`src/Services/ApiCache.php`): `api:cache` freezes the prepared methods of every version and the module's route definitions; `BaseApi::getPreparedMethods()` and `BaseModule::getRouteDefinitions()` read it first. `ApiServiceProvider::makeApiRoutes()` skips route registration when `routesAreCached()` (keeps the middleware group). Tests: `ApiCache::flush()` is in `TestCase::resetStaticState()`; anything writing the cache must `ApiCache::clear()` after.
 
 Golden-master snapshots (`tests/Feature/GoldenMaster`, stored in `tests/.pest/snapshots`) pin the spec, TS types, exports, lint report and routes of every fixture API and the example. A snapshot changes only on purpose; regenerate with `vendor/bin/pest --update-snapshots`.
 

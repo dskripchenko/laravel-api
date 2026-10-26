@@ -48,6 +48,7 @@ abstract class TestCase extends BaseTestCase
         \Dskripchenko\LaravelApi\Operations\OperationRegistry::flush();
         \Dskripchenko\LaravelApi\Operations\Doc\OperationDocParser::flush();
         \Dskripchenko\LaravelApi\Operations\Schema\SchemaRegistry::flush();
+        \Dskripchenko\LaravelApi\Services\ApiCache::flush();
 
         // Reset BaseApiRequest::$_instance
         $ref = new \ReflectionProperty(BaseApiRequest::class, '_instance');

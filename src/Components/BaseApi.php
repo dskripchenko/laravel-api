@@ -6,6 +6,7 @@ use Dskripchenko\LaravelApi\Facades\ApiRequest;
 use Dskripchenko\LaravelApi\Facades\ApiErrorHandler;
 use Dskripchenko\LaravelApi\Interfaces\ApiInterface;
 use Dskripchenko\LaravelApi\Operations\OperationRegistry;
+use Dskripchenko\LaravelApi\Services\ApiCache;
 use Dskripchenko\LaravelApi\Traits\OpenApiTrait;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -245,11 +246,25 @@ RAW_STR;
     }
 
     /**
+     * Forgets the prepared methods of every class, so they are prepared again.
+     */
+    public static function flushPreparedMethods(): void
+    {
+        static::$preparedMethods = [];
+    }
+
+    /**
      * @return array
      */
     public static function getPreparedMethods(): array
     {
         if (!isset(static::$preparedMethods[static::class])) {
+            // `php artisan api:cache` froze the map: take it as it was.
+            $cached = ApiCache::preparedMethods(static::class);
+            if ($cached !== null) {
+                return static::$preparedMethods[static::class] = $cached;
+            }
+
             $parents = array_values(class_parents(static::class));
             $nonStaticParents = array_diff($parents, [self::class]);
             $nonStaticParents = array_reverse($nonStaticParents);
