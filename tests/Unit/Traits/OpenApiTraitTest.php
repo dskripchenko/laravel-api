@@ -100,12 +100,11 @@ it('uses template reference in output when useResponseTemplates is true', functi
 });
 
 it('falls back unknown type to string', function () {
-    $ref = new \ReflectionMethod(BaseApi::class, 'getSafeDataType');
-    $ref->setAccessible(true);
+    $safeType = [\Dskripchenko\LaravelApi\Operations\Schema\FieldSchemas::class, 'safeType'];
 
-    expect($ref->invoke(null, 'unknown_type'))->toBe('string');
-    expect($ref->invoke(null, 'integer'))->toBe('integer');
-    expect($ref->invoke(null, 'boolean'))->toBe('boolean');
+    expect($safeType('unknown_type'))->toBe('string');
+    expect($safeType('integer'))->toBe('integer');
+    expect($safeType('boolean'))->toBe('boolean');
 });
 
 // === Phase 1: Format, Enum, operationId, deprecated ===

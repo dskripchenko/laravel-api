@@ -3,10 +3,14 @@
 namespace Dskripchenko\LaravelApi\Traits;
 
 use Dskripchenko\LaravelApi\Facades\ApiModule;
+use Dskripchenko\LaravelApi\Operations\Descriptor\OperationDescriptor;
+use Dskripchenko\LaravelApi\Operations\Descriptor\OutputDeclaration;
+use Dskripchenko\LaravelApi\Operations\Descriptor\ResponseDeclaration;
+use Dskripchenko\LaravelApi\Operations\DescriptorBuilder;
 use Dskripchenko\LaravelApi\Operations\Doc\OperationDocParser;
 use Dskripchenko\LaravelApi\Operations\OperationRegistry;
-use Dskripchenko\LaravelApi\Services\OpenApi\DocPatterns;
-use Dskripchenko\LaravelApi\Services\OpenApi\OperationContext;
+use Dskripchenko\LaravelApi\Operations\Schema\SchemaRef;
+use Dskripchenko\LaravelApi\Operations\Schema\SchemaRegistry;
 use Illuminate\Support\Arr;
 use phpDocumentor\Reflection\DocBlockFactory;
 
@@ -39,32 +43,13 @@ trait OpenApiTrait
      */
     public static $responseEnvelope = false;
 
-    /** The placeholder in a custom envelope that the response schema replaces. */
-    private const ENVELOPE_PAYLOAD = '{payload}';
-
-    /**
-     * The keys a hand-written schema may carry. A nested array whose keys are
-     * all of these (and which names a type, a $ref, properties, items or a
-     * composition) is taken as a schema and passed through; any other array
-     * is a map of fields — a nested object in the shorthand.
-     */
-    private const SCHEMA_KEYWORDS = [
-        'type', 'format', 'required', 'description', 'properties', 'items', '$ref',
-        'enum', 'nullable', 'example', 'examples', 'default', 'minimum', 'maximum',
-        'exclusiveMinimum', 'exclusiveMaximum', 'minLength', 'maxLength', 'pattern',
-        'minItems', 'maxItems', 'uniqueItems', 'minProperties', 'maxProperties',
-        'additionalProperties', 'allOf', 'oneOf', 'anyOf', 'not', 'discriminator',
-        'readOnly', 'writeOnly', 'deprecated', 'title', 'multipleOf', 'xml', 'externalDocs',
-    ];
-
-    private const SCHEMA_MARKERS = ['type', '$ref', 'properties', 'items', 'allOf', 'oneOf', 'anyOf', 'enum'];
-
-    private const SCHEMA_TYPES = ['object', 'array', 'string', 'integer', 'number', 'boolean', 'null'];
-
     /** @deprecated 6.1 Unused: docblocks are read by OperationDocParser. Removed in 7.0. */
     protected static ?DocBlockFactory $docBlockFactory = null;
 
-    /** @var array<class-string, array<string, mixed>> */
+    /**
+     * @deprecated 6.1 Unused: the templates are cached by SchemaRegistry. Removed in 7.0.
+     * @var array<class-string, array<string, mixed>>
+     */
     protected static array $cachedRawTemplatesByClass = [];
 
     /**
@@ -121,93 +106,17 @@ trait OpenApiTrait
     {
         $result       = [];
         $patternParts = explode('/', ApiModule::getApiUriPattern());
+        $builder      = DescriptorBuilder::for(static::class);
         foreach (OperationRegistry::for(static::class, (string) $version)->controllers() as $definition) {
             // Reflected before the actions, as a controller entry: a wrong
             // class fails the spec even when none of its actions is enabled.
-            $reflectionClass = new \ReflectionClass($definition->class);
+            new \ReflectionClass($definition->class);
 
             foreach ($definition->operations as $operation) {
-                $controller = $operation->controllerKey;
-                $action     = $operation->actionKey;
-                $class      = $operation->controllerClass;
-                $methodKey  = $operation->controllerMethod;
+                $path = static::getApiPath($patternParts, $version, $operation->controllerKey, $operation->actionKey);
 
-                $middlewareList   = $operation->middleware();
-                $reflectionMethod = $reflectionClass->getMethod($methodKey);
-                $doc = OperationDocParser::parse($reflectionMethod->getDocComment(), $middlewareList);
-
-                $declaringClass = $reflectionMethod->getDeclaringClass()->name;
-
-                $summary     = $doc->summary;
-                $description = $doc->description;
-
-                // A controller's FQCN is a debugging detail: in a public spec
-                // it exposes the internal structure of the namespaces. It is off
-                // by default; whoever needs it has
-                // `laravel-api.expose_controller_class`.
-                if (config('laravel-api.expose_controller_class', false)) {
-                    $description = trim($declaringClass . PHP_EOL . $description);
-                }
-                $tags        = [$controller];
-                $httpMethods = $operation->httpMethods;
-
-                $actionSecurity = $operation->security;
-
-                // `@deprecated` lives in a method's docblock, while one
-                // controller may serve several API versions — and then only one
-                // of them has to be marked deprecated. That is what the flag in
-                // getMethods() is for.
-                $deprecated = $doc->isDeprecated() || $operation->deprecated;
-                $operationId = static::getOperationId($controller, $action);
-                $security = !empty($actionSecurity)
-                    ? $actionSecurity
-                    : array_map(static fn (string $name): array => [$name => []], $doc->securitySchemes());
-                $defaultsAndExamples = $doc->defaultsAndExamples();
-
-                foreach (array_values($httpMethods) as $methodIndex => $httpMethod) {
-                    // An action serving several HTTP methods is several
-                    // operations, and OpenAPI wants their ids unique: the first
-                    // method keeps the plain id (as before), the others get the
-                    // method as a suffix.
-                    $methodOperationId = $methodIndex === 0
-                        ? $operationId
-                        : $operationId.'_'.strtolower((string) $httpMethod);
-
-                    // Who is being described: a dynamic `[method]` serving many
-                    // routes cannot answer for one of them without being told.
-                    $context = new OperationContext(
-                        (string) $version,
-                        static::class,
-                        (string) $controller,
-                        $action,
-                        $class,
-                        $methodKey,
-                        strtolower((string) $httpMethod),
-                        'input',
-                        $operation->options,
-                        $methodOperationId,
-                    );
-
-                    $parameters  = static::getParametersByTags($doc->inputs(), $class, $httpMethod, $defaultsAndExamples, $context);
-                    $headerParameters = static::getHeaderParametersByTags($doc->headers());
-                    $parameters = array_merge($headerParameters, $parameters);
-
-                    $hasExplicitResponses = $doc->responses() !== [];
-                    $responses = $hasExplicitResponses
-                        ? static::getResponsesByTags($doc->responses())
-                        : static::getResponseByTags($doc->outputs(), $class, $context->forTag('output'));
-
-                    $methodData = static::getMethodData($summary, $description, [
-                        'tags' => $tags,
-                        'parameters' => $parameters,
-                        'responses' => $responses,
-                        'operationId' => $methodOperationId,
-                        'deprecated' => $deprecated,
-                        'security' => $security,
-                        'hasExplicitResponses' => $hasExplicitResponses,
-                    ]);
-                    $path   = static::getApiPath($patternParts, $version, $controller, $action);
-                    $result[$path][$httpMethod] = $methodData;
+                foreach ($builder->build($operation) as $descriptor) {
+                    $result[$path][$descriptor->httpMethod] = static::getMethodData($descriptor);
                 }
             }
         }
@@ -215,258 +124,73 @@ trait OpenApiTrait
     }
 
     /**
-     * @param  \Dskripchenko\LaravelApi\Operations\Doc\DocLine[]  $lines
-     * @param $class
-     * @param  string  $httpMethod
-     * @param  array  $defaultsAndExamples
-     * @param  OperationContext|null  $context  The operation being described,
-     *                                          handed to `[method]` callables.
+     * The input as Swagger-2-style parameters — `in` query, formData, body or
+     * header — which buildOasParametersAndBody() folds into OpenAPI 3.
+     *
+     * Flat lines are query parameters for GET and form fields otherwise;
+     * nested lines, a `[method]` schema and `@Model` are a JSON body.
+     *
+     * @param OperationDescriptor $descriptor
      * @return array
      */
-    private static function getParametersByTags(
-        array $lines,
-        $class,
-        $httpMethod = 'post',
-        array $defaultsAndExamples = [],
-        ?OperationContext $context = null
-    ) {
+    private static function getRawParameters(OperationDescriptor $descriptor): array
+    {
+        $input = $descriptor->input;
+        $parameterType = strtolower($descriptor->httpMethod) === 'get' ? 'query' : 'formData';
+
         $parameters = [];
-        $pattern    = static::getDocInputOutputPattern();
-        $callableInputsPattern = static::getDocInputsCallablePattern();
-        $modelRefPattern = static::getDocModelRefPattern();
-        $httpMethod = strtolower($httpMethod);
-
-        $parameterType = $httpMethod === 'get' ? 'query' : 'formData';
-
-        $parsedParams = [];
-        $explicitSchemas = [];
-
-        foreach ($lines as $line) {
-            $description  = $line->body;
-            $descriptions = [$description];
-
-            if (preg_match($callableInputsPattern, $description, $matches)) {
-                $result = static::callSchemaMethod($class, $matches['callable'], $context);
-
-                if (static::isObjectSchema($result)) {
-                    $explicitSchemas[] = $result;
-                    continue;
-                }
-
-                $descriptions = $result;
-            }
-
-            foreach ($descriptions as $description) {
-                if (!is_string($description)) {
-                    continue;
-                }
-
-                if (preg_match($modelRefPattern, $description, $matches)) {
-                    $modelName = $matches['model'];
-                    if (static::$useResponseTemplates && static::isHasTemplate($modelName)) {
-                        $parameters[] = [
-                            'in' => 'body',
-                            'name' => 'body',
-                            'description' => $modelName,
-                            'required' => true,
-                            'schema' => [
-                                '$ref' => "#/components/schemas/{$modelName}",
-                            ],
-                        ];
-                    }
-                    continue;
-                }
-
-                if (preg_match($pattern, $description, $matches)) {
-                    $parsedParams[] = $matches;
-                }
-            }
+        foreach ($input->refs as $modelName) {
+            $parameters[] = [
+                'in' => 'body',
+                'name' => 'body',
+                'description' => $modelName,
+                'required' => true,
+                'schema' => SchemaRef::to($modelName),
+            ];
         }
 
-        if (!empty($explicitSchemas)) {
-            $schema = static::mergeObjectSchemas(
-                static::objectSchemaFromParsedParams($parsedParams, $defaultsAndExamples),
-                ...$explicitSchemas
-            );
-
-            return array_merge($parameters, static::parametersFromObjectSchema($schema, $parameterType));
-        }
-
-        if (static::hasNestedParameters($parsedParams)) {
-            $nestedSchema = static::buildNestedSchema($parsedParams);
-            $parameters[] = static::getBodyParameterFromNested($nestedSchema, static::requiredRootsOf($parsedParams));
+        if ($input->hasSchemas()) {
+            $parameters = array_merge($parameters, static::parametersFromObjectSchema($input->mergedSchema(), $parameterType));
+        } elseif ($input->isNested()) {
+            $parameters[] = static::getBodyParameterFromNested($input->nestedProperties(), $input->requiredRoots());
         } else {
-            foreach ($parsedParams as $matches) {
-                $parameters[] = static::flatParameterFromMatches($matches, $parameterType, $defaultsAndExamples);
+            foreach ($input->fields() as $field) {
+                $parameters[] = ['in' => $parameterType] + $field;
             }
         }
 
-        return $parameters;
+        $headers = array_map(static fn (array $header): array => ['in' => 'header'] + $header, $descriptor->headers);
+
+        return array_merge($headers, $parameters);
     }
 
     /**
-     * One `type ?$name Description` line as a flat parameter.
-     *
-     * @param  array  $matches
-     * @param  string  $parameterType
-     * @param  array  $defaultsAndExamples
+     * @param ResponseDeclaration[] $declarations
      * @return array
      */
-    private static function flatParameterFromMatches(array $matches, string $parameterType, array $defaultsAndExamples): array
+    private static function getResponsesByDeclarations(array $declarations): array
     {
-        $descText = Arr::get($matches, 'description', '');
-        $enum = static::extractEnumFromDescription($descText);
-        $type = static::getSafeDataType(Arr::get($matches, 'type', 'string'));
-        $varName = Arr::get($matches, 'variable', '');
+        $envelope = SchemaRegistry::for(static::class);
+        $responses = [];
 
-        $param = [
-            'in' => $parameterType,
-            'name' => $varName,
-            'description' => $descText,
-            'required' => Arr::get($matches, 'optional', '') !== '?',
-            'type' => $type,
-        ];
-
-        $format = Arr::get($matches, 'format');
-        if ($format) {
-            $param['format'] = $format;
-        }
-        if ($enum !== null) {
-            $param['enum'] = $enum;
-        }
-        if (isset($defaultsAndExamples[$varName]['default'])) {
-            $param['default'] = $defaultsAndExamples[$varName]['default'];
-        }
-        if (isset($defaultsAndExamples[$varName]['example'])) {
-            $param['example'] = $defaultsAndExamples[$varName]['example'];
-        }
-
-        return $param;
-    }
-
-    /**
-     * Calls a `[method]` on the controller, telling it which operation is
-     * being described.
-     *
-     * The context goes through the container: a parameter typed
-     * OperationContext receives it whatever its name, and `$version`,
-     * `$controllerKey`, `$actionKey` and `$httpMethod` receive those scalars.
-     * A method declaring none of them is called exactly as it always was.
-     *
-     * @param  string  $class
-     * @param  string  $method
-     * @param  OperationContext|null  $context
-     * @return array A list of `type ?$name Description` lines, or an object schema.
-     */
-    private static function callSchemaMethod(string $class, string $method, ?OperationContext $context): array
-    {
-        $result = app()->call("{$class}@{$method}", $context ? $context->callParameters() : []);
-
-        return is_array($result) ? $result : [];
-    }
-
-    /**
-     * Whether a `[method]` returned a JSON Schema object rather than a list of
-     * docblock lines.
-     *
-     * @param  mixed  $value
-     * @return bool
-     */
-    private static function isObjectSchema($value): bool
-    {
-        if (!is_array($value) || $value === [] || array_is_list($value)) {
-            return false;
-        }
-
-        if (isset($value['properties']) && is_array($value['properties'])) {
-            return true;
-        }
-
-        return ($value['type'] ?? null) === 'object';
-    }
-
-    /**
-     * The docblock lines of an operation as one object schema, so they can be
-     * merged with a schema a `[method]` returned.
-     *
-     * @param  array  $parsedParams
-     * @param  array  $defaultsAndExamples
-     * @return array
-     */
-    private static function objectSchemaFromParsedParams(array $parsedParams, array $defaultsAndExamples = []): array
-    {
-        $schema = ['type' => 'object', 'properties' => []];
-
-        if (empty($parsedParams)) {
-            return $schema;
-        }
-
-        if (static::hasNestedParameters($parsedParams)) {
-            $schema['properties'] = static::buildNestedSchema($parsedParams);
-            $required = static::requiredRootsOf($parsedParams);
-        } else {
-            $required = [];
-            foreach ($parsedParams as $matches) {
-                $param = static::flatParameterFromMatches($matches, 'formData', $defaultsAndExamples);
-                $prop = ['type' => $param['type']];
-                foreach (['format', 'enum', 'default', 'example'] as $key) {
-                    if (array_key_exists($key, $param)) {
-                        $prop[$key] = $param[$key];
-                    }
-                }
-                $prop['description'] = $param['description'];
-                if ($prop['type'] === 'file') {
-                    $prop = ['type' => 'string', 'format' => 'binary', 'description' => $param['description']];
-                }
-                $schema['properties'][$param['name']] = $prop;
-                if ($param['required']) {
-                    $required[] = $param['name'];
-                }
+        foreach ($declarations as $declaration) {
+            if ($declaration->template !== null) {
+                $responses[$declaration->code] = [
+                    'description' => $declaration->template,
+                    'content' => [
+                        'application/json' => [
+                            'schema' => $envelope->wrap(SchemaRef::to($declaration->template)),
+                        ],
+                    ],
+                ];
+            } else {
+                $responses[$declaration->code] = [
+                    'description' => $declaration->description,
+                ];
             }
         }
 
-        if (!empty($required)) {
-            $schema['required'] = array_values(array_unique($required));
-        }
-
-        return $schema;
-    }
-
-    /**
-     * Merges object schemas left to right: a property declared later replaces
-     * the earlier one of the same name, and the `required` lists are united.
-     *
-     * @param  array  ...$schemas
-     * @return array
-     */
-    private static function mergeObjectSchemas(array ...$schemas): array
-    {
-        $merged = ['type' => 'object', 'properties' => []];
-        $required = [];
-
-        foreach ($schemas as $schema) {
-            foreach ($schema as $key => $value) {
-                if ($key === 'properties') {
-                    foreach ((array) $value as $name => $property) {
-                        $merged['properties'][$name] = $property;
-                    }
-                } elseif ($key === 'required') {
-                    $required = array_merge($required, (array) $value);
-                } elseif ($key !== 'type') {
-                    $merged[$key] = $value;
-                }
-            }
-        }
-
-        $required = array_values(array_unique(array_filter(
-            $required,
-            static fn ($name): bool => is_string($name) && $name !== ''
-        )));
-        if (!empty($required)) {
-            $merged['required'] = $required;
-        }
-
-        return $merged;
+        return $responses;
     }
 
     /**
@@ -513,247 +237,6 @@ trait OpenApiTrait
     }
 
     /**
-     * @param \Dskripchenko\LaravelApi\Operations\Doc\DocLine[] $docLines
-     * @param string|null $class The controller, for `@output [method]`.
-     * @param OperationContext|null $context The operation, for `@output [method]`.
-     * @return array
-     */
-    private static function getResponseByTags(array $docLines, ?string $class = null, ?OperationContext $context = null)
-    {
-
-        // `@output [method]` unfolds into the lines it returns, or into an
-        // object schema merged over whatever the other lines describe.
-        $lines = [];
-        $explicitSchemas = [];
-        foreach ($docLines as $docLine) {
-            $line = $docLine->body;
-
-            if ($class !== null && preg_match(static::getDocInputsCallablePattern(), $line, $matches)) {
-                $result = static::callSchemaMethod($class, $matches['callable'], $context);
-
-                if (static::isObjectSchema($result)) {
-                    $explicitSchemas[] = $result;
-                } else {
-                    $lines = array_merge($lines, array_filter($result, 'is_string'));
-                }
-
-                continue;
-            }
-
-            $lines[] = $line;
-        }
-
-        $base = static::getResponseByLines($lines);
-
-        // A `{Template}` line wins over everything, as it does among plain lines.
-        if (empty($explicitSchemas) || isset($base['schema'])) {
-            return $base;
-        }
-
-        $schema = static::mergeObjectSchemas(
-            array_intersect_key($base, array_flip(['properties', 'required'])),
-            ...$explicitSchemas
-        );
-
-        return ['description' => 'Response payload', 'schema' => $schema];
-    }
-
-    /**
-     * @param string[] $lines The bodies of @output tags.
-     * @return array
-     */
-    private static function getResponseByLines(array $lines)
-    {
-        $properties = [];
-        $pattern    = static::getDocInputOutputPattern();
-        $templatePattern = static::getDocInputOutputTemplatePattern();
-        $modelRefPattern = static::getDocModelRefPattern();
-
-        foreach ($lines as $desctiption) {
-
-            if (static::$useResponseTemplates && preg_match($templatePattern, $desctiption, $matches)) {
-                if (static::isHasTemplate($matches['template'])) {
-                    return [
-                        'description' => 'Response payload',
-                        'schema' => [
-                            '$ref' => "#/components/schemas/{$matches['template']}"
-                        ],
-                    ];
-                }
-            }
-
-            if (static::$useResponseTemplates && preg_match($modelRefPattern, $desctiption, $matches)) {
-                $modelName = $matches['model'];
-                $isArray = !empty($matches['isArray']);
-                $variable = Arr::get($matches, 'variable', '');
-
-                if (static::isHasTemplate($modelName) && $variable) {
-                    if ($isArray) {
-                        $properties[$variable] = [
-                            'type' => 'array',
-                            'items' => ['$ref' => "#/components/schemas/{$modelName}"],
-                            'description' => Arr::get($matches, 'description', ''),
-                        ];
-                    } else {
-                        $properties[$variable] = [
-                            '$ref' => "#/components/schemas/{$modelName}",
-                            'description' => Arr::get($matches, 'description', ''),
-                        ];
-                    }
-                    continue;
-                }
-            }
-
-            if (preg_match($pattern, $desctiption, $matches)) {
-                $descText = Arr::get($matches, 'description', '');
-                $enum = static::extractEnumFromDescription($descText);
-
-                $prop = [
-                    'type' => static::getSafeDataType(Arr::get($matches, 'type', 'string')),
-                    'name' => Arr::get($matches, 'variable', ''),
-                    'description' => $descText,
-                    'required' => Arr::get($matches, 'optional', '') !== '?',
-                ];
-
-                $format = Arr::get($matches, 'format');
-                if ($format) {
-                    $prop['format'] = $format;
-                }
-                if ($enum !== null) {
-                    $prop['enum'] = $enum;
-                }
-
-                $properties[$matches['variable']] = $prop;
-                continue;
-            }
-        }
-
-        if (static::hasNestedParameters(array_map(
-            static fn ($variable): array => ['variable' => (string) $variable],
-            array_keys($properties)
-        ))) {
-            // Every line takes part — the flat siblings and the roots' own
-            // declarations too, not only the dotted ones; references to
-            // templates are already schemas and are carried over as they are.
-            $parsedParams = [];
-            $references = [];
-            foreach ($properties as $variable => $prop) {
-                if (!isset($prop['type'])) {
-                    $references[$variable] = $prop;
-                    continue;
-                }
-                $parsedParams[] = [
-                    'variable' => (string) $variable,
-                    'type' => $prop['type'],
-                    'format' => $prop['format'] ?? null,
-                    'description' => $prop['description'] ?? '',
-                    'required' => $prop['required'] ?? true,
-                ];
-            }
-
-            $nested = [
-                'description' => 'Response payload',
-                'type' => 'object',
-                'properties' => array_merge(static::buildNestedSchema($parsedParams), $references),
-            ];
-            $required = static::requiredRootsOf($parsedParams);
-            if (!empty($required)) {
-                $nested['required'] = $required;
-            }
-
-            return $nested;
-        }
-
-        $requiredFields = [];
-        foreach ($properties as $variable => $prop) {
-            if (!empty($prop['required'])) {
-                $requiredFields[] = $variable;
-            }
-            unset($properties[$variable]['required']);
-        }
-
-        $schema = [
-            'description' => 'Response payload',
-            'type' => 'object',
-            'properties' => $properties,
-        ];
-
-        if (!empty($requiredFields)) {
-            $schema['required'] = $requiredFields;
-        }
-
-        return $schema;
-    }
-
-    /**
-     * @return string
-     */
-    private static function getDocInputOutputPattern()
-    {
-        return DocPatterns::inputOutput();
-    }
-
-    /**
-     * @return string
-     */
-    private static function getDocInputOutputTemplatePattern()
-    {
-        return DocPatterns::inputOutputTemplate();
-    }
-
-    /**
-     * @return string
-     */
-    private static function getDocInputsCallablePattern()
-    {
-        return DocPatterns::inputsCallable();
-    }
-
-    /**
-     * @return string
-     */
-    private static function getDocModelRefPattern()
-    {
-        return DocPatterns::modelRef();
-    }
-
-    /**
-     * @return string
-     */
-    private static function getDocResponsePattern()
-    {
-        return DocPatterns::response();
-    }
-
-    /**
-     * @return string
-     */
-    private static function getDocDefaultExamplePattern()
-    {
-        return DocPatterns::defaultExample();
-    }
-
-    /**
-     * @return string[]
-     */
-    private static function getAvailableDataTypes()
-    {
-        return DocPatterns::availableDataTypes();
-    }
-
-    /**
-     * @param $type
-     * @return mixed|string
-     */
-    private static function getSafeDataType(string $type)
-    {
-        if (!in_array($type, static::getAvailableDataTypes())) {
-            $type = 'string';
-        }
-        return $type;
-    }
-
-    /**
      * @param $patternParts
      * @param $version
      * @param $controller
@@ -775,245 +258,6 @@ trait OpenApiTrait
      * @var array<class-string, array<string, array>>
      */
     protected static array $middlewareInputTagCache = [];
-
-    /**
-     * @param string $controllerKey
-     * @param string $actionKey
-     * @return string
-     */
-    private static function getOperationId(string $controllerKey, string $actionKey): string
-    {
-        return "{$controllerKey}_{$actionKey}";
-    }
-
-    /**
-     * @param string $description
-     * @return array|null
-     */
-    private static function extractEnumFromDescription(string &$description): ?array
-    {
-        if (preg_match('/\[([a-zA-Z0-9_,\-\s]+)\]\s*$/', $description, $matches)) {
-            $description = trim(preg_replace('/\[([a-zA-Z0-9_,\-\s]+)\]\s*$/', '', $description));
-            return array_map('trim', explode(',', $matches[1]));
-        }
-        return null;
-    }
-
-    /**
-     * @param \Dskripchenko\LaravelApi\Operations\Doc\DocLine[] $headerLines
-     * @return array
-     */
-    private static function getHeaderParametersByTags(array $headerLines): array
-    {
-        $parameters = [];
-        $pattern = static::getDocInputOutputPattern();
-
-        foreach ($headerLines as $line) {
-            $description = $line->body;
-            if (preg_match($pattern, $description, $matches)) {
-                $parameters[] = [
-                    'in' => 'header',
-                    'name' => Arr::get($matches, 'variable', ''),
-                    'description' => Arr::get($matches, 'description', ''),
-                    'required' => Arr::get($matches, 'optional', '') !== '?',
-                    'type' => static::getSafeDataType(Arr::get($matches, 'type', 'string')),
-                ];
-            }
-        }
-
-        return $parameters;
-    }
-
-    /**
-     * @param \Dskripchenko\LaravelApi\Operations\Doc\DocLine[] $responseLines
-     * @return array
-     */
-    private static function getResponsesByTags(array $responseLines): array
-    {
-        $responses = [];
-        $pattern = static::getDocResponsePattern();
-
-        foreach ($responseLines as $line) {
-            $description = $line->body;
-            if (preg_match($pattern, $description, $matches)) {
-                $code = $matches['code'];
-                $template = Arr::get($matches, 'template', '');
-
-                if ($template) {
-                    $templateName = trim($template, '{}');
-                    $responses[$code] = [
-                        'description' => $templateName,
-                        'content' => [
-                            'application/json' => [
-                                'schema' => static::wrapInResponseEnvelope([
-                                    '$ref' => "#/components/schemas/{$templateName}",
-                                ]),
-                            ],
-                        ],
-                    ];
-                } else {
-                    $responses[$code] = [
-                        'description' => Arr::get($matches, 'description', ''),
-                    ];
-                }
-            }
-        }
-
-        return $responses;
-    }
-
-    /**
-     * @param array $parsedParams
-     * @return bool
-     */
-    private static function hasNestedParameters(array $parsedParams): bool
-    {
-        foreach ($parsedParams as $param) {
-            $variable = is_array($param) ? ($param['variable'] ?? '') : '';
-            if (str_contains($variable, '.') || str_contains($variable, '[]')) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Whether a parsed line is required: input lines carry the `?` mark,
-     * output lines arrive with a `required` flag already worked out.
-     *
-     * @param array $param
-     * @return bool
-     */
-    private static function isRequiredParam(array $param): bool
-    {
-        if (array_key_exists('required', $param) && is_bool($param['required'])) {
-            return $param['required'];
-        }
-
-        return ($param['optional'] ?? '') !== '?';
-    }
-
-    /**
-     * The required top-level names of a nested set of lines: a root counts
-     * when its own line (`$address`, or `$tags[]` for a list of scalars) is
-     * not marked optional. A root known only through its children says
-     * nothing about itself.
-     *
-     * @param array $parsedParams
-     * @return string[]
-     */
-    private static function requiredRootsOf(array $parsedParams): array
-    {
-        $declared = [];
-        foreach ($parsedParams as $param) {
-            $variable = $param['variable'] ?? '';
-            $parts = explode('.', str_replace('[]', '', $variable));
-            if (count($parts) !== 1) {
-                continue;
-            }
-            // `$tags` decides over `$tags[]` whatever the order.
-            if (str_contains($variable, '[]') && array_key_exists($parts[0], $declared)) {
-                continue;
-            }
-            $declared[$parts[0]] = static::isRequiredParam($param);
-        }
-
-        return array_keys(array_filter($declared));
-    }
-
-    /**
-     * @param array $parsedParams
-     * @return array
-     */
-    private static function buildNestedSchema(array $parsedParams): array
-    {
-        $groups = [];
-        foreach ($parsedParams as $param) {
-            $variable = $param['variable'] ?? '';
-            $type = static::getSafeDataType($param['type'] ?? 'string');
-            $description = $param['description'] ?? '';
-            $isArray = str_contains($variable, '[]');
-
-            $parts = explode('.', str_replace('[]', '', $variable));
-            $root = $parts[0];
-            $groups[$root] = $groups[$root] ?? [];
-
-            if (count($parts) === 1 && !$isArray) {
-                // The root's own line. It may come after its children, so it
-                // must not wipe what they already put there.
-                $groups[$root]['declaredType'] = $type;
-                $groups[$root]['description'] = $description;
-                continue;
-            }
-
-            if ($isArray) {
-                $groups[$root]['isArray'] = true;
-            }
-
-            if (count($parts) === 1) {
-                // `$tags[]` — the element of a list of scalars.
-                $groups[$root]['itemType'] = $type;
-                if (!isset($groups[$root]['description'])) {
-                    $groups[$root]['description'] = $description;
-                }
-                continue;
-            }
-
-            $child = $parts[1];
-            $property = ['type' => $type, 'description' => $description];
-            if (!empty($param['format'])) {
-                $property['format'] = $param['format'];
-            }
-            $groups[$root]['properties'][$child] = $property;
-            if (static::isRequiredParam($param)) {
-                $groups[$root]['required'][] = $child;
-            }
-        }
-
-        return static::buildNestedSchemaRecursive($groups);
-    }
-
-    /**
-     * @param array $groups
-     * @return array
-     */
-    private static function buildNestedSchemaRecursive(array $groups): array
-    {
-        $result = [];
-        foreach ($groups as $key => $spec) {
-            $description = $spec['description'] ?? '';
-            $properties = $spec['properties'] ?? null;
-            $required = array_values(array_unique($spec['required'] ?? []));
-            $declaredType = $spec['declaredType'] ?? null;
-
-            $isArray = !empty($spec['isArray']) || $declaredType === 'array';
-            $type = $isArray
-                ? 'array'
-                : ($declaredType ?? ($properties !== null ? 'object' : 'string'));
-
-            if ($type === 'array' && $properties !== null) {
-                $items = ['type' => 'object', 'properties' => $properties];
-                if (!empty($required)) {
-                    $items['required'] = $required;
-                }
-                $result[$key] = ['type' => 'array', 'description' => $description, 'items' => $items];
-            } elseif ($type === 'array' && isset($spec['itemType'])) {
-                $result[$key] = [
-                    'type' => 'array',
-                    'description' => $description,
-                    'items' => ['type' => $spec['itemType']],
-                ];
-            } elseif ($type === 'object' && $properties !== null) {
-                $result[$key] = ['type' => 'object', 'description' => $description, 'properties' => $properties];
-                if (!empty($required)) {
-                    $result[$key]['required'] = $required;
-                }
-            } else {
-                $result[$key] = ['type' => $type, 'description' => $description];
-            }
-        }
-        return $result;
-    }
 
     /**
      * @param array $schema
@@ -1150,33 +394,16 @@ trait OpenApiTrait
     }
 
     /**
-     * @param array $responseData
+     * @param OutputDeclaration $output
      * @return array
      */
-    private static function buildOasResponses(array $responseData): array
+    private static function buildOasResponses(OutputDeclaration $output): array
     {
-        $description = $responseData['description'] ?? 'Response payload';
-
-        if (isset($responseData['schema'])) {
-            $schema = $responseData['schema'];
-        } else {
-            $schema = [];
-            if (isset($responseData['type'])) {
-                $schema['type'] = $responseData['type'];
-            }
-            if (isset($responseData['properties'])) {
-                $schema['properties'] = $responseData['properties'];
-            }
-            if (isset($responseData['required'])) {
-                $schema['required'] = $responseData['required'];
-            }
-        }
-
         $responses = [
             '200' => [
-                'description' => $description,
+                'description' => $output->description,
                 'content' => [
-                    'application/json' => ['schema' => static::wrapInResponseEnvelope($schema)],
+                    'application/json' => ['schema' => SchemaRegistry::for(static::class)->wrap($output->schema)],
                 ],
             ],
         ];
@@ -1186,7 +413,7 @@ trait OpenApiTrait
                 'description' => 'Error response',
                 'content' => [
                     'application/json' => [
-                        'schema' => ['$ref' => '#/components/schemas/Error'],
+                        'schema' => SchemaRef::to('Error'),
                     ],
                 ],
             ];
@@ -1196,51 +423,48 @@ trait OpenApiTrait
     }
 
     /**
-     * @param $summary
-     * @param $description
-     * @param array $options
+     * @param OperationDescriptor $descriptor
      * @return array
      */
-    private static function getMethodData($summary, $description, array $options = [])
+    private static function getMethodData(OperationDescriptor $descriptor)
     {
-        $tags = $options['tags'] ?? [];
-        $rawParameters = $options['parameters'] ?? [];
-        $responses = $options['responses'] ?? [];
-        $operationId = $options['operationId'] ?? null;
-        $deprecated = $options['deprecated'] ?? false;
-        $security = $options['security'] ?? [];
-        $hasExplicitResponses = $options['hasExplicitResponses'] ?? false;
+        $operation = $descriptor->operation;
+        $description = $descriptor->description();
 
-        [$oasParameters, $requestBody] = static::buildOasParametersAndBody($rawParameters);
-
-        if ($hasExplicitResponses) {
-            $formattedResponses = $responses;
-        } else {
-            $formattedResponses = static::buildOasResponses($responses);
+        // A controller's FQCN is a debugging detail: in a public spec
+        // it exposes the internal structure of the namespaces. It is off
+        // by default; whoever needs it has
+        // `laravel-api.expose_controller_class`.
+        if (config('laravel-api.expose_controller_class', false)) {
+            $declaringClass = (new \ReflectionMethod($operation->controllerClass, $operation->controllerMethod))
+                ->getDeclaringClass()->name;
+            $description = trim($declaringClass . PHP_EOL . $description);
         }
 
+        [$oasParameters, $requestBody] = static::buildOasParametersAndBody(static::getRawParameters($descriptor));
+
         $result = [
-            'summary' => $summary,
+            'summary' => $descriptor->summary(),
             'description' => $description,
-            'tags' => $tags,
+            'tags' => [$operation->controllerKey],
             'parameters' => $oasParameters,
-            'responses' => $formattedResponses,
+            'responses' => $descriptor->hasExplicitResponses()
+                ? static::getResponsesByDeclarations($descriptor->responses)
+                : static::buildOasResponses($descriptor->output),
         ];
 
         if ($requestBody !== null) {
             $result['requestBody'] = $requestBody;
         }
 
-        if ($operationId !== null) {
-            $result['operationId'] = $operationId;
-        }
+        $result['operationId'] = $descriptor->operationId;
 
-        if ($deprecated) {
+        if ($descriptor->deprecated) {
             $result['deprecated'] = true;
         }
 
-        if (!empty($security)) {
-            $result['security'] = $security;
+        if (!empty($descriptor->security)) {
+            $result['security'] = $descriptor->security;
         }
 
         return $result;
@@ -1251,403 +475,7 @@ trait OpenApiTrait
      */
     private static function getSchemas()
     {
-        return static::getRawTemplates();
-    }
-
-    /**
-     * Every template as a full object schema, the shorthand unfolded and the
-     * two the package always provides merged in.
-     *
-     * @return array<string, array>
-     */
-    private static function getRawTemplates()
-    {
-        if (isset(static::$cachedRawTemplatesByClass[static::class])) {
-            return static::$cachedRawTemplatesByClass[static::class];
-        }
-
-        $templates = [];
-        foreach ((array) static::getOpenApiTemplates() as $name => $fields) {
-            $templates[(string) $name] = static::normalizeTemplateFields(is_array($fields) ? $fields : [], true);
-        }
-
-        $errorFields = [
-            'errorKey' => ['type' => 'string'],
-            'message' => ['type' => 'string'],
-        ];
-
-        if (static::hasResponseEnvelope()) {
-            // Every template describes a payload here, the two defaults too:
-            // an own `Error` or `Success` is the payload of that answer, and
-            // the envelope comes from $responseEnvelope like everywhere else.
-            $errorPayload = $templates['Error']
-                ?? static::normalizeTemplateFields($errorFields, true);
-            $successPayload = $templates['Success']
-                ?? ['type' => 'object', 'description' => 'Response payload'];
-
-            $templates['Error'] = static::wrapInResponseEnvelope($errorPayload);
-            $templates['Success'] = static::wrapInResponseEnvelope($successPayload);
-        } else {
-            $defaults = [
-                'Error' => static::normalizeTemplateFields(['success' => ['type' => 'boolean']] + $errorFields, true),
-                'Success' => static::normalizeTemplateFields([
-                    'success' => ['type' => 'boolean'],
-                    'payload' => ['type' => 'object', 'description' => 'Response payload'],
-                ], true),
-            ];
-
-            // An own `Error` or `Success` adds to the default rather than
-            // replacing it — the historical merge, kept as it was.
-            foreach ($defaults as $name => $default) {
-                if (!isset($templates[$name])) {
-                    $templates[$name] = $default;
-                    continue;
-                }
-                $templates[$name]['properties'] = array_merge($default['properties'], $templates[$name]['properties']);
-                $templates[$name]['required'] = array_values(array_unique(array_merge(
-                    $default['required'],
-                    $templates[$name]['required']
-                )));
-            }
-        }
-
-        static::$cachedRawTemplatesByClass[static::class] = $templates;
-        return static::$cachedRawTemplatesByClass[static::class];
-    }
-
-    /**
-     * @param $name
-     * @return bool
-     */
-    private static function isHasTemplate($name)
-    {
-        return array_key_exists((string) $name, static::getRawTemplates());
-    }
-
-    /**
-     * @return bool
-     */
-    private static function hasResponseEnvelope(): bool
-    {
-        return static::getResponseEnvelopeFields() !== null;
-    }
-
-    /**
-     * The envelope as a map of fields in the template shorthand, or null when
-     * there is none.
-     *
-     * @return array<string, mixed>|null
-     */
-    private static function getResponseEnvelopeFields(): ?array
-    {
-        $envelope = static::$responseEnvelope;
-
-        if ($envelope === true) {
-            return ['success!' => 'boolean', 'payload!' => self::ENVELOPE_PAYLOAD];
-        }
-
-        if (is_array($envelope) && $envelope !== []) {
-            return $envelope;
-        }
-
-        return null;
-    }
-
-    /**
-     * Wraps a body schema in the response envelope; the schema itself when
-     * there is no envelope.
-     *
-     * @param array $schema
-     * @return array
-     */
-    private static function wrapInResponseEnvelope(array $schema): array
-    {
-        $fields = static::getResponseEnvelopeFields();
-
-        if ($fields === null) {
-            return $schema;
-        }
-
-        $envelope = static::normalizeTemplateFields($fields, true);
-        $envelope['properties'] = static::replaceEnvelopePayload($envelope['properties'], $schema);
-
-        return $envelope;
-    }
-
-    /**
-     * Puts the body schema where the envelope says `{payload}` — at any depth,
-     * so a payload under `data.result` is as good as one at the top.
-     *
-     * @param array $properties
-     * @param array $schema
-     * @return array
-     */
-    private static function replaceEnvelopePayload(array $properties, array $schema): array
-    {
-        foreach ($properties as $name => $definition) {
-            if (!is_array($definition)) {
-                continue;
-            }
-
-            if (($definition['type'] ?? null) === self::ENVELOPE_PAYLOAD) {
-                $properties[$name] = $schema;
-                continue;
-            }
-
-            if (isset($definition['properties']) && is_array($definition['properties'])) {
-                $properties[$name]['properties'] = static::replaceEnvelopePayload($definition['properties'], $schema);
-            }
-        }
-
-        return $properties;
-    }
-
-    /**
-     * Unfolds a map of fields into an object schema: the shorthand strings,
-     * the nested maps, the one-element lists and the hand-written schemas
-     * alike, at any depth.
-     *
-     * A key ending in `!` marks the field required whatever its definition —
-     * the way to require a nested object or an array, which have no string
-     * to carry the mark.
-     *
-     * @param array $fields
-     * @param bool $keepEmptyRequired  emit `required: []` even when nothing is required
-     * @return array
-     */
-    private static function normalizeTemplateFields(array $fields, bool $keepEmptyRequired = false): array
-    {
-        $properties = [];
-        $required = [];
-
-        foreach ($fields as $name => $definition) {
-            $name = (string) $name;
-            $forced = false;
-
-            if (str_ends_with($name, '!')) {
-                $name = substr($name, 0, -1);
-                $forced = true;
-            }
-
-            [$schema, $isRequired] = static::normalizeTemplateDefinition($definition);
-            $properties[$name] = $schema;
-
-            if ($forced || $isRequired) {
-                $required[] = $name;
-            }
-        }
-
-        $result = ['type' => 'object', 'properties' => $properties];
-
-        if ($required !== [] || $keepEmptyRequired) {
-            $result['required'] = array_values(array_unique($required));
-        }
-
-        return $result;
-    }
-
-    /**
-     * One field's definition as a schema, plus whether the field is required.
-     *
-     *   'string!'                      → a shorthand string
-     *   ['url' => 'string']            → a nested object
-     *   ['string']                     → an array of strings
-     *   [['id' => 'integer!']]         → an array of objects
-     *   ['type' => 'string', ...]      → a hand-written schema, passed through
-     *
-     * @param mixed $definition
-     * @return array{0: array, 1: bool}
-     */
-    private static function normalizeTemplateDefinition($definition): array
-    {
-        if (is_string($definition)) {
-            $schema = static::parseShorthandType($definition);
-            $required = (bool) ($schema['required'] ?? false);
-            unset($schema['required']);
-
-            return [$schema, $required];
-        }
-
-        if (!is_array($definition)) {
-            return [['type' => 'string'], false];
-        }
-
-        if ($definition === []) {
-            return [['type' => 'object'], false];
-        }
-
-        // A one-element list is an array of that element.
-        if (array_is_list($definition) && count($definition) === 1) {
-            [$items] = static::normalizeTemplateDefinition($definition[0]);
-
-            return [['type' => 'array', 'items' => $items], false];
-        }
-
-        if (static::isExplicitSchema($definition)) {
-            $required = false;
-
-            if (isset($definition['required']) && is_bool($definition['required'])) {
-                $required = $definition['required'];
-                unset($definition['required']);
-            }
-
-            if (isset($definition['properties']) && is_array($definition['properties'])) {
-                $nested = static::normalizeTemplateFields($definition['properties']);
-                $definition['properties'] = $nested['properties'];
-
-                $requiredList = array_merge(
-                    is_array($definition['required'] ?? null) ? $definition['required'] : [],
-                    $nested['required'] ?? []
-                );
-                if ($requiredList !== []) {
-                    $definition['required'] = array_values(array_unique($requiredList));
-                }
-            }
-
-            if (isset($definition['items']) && (is_string($definition['items']) || is_array($definition['items']))) {
-                [$definition['items']] = static::normalizeTemplateDefinition($definition['items']);
-            }
-
-            if (isset($definition['$ref']) && is_string($definition['$ref']) && str_starts_with($definition['$ref'], '@')) {
-                $definition['$ref'] = '#/components/schemas/' . substr($definition['$ref'], 1);
-            }
-
-            return [$definition, $required];
-        }
-
-        return [static::normalizeTemplateFields($definition), false];
-    }
-
-    /**
-     * Whether an array is a hand-written schema rather than a map of fields.
-     *
-     * A map whose every key happens to be a schema keyword and whose `type`
-     * names a real type — `['type' => 'string', 'format' => 'string']`, two
-     * optional fields called type and format — reads as a schema; write such
-     * a map with `['type' => ['type' => 'string'], ...]` to disambiguate.
-     *
-     * @param array $definition
-     * @return bool
-     */
-    private static function isExplicitSchema(array $definition): bool
-    {
-        if (array_is_list($definition)) {
-            return false;
-        }
-
-        $hasMarker = false;
-
-        foreach ($definition as $key => $value) {
-            $key = (string) $key;
-
-            if (!in_array($key, self::SCHEMA_KEYWORDS, true) && !str_starts_with($key, 'x-')) {
-                return false;
-            }
-
-            if (in_array($key, self::SCHEMA_MARKERS, true)) {
-                $hasMarker = true;
-            }
-        }
-
-        if (!$hasMarker) {
-            return false;
-        }
-
-        if (array_key_exists('type', $definition)) {
-            $type = $definition['type'];
-
-            if (!is_string($type) || !in_array($type, self::SCHEMA_TYPES, true)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Parses shorthand type string into a full attribute array.
-     *
-     * Format: "type(format)! Description" — the format, the required mark and
-     * the description are all optional.
-     * Examples: "integer!", "string(date-time)", "string(email)! Contact email",
-     * "string Document identifier".
-     * Ref syntax "@ModelName", "@ModelName!" and "@ModelName[]" resolve to $ref.
-     *
-     * @param string $shorthand
-     * @return array
-     */
-    private static function parseShorthandType(string $shorthand): array
-    {
-        $shorthand = trim($shorthand);
-
-        // Everything past the first space is a human description: response
-        // schemas were type-only, so consumers of the spec (and anything
-        // reading it, from SDK generators to search) saw field names without
-        // a hint of what they mean.
-        $description = null;
-        if (preg_match('/^(\S+)\s+(.+)$/u', $shorthand, $parts) === 1) {
-            $shorthand = $parts[1];
-            $description = trim($parts[2]);
-        }
-
-        $required = false;
-        if (str_ends_with($shorthand, '!')) {
-            $required = true;
-            $shorthand = substr($shorthand, 0, -1);
-        }
-
-        // @ref array syntax: @ModelName[] with an optional description.
-        // A description next to `$ref` is ignored by OpenAPI 3.0, but an
-        // array wrapping a ref is a plain object — so here it survives.
-        if (preg_match('/^@(\S+?)\[\]$/u', $shorthand, $m)) {
-            $result = [
-                'type' => 'array',
-                'items' => ['$ref' => '#/components/schemas/' . $m[1]],
-            ];
-
-            if ($description !== null && $description !== '') {
-                $result['description'] = $description;
-            }
-
-            if ($required) {
-                $result['required'] = true;
-            }
-
-            return $result;
-        }
-
-        // @ref syntax: @ModelName
-        if (str_starts_with($shorthand, '@')) {
-            $result = ['$ref' => '#/components/schemas/' . substr($shorthand, 1)];
-
-            if ($required) {
-                $result['required'] = true;
-            }
-
-            return $result;
-        }
-
-        $format = null;
-        if (preg_match('/^(\w+)\(([^)]+)\)$/', $shorthand, $m)) {
-            $shorthand = $m[1];
-            $format = $m[2];
-        }
-
-        $result = ['type' => $shorthand];
-
-        if ($format !== null) {
-            $result['format'] = $format;
-        }
-
-        if ($required) {
-            $result['required'] = true;
-        }
-
-        if ($description !== null && $description !== '') {
-            $result['description'] = $description;
-        }
-
-        return $result;
+        return SchemaRegistry::for(static::class)->all();
     }
 
     /**
