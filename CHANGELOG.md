@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `AuthorizationException` (a policy or a gate said no) and `AuthenticationException`
+  (no user) answered 500: the error handler knew only its own and HTTP exceptions. They
+  now answer 403 (`errorKey: forbidden`, the exception's message) and 401
+  (`unauthenticated`).
+
 ## [6.2.0] — 2026-10-26
 
 The API beyond HTTP. An action can be called without an HTTP request of its

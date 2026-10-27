@@ -18,6 +18,22 @@ it('handles ApiException with errorKey and message', function () {
     expect($data['payload']['message'])->toBe('Test message');
 });
 
+it('answers 403 to a Laravel authorization refusal', function () {
+    $response = (new ApiErrorHandler())->handle(new \Illuminate\Auth\Access\AuthorizationException('Not yours'));
+
+    $data = $response->getData(true);
+    expect($response->getStatusCode())->toBe(403);
+    expect($data['payload']['errorKey'])->toBe('forbidden');
+    expect($data['payload']['message'])->toBe('Not yours');
+});
+
+it('answers 401 to a missing user', function () {
+    $response = (new ApiErrorHandler())->handle(new \Illuminate\Auth\AuthenticationException());
+
+    expect($response->getStatusCode())->toBe(401);
+    expect($response->getData(true)['payload']['errorKey'])->toBe('unauthenticated');
+});
+
 it('falls back to generic handler for unknown exceptions in debug mode', function () {
     app()['config']->set('app.debug', true);
     $handler = new ApiErrorHandler();

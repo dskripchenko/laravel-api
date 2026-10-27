@@ -6,6 +6,8 @@ use Dskripchenko\LaravelApi\Services\ApiResponseHelper;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Closure;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
@@ -45,6 +47,21 @@ class ApiErrorHandler
                 'message' => $e->getMessage(),
                 'errors' => $e->errors(),
             ], $e->status);
+        });
+
+        // Laravel's own refusals: a policy or a gate, a missing user.
+        $this->addErrorHandler(AuthorizationException::class, function (AuthorizationException $e) {
+            return ApiResponseHelper::sayError([
+                'errorKey' => 'forbidden',
+                'message' => $e->getMessage() !== '' ? $e->getMessage() : 'This action is unauthorized.',
+            ], 403);
+        });
+
+        $this->addErrorHandler(AuthenticationException::class, function (AuthenticationException $e) {
+            return ApiResponseHelper::sayError([
+                'errorKey' => 'unauthenticated',
+                'message' => $e->getMessage(),
+            ], 401);
         });
 
         $this->addErrorHandler(HttpExceptionInterface::class, function (HttpExceptionInterface $e) {
