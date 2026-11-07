@@ -83,3 +83,26 @@ it('v2 named routes work with inherited actions', function () {
     $data = $response->json();
     expect($data['success'])->toBeTrue();
 });
+
+it('does not carry the middleware of the request the routes were built in to other actions', function () {
+    // A long-lived process (Octane, a test suite) builds the routes once, in
+    // whatever request came first. Here that is item.list, guarded by
+    // TestAuthMiddleware; open.ping has no such guard and must stay open.
+    \Dskripchenko\LaravelApi\Requests\BaseApiRequest::createFromBase(
+        \Symfony\Component\HttpFoundation\Request::create('/api/v1/item/list', 'GET')
+    );
+    app()->getProvider(\Tests\Fixtures\TestServiceProvider::class)->makeApiRoutes();
+    app('router')->getRoutes()->refreshNameLookups();
+
+    $response = $this->get(route('api.v1.open.ping'));
+
+    $response->assertStatus(200);
+    expect($response->json('payload.pong'))->toBeTrue();
+});
+
+it('gives each named route only its own middleware cascade', function () {
+    $route = app('router')->getRoutes()->getByName('api.v1.open.ping');
+
+    expect($route->middleware())->not->toContain('api-middleware-group')
+        ->and($route->middleware())->not->toContain(\Tests\Fixtures\Middleware\TestAuthMiddleware::class);
+});

@@ -51,3 +51,21 @@ it('handles Throwable exceptions', function () {
     $data = json_decode($response->getContent(), true);
     expect($data['success'])->toBeFalse();
 });
+
+it('answers with the envelope for errors on named action routes', function () {
+    // Laravel middleware on an action (auth, throttle) throws before the
+    // action runs; the answer must still be the API's envelope.
+    $handler = app(\Illuminate\Contracts\Debug\ExceptionHandler::class);
+
+    $route = app('router')->getRoutes()->getByName('api.v1.open.ping');
+    $request = Request::create('/api/v1/open/ping', 'GET');
+    $request->setRouteResolver(fn () => $route->bind($request));
+
+    $response = $handler->render($request, new \Illuminate\Auth\AuthenticationException('Unauthenticated.'));
+
+    expect($response->getStatusCode())->toBe(401)
+        ->and(json_decode($response->getContent(), true))->toBe([
+            'success' => false,
+            'payload' => ['errorKey' => 'unauthenticated', 'message' => 'Unauthenticated.'],
+        ]);
+});

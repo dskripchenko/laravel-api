@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Errors thrown on the named action routes (`api.{version}.{controller}.{action}`) before
+  the action ran — by Laravel middleware such as `auth` or `throttle` — skipped the
+  envelope: the handler knew only the catch-all `api-endpoint` route, so an
+  unauthenticated call answered with Laravel's redirect to `login` (500 when there is no
+  such route). Every route the module registers is now marked in its action
+  (`ApiServiceProvider::ROUTE_MARK`, survives `route:cache`), and the handler answers
+  with the envelope for all of them.
+- The named action routes also received `api-middleware-group`, which is built from the
+  request the routes were registered in. In a long-lived process (Octane, a test suite)
+  every action got the middleware of whichever action came first — an `auth` guard
+  leaked onto public actions. A named route now carries only its own cascade; the group
+  stays on the catch-all route.
+
 ## [6.2.1] — 2026-10-27
 
 ### Fixed
