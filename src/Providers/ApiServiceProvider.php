@@ -161,6 +161,23 @@ class ApiServiceProvider extends ServiceProvider
             ->middleware((array) config('laravel-api.jsonrpc.middleware', []));
     }
 
+    /**
+     * The key in a route's action that marks it as an API action route; the
+     * exception handler answers with the API envelope for these. Part of the
+     * action array, so it survives `route:cache`.
+     */
+    public const ROUTE_MARK = 'laravel-api';
+
+    public static function isApiRoute(?\Illuminate\Routing\Route $route): bool
+    {
+        return $route !== null && $route->getAction(static::ROUTE_MARK) === true;
+    }
+
+    protected static function markApiRoute(\Illuminate\Routing\Route $route): void
+    {
+        $route->setAction(array_merge($route->getAction(), [static::ROUTE_MARK => true]));
+    }
+
     public function makeApiRoutes()
     {
         $middlewareGroupName = "api-middleware-group";
@@ -193,20 +210,23 @@ class ApiServiceProvider extends ServiceProvider
 
             $routeDefinitions = ApiModule::getRouteDefinitions();
             foreach ($routeDefinitions as $definition) {
-                $perActionMiddleware = (array) ($definition['middleware'] ?? []);
-                Route::match($definition['methods'], $definition['uri'], function () {
+                // Only the action's own cascade. The group is built from the
+                // request the routes were registered in, so in a long-lived
+                // process (Octane, a test suite) it holds the middleware of
+                // whichever action came first.
+                $route = Route::match($definition['methods'], $definition['uri'], function () {
                     return ApiModule::makeApi();
                 })->name($definition['name'])
-                    ->middleware(array_merge([$middlewareGroupName], $perActionMiddleware))
-                    // Through withoutMiddleware — it removes what came from
-                    // the group too, not only the version's own list.
+                    ->middleware((array) ($definition['middleware'] ?? []))
                     ->withoutMiddleware((array) ($definition['exclude-middleware'] ?? []));
+                static::markApiRoute($route);
             }
 
-            Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function () {
+            $route = Route::match(ApiModule::getAvailableApiMethods(), ApiModule::getApiUriPattern(), function () {
                 return ApiModule::makeApi();
             })->name('api-endpoint')
                 ->middleware($middlewareGroupName);
+            static::markApiRoute($route);
 
         });
     }
