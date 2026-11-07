@@ -9,6 +9,7 @@ use Throwable;
 /**
  * @method static void addErrorHandler($exceptionClassName, Closure $handler)
  * @method static mixed handle(Throwable $e)
+ * @method static bool handles(Throwable $e)
  *
  * @see \Dskripchenko\LaravelApi\Components\ApiErrorHandler
  */

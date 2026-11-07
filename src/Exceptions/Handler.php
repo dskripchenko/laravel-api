@@ -29,6 +29,14 @@ class Handler extends ExceptionHandler
     {
         if (ApiServiceProvider::isApiRoute($request->route()) || $request->routeIs('api-endpoint')) {
             $this->report($e);
+
+            // What no handler knows, Laravel may still know how to answer: a
+            // CSRF mismatch is 419, a missing model 404. Its own conversion
+            // goes first, so these do not become a bare 500.
+            if (!ApiErrorHandler::handles($e)) {
+                $e = $this->prepareException($e);
+            }
+
             return ApiErrorHandler::handle($e);
         }
         return parent::render($request, $e);

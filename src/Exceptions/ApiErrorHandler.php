@@ -73,6 +73,15 @@ class ApiErrorHandler
     }
 
     /**
+     * Whether a handler is registered for this exception, its parents or its
+     * interfaces — that is, whether it answers with something other than 500.
+     */
+    public function handles(Throwable $e): bool
+    {
+        return $this->findHandler($e) !== false;
+    }
+
+    /**
      * @param Throwable $e
      * @return Closure|false
      */

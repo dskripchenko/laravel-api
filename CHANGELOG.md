@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every action got the middleware of whichever action came first — an `auth` guard
   leaked onto public actions. A named route now carries only its own cascade; the group
   stays on the catch-all route.
+- Exceptions no handler knows go through Laravel's own conversion first
+  (`Handler::prepareException()`): a CSRF mismatch answers 419 and a missing model 404,
+  both with `errorKey: http_error`, instead of a bare 500.
+
+### Added
+
+- `ApiErrorHandler::handles($e)` — whether a handler is registered for the exception.
 
 ## [6.2.1] — 2026-10-27
 
